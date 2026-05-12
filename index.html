@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GalAid - VN launch doctor</title>
+    <meta
+      name="description"
+      content="Local-first visual novel folder diagnostics for launch issues, engine clues, and asset maps."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f4f7f2'/%3E%3Cpath d='M12 16h40v32H12z' fill='%23fff' stroke='%2320252b' stroke-width='4'/%3E%3Cpath d='M20 26h24M20 36h14' stroke='%2336a779' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M44 42l8 8' stroke='%23d95a48' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="GalAid workspace">
+        <aside class="control-pane">
+          <div class="brand-row">
+            <div class="brand-mark" aria-hidden="true">
+              <span>GA</span>
+            </div>
+            <div>
+              <h1>GalAid</h1>
+              <p>VN launch doctor</p>
+            </div>
+          </div>
+
+          <div id="dropZone" class="drop-zone" tabindex="0">
+            <input id="folderInput" type="file" webkitdirectory multiple hidden />
+            <input id="fileInput" type="file" multiple hidden />
+            <div class="drop-art" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="drop-copy">
+              <strong>拖入游戏文件夹</strong>
+              <span>或选择文件夹 / 压缩包 / 镜像文件</span>
+            </div>
+          </div>
+
+          <div class="button-grid" aria-label="input actions">
+            <button id="chooseFolderButton" class="primary-action" type="button">
+              选择文件夹
+            </button>
+            <button id="chooseFilesButton" type="button">选择文件</button>
+            <button id="sampleButton" type="button">载入样例</button>
+            <button id="clearButton" type="button">清空</button>
+          </div>
+
+          <label class="field-label" for="errorInput">错误信息</label>
+          <textarea
+            id="errorInput"
+            rows="7"
+            placeholder="粘贴报错文本，例如 d3dx9_43.dll、乱码、RTP、VCRUNTIME..."
+          ></textarea>
+
+          <div class="button-grid compact">
+            <button id="copyReportButton" type="button">复制报告</button>
+            <button id="downloadReportButton" type="button">下载报告</button>
+          </div>
+
+          <div class="privacy-note">
+            <strong>Local only.</strong>
+            <span>浏览器只读取文件名、路径和大小，不上传游戏内容。</span>
+          </div>
+        </aside>
+
+        <section class="result-pane">
+          <header class="result-header">
+            <div>
+              <p class="eyebrow">Diagnosis</p>
+              <h2 id="projectTitle">等待导入</h2>
+            </div>
+            <div id="statusPill" class="status-pill neutral">No data</div>
+          </header>
+
+          <section class="summary-strip" aria-label="summary">
+            <div>
+              <span id="fileCount">0</span>
+              <small>files</small>
+            </div>
+            <div>
+              <span id="engineCount">0</span>
+              <small>engine clues</small>
+            </div>
+            <div>
+              <span id="assetCount">0</span>
+              <small>assets</small>
+            </div>
+            <div>
+              <span id="riskCount">0</span>
+              <small>risks</small>
+            </div>
+          </section>
+
+          <nav class="tabs" aria-label="result views">
+            <button class="tab active" data-tab="launch" type="button">启动</button>
+            <button class="tab" data-tab="engine" type="button">引擎</button>
+            <button class="tab" data-tab="assets" type="button">素材</button>
+            <button class="tab" data-tab="report" type="button">报告</button>
+          </nav>
+
+          <section id="launchPanel" class="tab-panel active" aria-live="polite"></section>
+          <section id="enginePanel" class="tab-panel" aria-live="polite"></section>
+          <section id="assetsPanel" class="tab-panel" aria-live="polite"></section>
+          <section id="reportPanel" class="tab-panel" aria-live="polite"></section>
+        </section>
+      </section>
+    </main>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <div class="empty-glyph" aria-hidden="true"></div>
+        <h3>先丢一个游戏文件夹进来</h3>
+        <p>GalAid 会在本地分析启动文件、引擎线索、镜像/压缩包、路径风险和素材分布。</p>
+      </div>
+    </template>
+
+    <script src="./src/app.js"></script>
+  </body>
+</html>
