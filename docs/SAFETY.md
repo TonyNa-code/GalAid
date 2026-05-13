@@ -9,6 +9,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Generate local launch profiles that the user can inspect before using
 - Detect common visual novel engine markers
 - Explain common runtime errors
+- Match pasted error text against local advisory recipes
 - Explain likely runtime prerequisites and environment checks
 - Generate a local diagnosis report
 - Preview or list assets only when the format is open or user-controlled
@@ -47,3 +48,7 @@ The desktop beta should keep these defaults:
 - clear confirmation before opening external tools
 - visible warnings before running executables
 - launch profiles should stay inspectable and should not auto-run by default
+
+## Error Recipe Guardrails
+
+Error recipes are local advisory rules. They should explain likely causes and safe next steps, but they must not point users toward cracks, DRM bypasses, serials, decryption keys, or unauthorized asset extraction.

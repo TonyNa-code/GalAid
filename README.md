@@ -27,6 +27,7 @@ GalAid turns that mess into a small diagnosis report.
 - Detect engine clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, and TyranoScript
 - Warn about archive-only imports, disc images, non-English paths, long paths, and locale-sensitive engines
 - Run a runtime/environment checklist for extraction state, launch entry, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
+- Match pasted error text against a data-driven recipe library for common VN startup failures
 - Map common asset categories: images, audio, video, scripts, resource archives, launchers
 - Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
 - Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
@@ -52,6 +53,12 @@ The environment page turns common "why won't this start?" issues into a checklis
 It checks whether the folder appears fully extracted, whether a launch entry exists, and whether the metadata or pasted error text points to Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
 
 GalAid only explains likely prerequisites. It does not install runtimes, change system locale, mount images, or execute games automatically.
+
+## Error Recipes
+
+Common startup errors live in `src/error-recipes.js` as small data objects. The app can match pasted logs against recipes for DirectX, VC++ redistributables, RPG Maker RTP, locale issues, missing files, archive damage, web VN local-file restrictions, Unity runtime files, mounted-disc checks, and .NET tools.
+
+See `docs/ERROR_RECIPES.md` for the recipe format and contribution notes.
 
 ## Large Games
 

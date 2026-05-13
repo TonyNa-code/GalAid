@@ -486,6 +486,9 @@ textarea {
 .profile-card,
 .environment-summary,
 .environment-check,
+.error-summary,
+.error-recipe,
+.recipe-library-card,
 .package-card,
 .package-roadmap article {
   border: 1px solid var(--line);
@@ -528,6 +531,9 @@ textarea {
 .profile-card h4,
 .environment-summary h4,
 .environment-check h4,
+.error-summary h4,
+.error-recipe h4,
+.recipe-library-card h4,
 .package-card h4,
 .package-roadmap h4 {
   margin: 0 0 6px;
@@ -541,6 +547,9 @@ textarea {
 .profile-card p,
 .environment-summary p,
 .environment-check p,
+.error-summary p,
+.error-recipe p,
+.recipe-library-card p,
 .package-card p,
 .package-roadmap p,
 .empty-state p {
@@ -642,6 +651,7 @@ textarea {
 .env-status {
   display: inline-flex;
   align-items: center;
+  justify-self: start;
   min-height: 28px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -650,6 +660,7 @@ textarea {
   background: #fff;
   font-size: 12px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .environment-counts .good,
@@ -692,6 +703,11 @@ textarea {
   gap: 10px;
 }
 
+.environment-check-header .env-status,
+.error-recipe-header .env-status {
+  justify-self: end;
+}
+
 .environment-action {
   border-left: 3px solid var(--sky);
   padding-left: 10px;
@@ -703,6 +719,57 @@ textarea {
 
 .environment-evidence code {
   overflow-wrap: anywhere;
+}
+
+.error-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.error-summary.warning,
+.error-recipe.warning {
+  border-color: rgba(217, 154, 43, 0.44);
+  background: rgba(217, 154, 43, 0.06);
+}
+
+.error-summary.info,
+.error-recipe.info {
+  border-color: rgba(64, 125, 163, 0.26);
+}
+
+.error-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.error-recipe {
+  display: grid;
+  gap: 12px;
+}
+
+.error-recipe-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.recipe-steps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 22px;
+  color: #334039;
+  line-height: 1.5;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.recipe-library-card {
+  margin-top: 0;
 }
 
 .candidate-score {
@@ -930,6 +997,15 @@ textarea {
 
   .environment-summary {
     grid-template-columns: 1fr;
+  }
+
+  .error-summary,
+  .error-recipe-header {
+    grid-template-columns: 1fr;
+  }
+
+  .error-recipe-header .env-status {
+    justify-self: start;
   }
 
   .environment-counts {

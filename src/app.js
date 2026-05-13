@@ -22,6 +22,7 @@ const scanProgressBar = document.querySelector("#scanProgressBar");
 const launchPanel = document.querySelector("#launchPanel");
 const profilesPanel = document.querySelector("#profilesPanel");
 const environmentPanel = document.querySelector("#environmentPanel");
+const errorsPanel = document.querySelector("#errorsPanel");
 const packagesPanel = document.querySelector("#packagesPanel");
 const enginePanel = document.querySelector("#enginePanel");
 const assetsPanel = document.querySelector("#assetsPanel");
@@ -40,6 +41,7 @@ const SCAN_BATCH_SIZE = 1000;
 const LARGE_FOLDER_THRESHOLD = 20000;
 const HUGE_FOLDER_THRESHOLD = 50000;
 const MAX_SORTED_FILES = 50000;
+const ERROR_RECIPES = Array.isArray(window.GALAID_ERROR_RECIPES) ? window.GALAID_ERROR_RECIPES : [];
 
 const SAMPLE_FILES = [
   ["SakuraTrial/game.exe", 1422000],
@@ -236,8 +238,9 @@ function analyze(files, errorText = "") {
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
   const profiles = buildLaunchProfiles(launchCandidates, engines, packages);
-  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText);
-  const findings = buildFindings(files, roots, engines, launchCandidates, errorText, mode, packages);
+  const errorDiagnostics = buildErrorDiagnostics(errorText);
+  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics);
+  const findings = buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics);
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
 
@@ -252,6 +255,7 @@ function analyze(files, errorText = "") {
     engines,
     launchCandidates,
     profiles,
+    errorDiagnostics,
     environment,
     findings,
     status,
@@ -837,7 +841,7 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
   });
 }
 
-function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText) {
+function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics) {
   const checks = [];
   const engineIds = new Set(engines.map((engine) => engine.id));
   const engineNames = engines.map((engine) => engine.name);
@@ -853,11 +857,14 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const localeEngineNames = engines
     .filter((engine) => ["kirikiri", "nscript", "siglus"].includes(engine.id))
     .map((engine) => engine.name);
-  const localeError = /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
-  const directXError = /d3dx|directx|xinput|dsound|dinput/i.test(errorValue);
-  const vcError = /msvcr|msvcp|vcruntime|visual c\+\+|vc\+\+/i.test(errorValue);
-  const rtpError = /rtp|rgss|rpg maker/i.test(errorValue);
-  const permissionError = /access denied|permission|拒绝访问|权限/i.test(errorValue);
+  const localeError =
+    hasErrorRecipe(errorDiagnostics, "locale-encoding") ||
+    /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
+  const directXError = hasErrorRecipe(errorDiagnostics, "directx-legacy");
+  const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist");
+  const rtpError = hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp");
+  const permissionError = hasErrorRecipe(errorDiagnostics, "permission-write");
+  const webFileError = hasErrorRecipe(errorDiagnostics, "web-local-files");
   const directXInstallers = samplePaths(files, (file) => /(dxsetup|dxwebsetup|directx|d3dx)/i.test(file.lowerPath), 3);
   const vcInstallers = samplePaths(files, (file) => /(vcredist|vc_redist|visual.?c|redist)/i.test(file.lowerPath), 3);
   const rtpEvidence = compactEvidence(
@@ -1037,13 +1044,15 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     }),
   );
 
-  if (webEntry || engineIds.has("tyrano")) {
+  if (webEntry || engineIds.has("tyrano") || webFileError) {
     checks.push(
       makeEnvironmentCheck({
         id: "web-vn",
         title: "网页 VN 本地服务器",
-        status: webLaunch || engineIds.has("tyrano") ? "warning" : "info",
-        detail: "检测到 index.html 或 TyranoScript/web VN 结构。直接 file:// 打开可能被浏览器安全限制挡住。",
+        status: webLaunch || engineIds.has("tyrano") || webFileError ? "warning" : "info",
+        detail: webFileError
+          ? "报错文本指向浏览器本地文件读取限制。"
+          : "检测到 index.html 或 TyranoScript/web VN 结构。直接 file:// 打开可能被浏览器安全限制挡住。",
         action: "用本地服务器打开游戏目录，再访问 index.html；打包版可后续生成一键本地服务配置。",
         evidence: compactEvidence([webEntry?.path, ...(engineIds.has("tyrano") ? ["TyranoScript / web VN"] : [])], 4),
       }),
@@ -1139,7 +1148,7 @@ function isSetupLike(lowerPath) {
   return /(setup|install|installer|autorun|inst|修正|patch)/i.test(lowerPath);
 }
 
-function buildFindings(files, roots, engines, launchCandidates, errorText, mode, packages) {
+function buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics) {
   if (!files.length) return [];
 
   const findings = [];
@@ -1265,73 +1274,128 @@ function buildFindings(files, roots, engines, launchCandidates, errorText, mode,
     });
   }
 
-  findings.push(...analyzeErrorText(errorText));
+  findings.push(...errorDiagnostics.findings);
   return findings;
 }
 
-function analyzeErrorText(text) {
-  const value = text.trim();
-  if (!value) return [];
-  const lower = value.toLowerCase();
-  const findings = [];
-
-  if (/d3dx|directx|xinput|dsound|dinput/i.test(value)) {
-    findings.push({
-      level: "warning",
-      title: "报错指向 DirectX 旧组件",
-      body: "常见于老 galgame。可安装 DirectX End-User Runtime，并确认游戏目录没有被杀软隔离文件。",
-    });
+function buildErrorDiagnostics(text) {
+  const value = String(text || "").trim();
+  if (!value) {
+    return {
+      hasText: false,
+      matches: [],
+      findings: [],
+      summary: {
+        status: "info",
+        label: "等待报错文本",
+        detail: "没有粘贴报错时，GalAid 只根据文件清单做环境判断。",
+        counts: { warning: 0, info: 0 },
+      },
+    };
   }
 
-  if (/msvcr|msvcp|vcruntime|visual c\+\+|vc\+\+/i.test(value)) {
-    findings.push({
-      level: "warning",
-      title: "报错指向 VC++ 运行库",
-      body: "安装 Microsoft Visual C++ Redistributable x86/x64。老游戏即使在 64 位系统上也经常需要 x86。",
-    });
+  const matches = ERROR_RECIPES.map((recipe, index) => matchErrorRecipe(recipe, value, index))
+    .filter(Boolean)
+    .sort(
+      (a, b) =>
+        getLevelWeight(a.level) - getLevelWeight(b.level) ||
+        getRecipeRank(a) - getRecipeRank(b) ||
+        b.evidence.length - a.evidence.length,
+    );
+
+  const findings = matches.length
+    ? matches.map((match) => ({
+        level: match.level,
+        title: `报错指向${match.title}`,
+        body: `${match.cause} ${match.action}`,
+      }))
+    : [
+        {
+          level: "info",
+          title: "已记录错误信息",
+          body: "当前配方库没有命中特定报错。报告里会保留这段文本，方便继续排查或补充规则。",
+        },
+      ];
+
+  return {
+    hasText: true,
+    matches,
+    findings,
+    summary: summarizeErrorMatches(matches),
+  };
+}
+
+function matchErrorRecipe(recipe, text, index) {
+  const evidence = [];
+  const lowerText = text.toLowerCase();
+
+  for (const keyword of recipe.keywords || []) {
+    const normalized = String(keyword).toLowerCase();
+    if (normalized && lowerText.includes(normalized)) evidence.push(keyword);
   }
 
-  if (/rtp|rgss|rpg maker/i.test(value)) {
-    findings.push({
-      level: "warning",
-      title: "报错指向 RPG Maker RTP",
-      body: "安装对应版本 RTP，或确认游戏包是否自带 RTP 文件。",
-    });
+  for (const pattern of recipe.patterns || []) {
+    try {
+      const match = text.match(new RegExp(pattern, recipe.flags || "i"));
+      if (match?.[0]) evidence.push(match[0]);
+    } catch {
+      continue;
+    }
   }
 
-  if (/文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD/.test(value)) {
-    findings.push({
-      level: "warning",
-      title: "报错指向系统区域或字体",
-      body: "尝试日区环境、Locale Emulator、安装日文字体，并把游戏移动到英文短路径。",
-    });
+  const compacted = compactEvidence(evidence, 5);
+  if (!compacted.length) return null;
+
+  return {
+    ...recipe,
+    index,
+    level: recipe.level || "warning",
+    evidence: compacted,
+    confidence: getRecipeConfidence(compacted.length),
+  };
+}
+
+function summarizeErrorMatches(matches) {
+  const counts = {
+    warning: matches.filter((match) => match.level === "warning").length,
+    info: matches.filter((match) => match.level === "info").length,
+  };
+
+  if (!matches.length) {
+    return {
+      status: "info",
+      label: "没有命中已知配方",
+      detail: "原始报错会进入报告；这类文本很适合后续沉淀成新的社区规则。",
+      counts,
+    };
   }
 
-  if (/not found|cannot find|missing|找不到|缺少|failed to load/i.test(value)) {
-    findings.push({
-      level: "warning",
-      title: "报错指向缺文件",
-      body: "优先重新完整解压，确认分卷齐全，避免在压缩软件预览窗口里直接运行。",
-    });
-  }
+  const first = matches[0];
+  return {
+    status: first.level,
+    label: `命中 ${matches.length} 条报错配方`,
+    detail: first.action,
+    counts,
+  };
+}
 
-  if (/access denied|permission|拒绝访问|权限/i.test(value)) {
-    findings.push({
-      level: "warning",
-      title: "报错指向权限",
-      body: "移动到用户目录或 C:/Games，避免 Program Files；必要时再尝试管理员权限。",
-    });
-  }
+function getRecipeConfidence(evidenceCount) {
+  if (evidenceCount >= 3) return "high";
+  if (evidenceCount >= 2) return "medium";
+  return "matched";
+}
 
-  if (!findings.length) {
-    findings.push({
-      level: "info",
-      title: "已记录错误信息",
-      body: "当前规则没有命中特定报错。报告里会保留这段文本，方便继续排查。",
-    });
-  }
+function hasErrorRecipe(errorDiagnostics, id) {
+  return Boolean(errorDiagnostics?.matches?.some((match) => match.id === id));
+}
 
-  return findings;
+function getRecipeRank(match) {
+  return Number.isFinite(match.priority) ? match.priority : match.index;
+}
+
+function getLevelWeight(level) {
+  const weights = { blocker: 0, warning: 1, info: 2, good: 3 };
+  return weights[level] ?? 4;
 }
 
 function getCategories(files) {
@@ -1530,6 +1594,7 @@ function render() {
   launchPanel.innerHTML = renderLaunch(analysis);
   profilesPanel.innerHTML = renderProfiles(analysis);
   environmentPanel.innerHTML = renderEnvironment(analysis);
+  errorsPanel.innerHTML = renderErrorDiagnostics(analysis);
   packagesPanel.innerHTML = renderPackages(analysis);
   enginePanel.innerHTML = renderEngines(analysis);
   assetsPanel.innerHTML = renderAssets(analysis);
@@ -1558,6 +1623,7 @@ function renderEmpty() {
   launchPanel.innerHTML = empty;
   profilesPanel.innerHTML = empty;
   environmentPanel.innerHTML = empty;
+  errorsPanel.innerHTML = empty;
   packagesPanel.innerHTML = empty;
   enginePanel.innerHTML = empty;
   assetsPanel.innerHTML = empty;
@@ -1721,6 +1787,89 @@ function renderEnvironmentCheck(check) {
       <p>${escapeHtml(check.detail)}</p>
       <div class="environment-action">${escapeHtml(check.action)}</div>
       ${evidence}
+    </article>
+  `;
+}
+
+function renderErrorDiagnostics(analysis) {
+  const diagnostics = analysis.errorDiagnostics;
+  const recipeCount = ERROR_RECIPES.length;
+
+  if (!diagnostics.hasText) {
+    return `
+      <div class="section-title">
+        <h3>报错诊断</h3>
+        <span>${recipeCount} recipes</span>
+      </div>
+      <article class="error-summary info">
+        <div>
+          <h4>还没有粘贴报错文本</h4>
+          <p>当前没有错误文本；如果启动失败，把弹窗或日志文字放到左侧输入框后会重新诊断。</p>
+        </div>
+      </article>
+      ${renderRecipeLibrary()}
+    `;
+  }
+
+  const matchCards = diagnostics.matches.length
+    ? diagnostics.matches.map(renderErrorRecipeMatch).join("")
+    : `<article class="error-recipe info"><h4>没有命中已知配方</h4><p>这段报错已经保留在报告中，可以作为后续新增社区配方的素材。</p></article>`;
+
+  return `
+    <div class="section-title">
+      <h3>报错诊断</h3>
+      <span>${diagnostics.matches.length} matches</span>
+    </div>
+    <article class="error-summary ${diagnostics.summary.status}">
+      <div>
+        <h4>${escapeHtml(diagnostics.summary.label)}</h4>
+        <p>${escapeHtml(diagnostics.summary.detail)}</p>
+      </div>
+      <div class="environment-counts" aria-label="error recipe counts">
+        <span class="warning">${diagnostics.summary.counts.warning} 建议</span>
+        <span>${diagnostics.summary.counts.info} 观察</span>
+      </div>
+    </article>
+    <div class="error-grid">${matchCards}</div>
+    ${renderRecipeLibrary()}
+  `;
+}
+
+function renderErrorRecipeMatch(match) {
+  return `
+    <article class="error-recipe ${match.level}">
+      <div class="error-recipe-header">
+        <div>
+          <h4>${escapeHtml(match.title)}</h4>
+          <p>${escapeHtml(match.cause)}</p>
+        </div>
+        <span class="env-status ${match.level}">${escapeHtml(match.confidence)}</span>
+      </div>
+      <div class="environment-action">${escapeHtml(match.action)}</div>
+      <ol class="recipe-steps">
+        ${(match.checklist || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
+      </ol>
+      <div class="sample-list environment-evidence">
+        ${match.evidence.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderRecipeLibrary() {
+  const groups = countBy(ERROR_RECIPES, (recipe) => recipe.category || "general");
+  const chips = [...groups.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([category, count]) => `<span class="chip">${escapeHtml(category)} ${count}</span>`)
+    .join("");
+
+  return `
+    <div class="section-title">
+      <h3>配方覆盖</h3>
+      <span>${ERROR_RECIPES.length} rules</span>
+    </div>
+    <article class="recipe-library-card">
+      <div class="meta-row">${chips}</div>
     </article>
   `;
 }
@@ -1904,6 +2053,23 @@ function buildMarkdownReport(analysis, errorText) {
     lines.push(`- [${check.status}] ${check.title}: ${check.detail}`);
     lines.push(`  - Action: ${check.action}`);
     for (const evidence of check.evidence) lines.push(`  - Evidence: ${evidence}`);
+  }
+  lines.push("");
+  lines.push("## Error recipes");
+  if (analysis.errorDiagnostics.hasText) {
+    lines.push(`- Summary: ${analysis.errorDiagnostics.summary.label}`);
+    lines.push(`- Detail: ${analysis.errorDiagnostics.summary.detail}`);
+    if (analysis.errorDiagnostics.matches.length) {
+      for (const match of analysis.errorDiagnostics.matches) {
+        lines.push(`- [${match.level}] ${match.title}: ${match.action}`);
+        for (const evidence of match.evidence) lines.push(`  - Evidence: ${evidence}`);
+        for (const step of match.checklist || []) lines.push(`  - Step: ${step}`);
+      }
+    } else {
+      lines.push("- No known error recipe matched.");
+    }
+  } else {
+    lines.push("- No error text provided.");
   }
   lines.push("");
   lines.push("## Engine clues");

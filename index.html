@@ -112,6 +112,7 @@
             <button class="tab active" data-tab="launch" type="button">启动</button>
             <button class="tab" data-tab="profiles" type="button">配置</button>
             <button class="tab" data-tab="environment" type="button">环境</button>
+            <button class="tab" data-tab="errors" type="button">报错</button>
             <button class="tab" data-tab="packages" type="button">包/镜像</button>
             <button class="tab" data-tab="engine" type="button">引擎</button>
             <button class="tab" data-tab="assets" type="button">素材</button>
@@ -121,6 +122,7 @@
           <section id="launchPanel" class="tab-panel active" aria-live="polite"></section>
           <section id="profilesPanel" class="tab-panel" aria-live="polite"></section>
           <section id="environmentPanel" class="tab-panel" aria-live="polite"></section>
+          <section id="errorsPanel" class="tab-panel" aria-live="polite"></section>
           <section id="packagesPanel" class="tab-panel" aria-live="polite"></section>
           <section id="enginePanel" class="tab-panel" aria-live="polite"></section>
           <section id="assetsPanel" class="tab-panel" aria-live="polite"></section>
@@ -137,6 +139,7 @@
       </div>
     </template>
 
+    <script src="./src/error-recipes.js"></script>
     <script src="./src/app.js"></script>
   </body>
 </html>
