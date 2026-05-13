@@ -26,6 +26,7 @@ GalAid turns that mess into a small diagnosis report.
 - Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
 - Detect engine clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, and TyranoScript
 - Warn about archive-only imports, disc images, non-English paths, long paths, and locale-sensitive engines
+- Run a runtime/environment checklist for extraction state, launch entry, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Map common asset categories: images, audio, video, scripts, resource archives, launchers
 - Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
 - Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
@@ -43,6 +44,14 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - a portable `.galaid-profile.json` file
 
 Profiles do not auto-run games. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker.
+
+## Environment Checks
+
+The environment page turns common "why won't this start?" issues into a checklist before the user starts changing system settings.
+
+It checks whether the folder appears fully extracted, whether a launch entry exists, and whether the metadata or pasted error text points to Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
+
+GalAid only explains likely prerequisites. It does not install runtimes, change system locale, mount images, or execute games automatically.
 
 ## Large Games
 

@@ -9,6 +9,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Generate local launch profiles that the user can inspect before using
 - Detect common visual novel engine markers
 - Explain common runtime errors
+- Explain likely runtime prerequisites and environment checks
 - Generate a local diagnosis report
 - Preview or list assets only when the format is open or user-controlled
 
@@ -19,6 +20,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Sharing cracks, serials, patches, or bypass instructions
 - Decrypting protected archives without permission
 - Uploading user game files to a third-party server
+- Installing system runtimes, changing locale settings, mounting images, or running executables automatically
 
 ## Default Privacy Model
 

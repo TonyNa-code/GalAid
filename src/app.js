@@ -21,6 +21,7 @@ const scanDetail = document.querySelector("#scanDetail");
 const scanProgressBar = document.querySelector("#scanProgressBar");
 const launchPanel = document.querySelector("#launchPanel");
 const profilesPanel = document.querySelector("#profilesPanel");
+const environmentPanel = document.querySelector("#environmentPanel");
 const packagesPanel = document.querySelector("#packagesPanel");
 const enginePanel = document.querySelector("#enginePanel");
 const assetsPanel = document.querySelector("#assetsPanel");
@@ -235,6 +236,7 @@ function analyze(files, errorText = "") {
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
   const profiles = buildLaunchProfiles(launchCandidates, engines, packages);
+  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText);
   const findings = buildFindings(files, roots, engines, launchCandidates, errorText, mode, packages);
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
@@ -250,6 +252,7 @@ function analyze(files, errorText = "") {
     engines,
     launchCandidates,
     profiles,
+    environment,
     findings,
     status,
     riskTotal,
@@ -834,6 +837,285 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
   });
 }
 
+function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText) {
+  const checks = [];
+  const engineIds = new Set(engines.map((engine) => engine.id));
+  const engineNames = engines.map((engine) => engine.name);
+  const errorValue = String(errorText || "");
+  const packageEvidence = compactEvidence(
+    [...packages.archiveSets, ...packages.discSets].map((set) => set.firstFile?.path || set.files?.[0]?.file?.path),
+    4,
+  );
+  const missingArchiveSet = packages.archiveSets.find((set) => set.missing?.length);
+  const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
+  const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
+  const topLaunch = launchCandidates[0]?.file;
+  const localeEngineNames = engines
+    .filter((engine) => ["kirikiri", "nscript", "siglus"].includes(engine.id))
+    .map((engine) => engine.name);
+  const localeError = /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
+  const directXError = /d3dx|directx|xinput|dsound|dinput/i.test(errorValue);
+  const vcError = /msvcr|msvcp|vcruntime|visual c\+\+|vc\+\+/i.test(errorValue);
+  const rtpError = /rtp|rgss|rpg maker/i.test(errorValue);
+  const permissionError = /access denied|permission|拒绝访问|权限/i.test(errorValue);
+  const directXInstallers = samplePaths(files, (file) => /(dxsetup|dxwebsetup|directx|d3dx)/i.test(file.lowerPath), 3);
+  const vcInstallers = samplePaths(files, (file) => /(vcredist|vc_redist|visual.?c|redist)/i.test(file.lowerPath), 3);
+  const rtpEvidence = compactEvidence(
+    [
+      ...samplePaths(files, (file) => /^RGSS\d+.*\.dll$/i.test(file.name) || file.name === "Game.ini", 3),
+      ...engines.filter((engine) => engine.id === "rpgmaker").flatMap((engine) => engine.evidence.slice(0, 2)),
+    ],
+    4,
+  );
+  const webEntry = files.find((file) => file.name.toLowerCase() === "index.html");
+  const webLaunch = launchCandidates.find((candidate) => candidate.file.name.toLowerCase() === "index.html");
+
+  if (packages.hasPackages && !launchCandidates.length) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "extraction",
+        title: "完整解压状态",
+        status: "blocker",
+        detail: "当前更像压缩包或镜像阶段，而且没有发现可靠启动入口。",
+        action: "先补齐分卷、挂载或完整解压，再把解压后的游戏目录拖回来诊断。",
+        evidence: packageEvidence,
+      }),
+    );
+  } else if (missingArchiveSet) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "extraction",
+        title: "完整解压状态",
+        status: launchCandidates.length ? "warning" : "blocker",
+        detail: `发现分卷编号缺口：${missingArchiveSet.missing.join(", ")}。缺任意分卷都可能导致解压后缺文件。`,
+        action: "先确认所有分卷在同一目录，再从第一分卷重新解压。",
+        evidence: packageEvidence,
+      }),
+    );
+  } else if (packages.hasPackages) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "extraction",
+        title: "完整解压状态",
+        status: "warning",
+        detail: "发现压缩包或镜像。它们可能是补丁、附加盘，也可能说明还没有处理到可运行目录。",
+        action: "如果这是主游戏包，先完成解压或挂载；如果是补丁包，确认它已被正确放到游戏目录。",
+        evidence: packageEvidence,
+      }),
+    );
+  } else {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "extraction",
+        title: "完整解压状态",
+        status: "good",
+        detail: "没有发现常见压缩包或光盘镜像，当前内容更像已经展开的游戏目录。",
+        action: "继续检查启动入口和运行环境。",
+      }),
+    );
+  }
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "launcher",
+      title: "启动入口",
+      status: launchCandidates.length ? "good" : "blocker",
+      detail: launchCandidates.length
+        ? `最高置信度入口是 ${topLaunch.path}。`
+        : "没有发现可信的 exe、bat、cmd、lnk 或 index.html 启动入口。",
+      action: launchCandidates.length
+        ? "优先使用配置页的推荐命令；如果失败，再尝试候选列表里的备用入口。"
+        : "换成完整解压或安装后的游戏根目录再扫描。",
+      evidence: topLaunch ? [topLaunch.path] : [],
+    }),
+  );
+
+  if (localeEngineNames.length || localeError) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "locale",
+        title: "日区与文本编码",
+        status: "warning",
+        detail: localeEngineNames.length
+          ? `${localeEngineNames.join(", ")} 常见乱码、无法读取脚本或启动即闪退。`
+          : "粘贴的报错文本指向乱码、区域设置或字体问题。",
+        action: "优先尝试日区环境或 Locale Emulator，并把游戏移到英文短路径。",
+        evidence: compactEvidence([...localeEngineNames, ...nonAsciiPaths], 4),
+      }),
+    );
+  } else {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "locale",
+        title: "日区与文本编码",
+        status: "info",
+        detail: "没有强烈日区线索，但老 galgame 仍可能受系统区域、字体和路径编码影响。",
+        action: "如果出现乱码或启动即退出，再回到这一项排查。",
+        evidence: engineNames.slice(0, 3),
+      }),
+    );
+  }
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "path",
+      title: "英文短路径",
+      status: nonAsciiPaths.length || longPaths.length ? "warning" : "good",
+      detail:
+        nonAsciiPaths.length || longPaths.length
+          ? "发现非英文字符或过长路径，老 Windows 游戏可能因此打不开资源文件。"
+          : "路径长度和字符看起来没有明显风险。",
+      action:
+        nonAsciiPaths.length || longPaths.length
+          ? "建议移动到 C:/Games/VNName 这类英文短路径后再启动。"
+          : "保持目录层级简短即可。",
+      evidence: compactEvidence([...nonAsciiPaths, ...longPaths], 4),
+    }),
+  );
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "directx",
+      title: "DirectX 旧组件",
+      status: directXError ? "warning" : "info",
+      detail: directXError
+        ? "报错里出现 DirectX、D3DX、XInput 或旧声音/输入组件线索。"
+        : directXInstallers.length
+          ? "目录里看到了 DirectX 支持安装器，但它不应当作为游戏主入口。"
+          : "文件清单和报错里没有发现明确 DirectX 旧组件线索。",
+      action: directXError
+        ? "安装 DirectX End-User Runtime；老游戏经常需要这个而不是新版 DirectX。"
+        : "只有在报错提到 d3dx、xinput、dsound、dinput 时再处理这一项。",
+      evidence: directXInstallers,
+    }),
+  );
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "vcredist",
+      title: "VC++ 运行库",
+      status: vcError ? "warning" : "info",
+      detail: vcError
+        ? "报错里出现 msvcr、msvcp、vcruntime 或 Visual C++ 线索。"
+        : vcInstallers.length
+          ? "目录里看到了 VC++/redist 支持安装器，但它不应当作为游戏主入口。"
+          : "文件清单和报错里没有发现明确 VC++ 运行库线索。",
+      action: vcError
+        ? "安装 Microsoft Visual C++ Redistributable；老游戏在 64 位系统上也常需要 x86。"
+        : "只有在报错点名 msvcr、msvcp、vcruntime 时再处理这一项。",
+      evidence: vcInstallers,
+    }),
+  );
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "rtp",
+      title: "RPG Maker RTP",
+      status: rtpError ? "warning" : "info",
+      detail: rtpError
+        ? "报错文本指向 RPG Maker RTP、RGSS 或 RPG Maker 运行环境。"
+        : engineIds.has("rpgmaker")
+          ? "检测到 RPG Maker 线索；旧版项目可能需要对应 RTP。"
+          : "没有发现 RPG Maker RTP 相关线索。",
+      action: rtpError
+        ? "安装与游戏版本对应的 RPG Maker RTP，或确认游戏包是否自带 RTP 文件。"
+        : "如果启动时报 RTP/RGSS，再按版本安装对应 RTP。",
+      evidence: rtpEvidence,
+    }),
+  );
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "permission",
+      title: "权限与安装位置",
+      status: permissionError ? "warning" : "info",
+      detail: permissionError ? "报错文本指向权限不足或拒绝访问。" : "没有发现明确权限报错。",
+      action: permissionError
+        ? "把游戏移动到用户目录或 C:/Games，避免 Program Files；必要时再尝试管理员权限。"
+        : "如果保存失败或启动器无法写入配置，优先换到用户可写目录。",
+      evidence: samplePaths(files, (file) => /program files|windows\/|desktop|downloads/i.test(file.lowerPath), 3),
+    }),
+  );
+
+  if (webEntry || engineIds.has("tyrano")) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "web-vn",
+        title: "网页 VN 本地服务器",
+        status: webLaunch || engineIds.has("tyrano") ? "warning" : "info",
+        detail: "检测到 index.html 或 TyranoScript/web VN 结构。直接 file:// 打开可能被浏览器安全限制挡住。",
+        action: "用本地服务器打开游戏目录，再访问 index.html；打包版可后续生成一键本地服务配置。",
+        evidence: compactEvidence([webEntry?.path, ...(engineIds.has("tyrano") ? ["TyranoScript / web VN"] : [])], 4),
+      }),
+    );
+  }
+
+  return {
+    checks,
+    summary: summarizeEnvironmentChecks(checks),
+  };
+}
+
+function makeEnvironmentCheck({ id, title, status, detail, action, evidence = [] }) {
+  return {
+    id,
+    title,
+    status,
+    statusLabel: getEnvironmentStatusLabel(status),
+    detail,
+    action,
+    evidence: compactEvidence(evidence, 4),
+  };
+}
+
+function getEnvironmentStatusLabel(status) {
+  const labels = {
+    good: "OK",
+    info: "观察",
+    warning: "建议处理",
+    blocker: "先处理",
+  };
+  return labels[status] || "观察";
+}
+
+function summarizeEnvironmentChecks(checks) {
+  const counts = {
+    blocker: checks.filter((check) => check.status === "blocker").length,
+    warning: checks.filter((check) => check.status === "warning").length,
+    good: checks.filter((check) => check.status === "good").length,
+    info: checks.filter((check) => check.status === "info").length,
+  };
+  const firstBlocker = checks.find((check) => check.status === "blocker");
+  const firstWarning = checks.find((check) => check.status === "warning");
+
+  if (counts.blocker) {
+    return {
+      status: "blocker",
+      label: `${counts.blocker} 个启动前阻断项`,
+      detail: firstBlocker.action,
+      counts,
+    };
+  }
+  if (counts.warning) {
+    return {
+      status: "warning",
+      label: `${counts.warning} 个建议先处理的环境项`,
+      detail: firstWarning.action,
+      counts,
+    };
+  }
+  return {
+    status: "good",
+    label: "环境检查没有发现明显阻断",
+    detail: "可以优先尝试推荐启动配置；如果仍失败，再把报错文本贴回来重新诊断。",
+    counts,
+  };
+}
+
+function compactEvidence(values, limit = 4) {
+  return [...new Set(values.filter(Boolean))].slice(0, limit);
+}
+
 function getDirectoryName(pathValue) {
   const normalized = String(pathValue || "").replaceAll("\\", "/");
   const index = normalized.lastIndexOf("/");
@@ -1247,6 +1529,7 @@ function render() {
 
   launchPanel.innerHTML = renderLaunch(analysis);
   profilesPanel.innerHTML = renderProfiles(analysis);
+  environmentPanel.innerHTML = renderEnvironment(analysis);
   packagesPanel.innerHTML = renderPackages(analysis);
   enginePanel.innerHTML = renderEngines(analysis);
   assetsPanel.innerHTML = renderAssets(analysis);
@@ -1274,6 +1557,7 @@ function renderEmpty() {
   const empty = emptyStateTemplate.innerHTML;
   launchPanel.innerHTML = empty;
   profilesPanel.innerHTML = empty;
+  environmentPanel.innerHTML = empty;
   packagesPanel.innerHTML = empty;
   enginePanel.innerHTML = empty;
   assetsPanel.innerHTML = empty;
@@ -1393,6 +1677,50 @@ function renderProfileCard(profile) {
         <button type="button" data-profile-action="copy-json" data-profile-id="${profile.id}">复制 JSON</button>
         <button type="button" data-profile-action="download-json" data-profile-id="${profile.id}">下载配置</button>
       </div>
+    </article>
+  `;
+}
+
+function renderEnvironment(analysis) {
+  const { environment } = analysis;
+  const counts = environment.summary.counts;
+  return `
+    <div class="section-title">
+      <h3>环境检查</h3>
+      <span>${environment.checks.length} checks</span>
+    </div>
+    <article class="environment-summary ${environment.summary.status}">
+      <div>
+        <h4>${escapeHtml(environment.summary.label)}</h4>
+        <p>${escapeHtml(environment.summary.detail)}</p>
+      </div>
+      <div class="environment-counts" aria-label="environment check counts">
+        <span class="good">${counts.good} OK</span>
+        <span class="warning">${counts.warning} 建议</span>
+        <span class="blocker">${counts.blocker} 阻断</span>
+        <span>${counts.info} 观察</span>
+      </div>
+    </article>
+    <div class="environment-grid">
+      ${environment.checks.map(renderEnvironmentCheck).join("")}
+    </div>
+  `;
+}
+
+function renderEnvironmentCheck(check) {
+  const evidence = check.evidence.length
+    ? `<div class="sample-list environment-evidence">${check.evidence.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</div>`
+    : "";
+
+  return `
+    <article class="environment-check ${check.status}">
+      <div class="environment-check-header">
+        <h4>${escapeHtml(check.title)}</h4>
+        <span class="env-status ${check.status}">${escapeHtml(check.statusLabel)}</span>
+      </div>
+      <p>${escapeHtml(check.detail)}</p>
+      <div class="environment-action">${escapeHtml(check.action)}</div>
+      ${evidence}
     </article>
   `;
 }
@@ -1567,6 +1895,15 @@ function buildMarkdownReport(analysis, errorText) {
     }
   } else {
     lines.push("- No launch profiles generated.");
+  }
+  lines.push("");
+  lines.push("## Environment checks");
+  lines.push(`- Summary: ${analysis.environment.summary.label}`);
+  lines.push(`- Detail: ${analysis.environment.summary.detail}`);
+  for (const check of analysis.environment.checks) {
+    lines.push(`- [${check.status}] ${check.title}: ${check.detail}`);
+    lines.push(`  - Action: ${check.action}`);
+    for (const evidence of check.evidence) lines.push(`  - Evidence: ${evidence}`);
   }
   lines.push("");
   lines.push("## Engine clues");
