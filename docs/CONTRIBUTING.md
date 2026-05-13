@@ -52,3 +52,5 @@ npm run check
 - New recipe patterns compile and avoid broad words that would match too often.
 - Any pasted logs are redacted.
 - Docs mention safe official prerequisites, not unofficial downloads or bypasses.
+
+GitHub Actions runs `npm run check` on pull requests and pushes to `main`. That covers generated recipe freshness, template sanity checks, and JavaScript syntax checks.

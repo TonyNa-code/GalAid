@@ -74,6 +74,8 @@ npm run check
 
 See [docs/ERROR_RECIPES.md](docs/ERROR_RECIPES.md) for the recipe format and contribution notes.
 
+CI runs the same check on pull requests and pushes to `main`.
+
 ## Contributing
 
 Recipe improvements, engine fingerprints, docs, and redacted false-positive reports are welcome. Start with [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
