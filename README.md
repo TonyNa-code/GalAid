@@ -22,6 +22,7 @@ GalAid turns that mess into a small diagnosis report.
 
 - Detect likely launch entries: `.exe`, `.bat`, `.cmd`, `.lnk`, `index.html`
 - Flag installer/support tools that should not be used as the main launcher
+- Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
 - Detect engine clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, and TyranoScript
 - Warn about archive-only imports, disc images, non-English paths, long paths, and locale-sensitive engines
 - Map common asset categories: images, audio, video, scripts, resource archives, launchers
@@ -41,6 +42,17 @@ The main limit is file count, not total bytes:
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
 Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app, but their internal file trees are not scanned yet. Deep archive and image inspection belongs in the future desktop app.
+
+## Archive and Disc Image Guidance
+
+The web MVP can recognize common package stages and tell the user what to do next:
+
+- split archives: keep every part together and start from `part1.rar`, `.7z.001`, or `.zip.001`
+- plain archives: extract fully before running the game
+- ISO/NRG/ISZ/CDI images: mount or unpack the image first
+- CUE/BIN, MDS/MDF, CCD/IMG/SUB sets: keep paired files together before mounting
+
+The web app still does not inspect the contents of these files. It only checks metadata and naming patterns.
 
 ## Run
 

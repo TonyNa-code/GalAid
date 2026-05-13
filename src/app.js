@@ -3,6 +3,7 @@ const fileInput = document.querySelector("#fileInput");
 const chooseFolderButton = document.querySelector("#chooseFolderButton");
 const chooseFilesButton = document.querySelector("#chooseFilesButton");
 const sampleButton = document.querySelector("#sampleButton");
+const packageSampleButton = document.querySelector("#packageSampleButton");
 const clearButton = document.querySelector("#clearButton");
 const copyReportButton = document.querySelector("#copyReportButton");
 const downloadReportButton = document.querySelector("#downloadReportButton");
@@ -19,6 +20,7 @@ const scanTitle = document.querySelector("#scanTitle");
 const scanDetail = document.querySelector("#scanDetail");
 const scanProgressBar = document.querySelector("#scanProgressBar");
 const launchPanel = document.querySelector("#launchPanel");
+const packagesPanel = document.querySelector("#packagesPanel");
 const enginePanel = document.querySelector("#enginePanel");
 const assetsPanel = document.querySelector("#assetsPanel");
 const reportPanel = document.querySelector("#reportPanel");
@@ -29,7 +31,7 @@ const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
-const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg"]);
+const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf"]);
 const SCAN_BATCH_SIZE = 1000;
@@ -54,6 +56,16 @@ const SAMPLE_FILES = [
   ["SakuraTrial/scenario/route_a.ks", 61000],
   ["SakuraTrial/Setup.exe", 2610000],
   ["SakuraTrial/vcredist_x86.exe", 6500000],
+];
+
+const PACKAGE_SAMPLE_FILES = [
+  ["MoonlightCafe.part1.rar", 2147483648],
+  ["MoonlightCafe.part2.rar", 2147483648],
+  ["MoonlightCafe.part3.rar", 913000000],
+  ["MoonlightCafe_readme.txt", 2400],
+  ["MoonlightCafe_Bonus.iso", 4810000000],
+  ["OldVN_Disc2.cue", 1200],
+  ["OldVN_Disc2.bin", 734000000],
 ];
 
 let currentFiles = [];
@@ -201,9 +213,10 @@ function analyze(files, errorText = "") {
   const categories = getCategories(files);
   const totalSize = files.reduce((sum, file) => sum + file.size, 0);
   const mode = getAnalysisMode(files.length, totalSize);
+  const packages = analyzePackages(files);
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
-  const findings = buildFindings(files, roots, engines, launchCandidates, errorText, mode);
+  const findings = buildFindings(files, roots, engines, launchCandidates, errorText, mode, packages);
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
 
@@ -214,6 +227,7 @@ function analyze(files, errorText = "") {
     categories,
     totalSize,
     mode,
+    packages,
     engines,
     launchCandidates,
     findings,
@@ -275,6 +289,251 @@ function countFiles(files, predicate) {
 
 function samplePaths(files, predicate, limit = 4) {
   return files.filter(predicate).slice(0, limit).map((file) => file.path);
+}
+
+function stripLastExtension(path) {
+  return path.replace(/\.[^/.]+$/, "");
+}
+
+function getArchiveInfo(file) {
+  const lower = file.lowerPath;
+  let match = lower.match(/^(.*)\.part(\d+)\.rar$/);
+  if (match) {
+    const volumeIndex = Number(match[2]);
+    return {
+      kind: "archive",
+      format: "RAR split archive",
+      family: match[1],
+      volumeIndex,
+      role: volumeIndex === 1 ? "start here" : "follow-up volume",
+      action: volumeIndex === 1 ? "从 part1.rar 开始解压" : "和 part1.rar 放在同一目录",
+      file,
+    };
+  }
+
+  match = lower.match(/^(.*)\.(7z|zip)\.(\d{3})$/);
+  if (match) {
+    const volumeIndex = Number(match[3]);
+    return {
+      kind: "archive",
+      format: `${match[2].toUpperCase()} split archive`,
+      family: match[1],
+      volumeIndex,
+      role: volumeIndex === 1 ? "start here" : "follow-up volume",
+      action: volumeIndex === 1 ? `从 .${match[2]}.001 开始解压` : "和第一分卷放在同一目录",
+      file,
+    };
+  }
+
+  match = lower.match(/^(.*)\.r(\d{2})$/);
+  if (match) {
+    return {
+      kind: "archive",
+      format: "RAR old split archive",
+      family: match[1],
+      volumeIndex: Number(match[2]) + 2,
+      role: "follow-up volume",
+      action: "和同名 .rar 放在同一目录",
+      file,
+    };
+  }
+
+  if (ARCHIVE_EXTS.has(file.ext)) {
+    return {
+      kind: "archive",
+      format: `${file.ext.toUpperCase()} archive`,
+      family: stripLastExtension(lower),
+      volumeIndex: file.ext === "rar" ? 1 : null,
+      role: "single archive or first volume",
+      action: "先完整解压到英文短路径",
+      file,
+    };
+  }
+
+  return null;
+}
+
+function getDiscInfo(file) {
+  if (!DISC_EXTS.has(file.ext)) return null;
+  const ext = file.ext;
+  const roleByExt = {
+    iso: "standalone image",
+    cue: "descriptor, expects .bin",
+    bin: "data track, often needs .cue",
+    mds: "descriptor, expects .mdf",
+    mdf: "data image, often needs .mds",
+    ccd: "descriptor, expects .img/.sub",
+    img: "raw image data",
+    sub: "subchannel data",
+    nrg: "standalone Nero image",
+    isz: "compressed image",
+    cdi: "DiscJuggler image",
+  };
+  const family = stripLastExtension(file.lowerPath);
+  return {
+    kind: "disc",
+    format: `${ext.toUpperCase()} disc image`,
+    family,
+    role: roleByExt[ext] || "disc image file",
+    action: ext === "iso" || ext === "nrg" || ext === "isz" || ext === "cdi" ? "先挂载或解包镜像" : "和配套镜像文件放在同一目录",
+    file,
+  };
+}
+
+function analyzePackages(files) {
+  const archives = files.map(getArchiveInfo).filter(Boolean);
+  const discs = files.map(getDiscInfo).filter(Boolean);
+  const archiveSets = buildArchiveSets(archives);
+  const discSets = buildDiscSets(discs);
+  const totalSize = [...archives, ...discs].reduce((sum, item) => sum + item.file.size, 0);
+  const recommendations = buildPackageRecommendations(archiveSets, discSets, archives, discs, files);
+
+  return {
+    archives,
+    discs,
+    archiveSets,
+    discSets,
+    recommendations,
+    totalSize,
+    hasPackages: archives.length > 0 || discs.length > 0,
+  };
+}
+
+function buildArchiveSets(archives) {
+  const groups = groupBy(archives, (item) => item.family);
+  return [...groups.entries()]
+    .map(([family, items]) => {
+      const sorted = [...items].sort((a, b) => {
+        const left = a.volumeIndex || 0;
+        const right = b.volumeIndex || 0;
+        return left - right || a.file.path.localeCompare(b.file.path);
+      });
+      const volumeIndexes = sorted.map((item) => item.volumeIndex).filter(Boolean);
+      const expected = volumeIndexes.length ? Math.max(...volumeIndexes) : 0;
+      const missing = [];
+      for (let index = 1; index <= expected; index += 1) {
+        if (!volumeIndexes.includes(index)) missing.push(index);
+      }
+      const first = sorted.find((item) => item.volumeIndex === 1) || sorted[0];
+      const isSplit = sorted.length > 1 || sorted.some((item) => item.volumeIndex);
+      const level = missing.length ? "warning" : isSplit ? "good" : "info";
+      const summary = missing.length
+        ? `可能缺少分卷：${missing.join(", ")}`
+        : isSplit
+          ? "分卷看起来放在一起了"
+          : "单个压缩包，网页版不会读取内部目录";
+
+      return {
+        family,
+        type: "archive",
+        format: first.format,
+        files: sorted,
+        firstFile: first.file,
+        missing,
+        level,
+        summary,
+        nextStep: first.action,
+      };
+    })
+    .sort((a, b) => b.files.length - a.files.length || a.family.localeCompare(b.family));
+}
+
+function buildDiscSets(discs) {
+  const groups = groupBy(discs, (item) => item.family);
+  const byExt = countBy(discs, (item) => item.file.ext);
+  return [...groups.entries()]
+    .map(([family, items]) => {
+      const exts = new Set(items.map((item) => item.file.ext));
+      let level = "info";
+      let format = items[0].format;
+      let summary = "镜像文件已识别";
+      let nextStep = "先挂载或解包镜像，再运行镜像内的安装器或复制完整游戏目录";
+
+      if (exts.has("cue") && exts.has("bin")) {
+        format = "CUE/BIN disc image";
+      } else if (exts.has("mds") && exts.has("mdf")) {
+        format = "MDS/MDF disc image";
+      } else if (exts.has("ccd") && exts.has("img")) {
+        format = "CCD/IMG disc image";
+      }
+
+      if (exts.has("cue") && !exts.has("bin")) {
+        level = "warning";
+        summary = "有 .cue 但没看到同名 .bin";
+        nextStep = "把 .cue 和配套 .bin 放在同一目录后再挂载";
+      } else if (exts.has("bin") && !exts.has("cue") && byExt.get("cue")) {
+        level = "warning";
+        summary = "有 .bin，但没有同名 .cue";
+        nextStep = "确认 .cue 是否和 .bin 名称匹配";
+      } else if (exts.has("mds") && !exts.has("mdf")) {
+        level = "warning";
+        summary = "有 .mds 但没看到同名 .mdf";
+        nextStep = "把 .mds 和配套 .mdf 放在同一目录后再挂载";
+      } else if (exts.has("ccd") && !exts.has("img")) {
+        level = "warning";
+        summary = "有 .ccd 但没看到同名 .img";
+        nextStep = "把 .ccd/.img/.sub 放在同一目录后再挂载";
+      } else if (exts.has("iso")) {
+        summary = "ISO 通常可以直接挂载";
+      }
+
+      return {
+        family,
+        type: "disc",
+        format,
+        files: items.sort((a, b) => a.file.path.localeCompare(b.file.path)),
+        firstFile: items[0].file,
+        level,
+        summary,
+        nextStep,
+      };
+    })
+    .sort((a, b) => b.files.length - a.files.length || a.family.localeCompare(b.family));
+}
+
+function buildPackageRecommendations(archiveSets, discSets, archives, discs, files) {
+  const steps = [];
+  const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext));
+
+  if (archives.length && !executableCount) {
+    steps.push({
+      title: "先解压，再诊断",
+      body: "当前更像压缩包阶段。先把所有分卷放在同一目录，完整解压到 C:/Games/VNName 这类英文短路径，再把解压后的文件夹拖回来。",
+    });
+  }
+
+  if (archiveSets.some((set) => set.missing?.length)) {
+    steps.push({
+      title: "分卷可能不完整",
+      body: "缺少任意一个分卷都会导致解压失败或游戏缺文件。先补齐缺失分卷，不要只解压其中一个文件。",
+    });
+  }
+
+  if (discSets.length) {
+    steps.push({
+      title: "镜像需要挂载或解包",
+      body: "镜像文件不是直接运行的游戏目录。挂载后，从虚拟光驱中运行安装器，或把安装后的完整游戏目录拖进 GalAid。",
+    });
+  }
+
+  if (!steps.length) {
+    steps.push({
+      title: "没有发现压缩包或镜像",
+      body: "当前导入内容更像已经解压的游戏目录。可以回到启动页查看候选入口。",
+    });
+  }
+
+  return steps;
+}
+
+function groupBy(items, getter) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = getter(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  return groups;
 }
 
 function detectEngines(files) {
@@ -496,12 +755,12 @@ function isSetupLike(lowerPath) {
   return /(setup|install|installer|autorun|inst|修正|patch)/i.test(lowerPath);
 }
 
-function buildFindings(files, roots, engines, launchCandidates, errorText, mode) {
+function buildFindings(files, roots, engines, launchCandidates, errorText, mode, packages) {
   if (!files.length) return [];
 
   const findings = [];
-  const archiveCount = countFiles(files, (file) => ARCHIVE_EXTS.has(file.ext));
-  const discCount = countFiles(files, (file) => DISC_EXTS.has(file.ext));
+  const archiveCount = packages.archives.length;
+  const discCount = packages.discs.length;
   const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext));
   const resourceArchiveCount = countFiles(files, (file) => RESOURCE_ARCHIVES.has(file.ext));
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
@@ -540,7 +799,7 @@ function buildFindings(files, roots, engines, launchCandidates, errorText, mode)
     findings.push({
       level: "warning",
       title: "看起来还停在压缩包阶段",
-      body: "先完整解压 zip/rar/7z，再把解压后的文件夹拖进来。直接在压缩软件里双击游戏经常会缺文件。",
+      body: "先完整解压 zip/rar/7z 等压缩包，再把解压后的文件夹拖进来。直接在压缩软件里双击游戏经常会缺文件。",
     });
   } else if (archiveCount) {
     findings.push({
@@ -555,6 +814,14 @@ function buildFindings(files, roots, engines, launchCandidates, errorText, mode)
       level: "warning",
       title: "发现镜像文件",
       body: "iso/mds/cue/bin 通常需要先挂载或解包。挂载后再从虚拟光驱里运行安装器或复制完整游戏目录。",
+    });
+  }
+
+  if (packages.archiveSets.some((set) => set.missing?.length)) {
+    findings.push({
+      level: "warning",
+      title: "压缩包分卷可能不完整",
+      body: "检测到分卷编号缺口。请确认 part1/part2 或 .001/.002 等所有分卷都在同一目录后再解压。",
     });
   }
 
@@ -737,9 +1004,11 @@ function getStatus(findings, launchCandidates) {
 }
 
 function setControlsBusy(isBusy) {
-  [chooseFolderButton, chooseFilesButton, sampleButton, copyReportButton, downloadReportButton].forEach((button) => {
-    button.disabled = isBusy;
-  });
+  [chooseFolderButton, chooseFilesButton, sampleButton, packageSampleButton, copyReportButton, downloadReportButton].forEach(
+    (button) => {
+      button.disabled = isBusy;
+    },
+  );
   dropZone.classList.toggle("is-busy", isBusy);
 }
 
@@ -818,7 +1087,7 @@ function render() {
   }
 
   const analysis = currentAnalysis;
-  projectTitle.textContent = analysis.roots[0]?.name || "已导入文件";
+  projectTitle.textContent = getDisplayTitle(analysis);
   statusPill.textContent = analysis.status.label;
   statusPill.className = `status-pill ${analysis.status.className}`;
   fileCount.textContent = String(analysis.files.length);
@@ -831,9 +1100,19 @@ function render() {
   riskCount.textContent = String(analysis.riskTotal);
 
   launchPanel.innerHTML = renderLaunch(analysis);
+  packagesPanel.innerHTML = renderPackages(analysis);
   enginePanel.innerHTML = renderEngines(analysis);
   assetsPanel.innerHTML = renderAssets(analysis);
   reportPanel.innerHTML = `<div class="report-box">${escapeHtml(analysis.report)}</div>`;
+}
+
+function getDisplayTitle(analysis) {
+  if (!analysis.roots.length) return "已导入文件";
+  if (analysis.roots.length === 1) return analysis.roots[0].name;
+  if (analysis.roots.every((root) => root.count === 1)) {
+    return `${formatNumber(analysis.files.length)} selected files`;
+  }
+  return `${analysis.roots[0].name} + ${analysis.roots.length - 1} more`;
 }
 
 function renderEmpty() {
@@ -847,6 +1126,7 @@ function renderEmpty() {
   scanBanner.hidden = true;
   const empty = emptyStateTemplate.innerHTML;
   launchPanel.innerHTML = empty;
+  packagesPanel.innerHTML = empty;
   enginePanel.innerHTML = empty;
   assetsPanel.innerHTML = empty;
   reportPanel.innerHTML = empty;
@@ -946,6 +1226,63 @@ function renderEngines(analysis) {
   `;
 }
 
+function renderPackages(analysis) {
+  const { packages } = analysis;
+  const packageCount = packages.archives.length + packages.discs.length;
+  const sets = [...packages.archiveSets, ...packages.discSets];
+  const packageCards = sets.length
+    ? sets.map(renderPackageSet).join("")
+    : `<article class="finding good"><div><h4>没有压缩包或镜像</h4><p>当前文件更像已经解压后的目录，可以直接看启动页。</p></div></article>`;
+
+  return `
+    <div class="section-title">
+      <h3>包/镜像识别</h3>
+      <span>${packageCount} files, ${formatBytes(packages.totalSize)}</span>
+    </div>
+    <div class="package-roadmap">
+      ${packages.recommendations
+        .map(
+          (step, index) => `
+            <article>
+              <span>${index + 1}</span>
+              <div>
+                <h4>${escapeHtml(step.title)}</h4>
+                <p>${escapeHtml(step.body)}</p>
+              </div>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+    <div class="section-title">
+      <h3>识别结果</h3>
+      <span>${sets.length} groups</span>
+    </div>
+    <div class="grid-two">${packageCards}</div>
+  `;
+}
+
+function renderPackageSet(set) {
+  const chips = [
+    `<span class="chip ${set.level === "warning" ? "warn" : "good"}">${escapeHtml(set.summary)}</span>`,
+    `<span class="chip">${set.files.length} files</span>`,
+    `<span class="chip">${formatBytes(set.files.reduce((sum, item) => sum + item.file.size, 0))}</span>`,
+  ].join("");
+  const samples = set.files
+    .slice(0, 6)
+    .map((item) => `<code>${escapeHtml(item.file.path)} <span>${escapeHtml(item.role)}</span></code>`)
+    .join("");
+
+  return `
+    <article class="package-card ${set.level}">
+      <h4>${escapeHtml(set.format)}</h4>
+      <p>${escapeHtml(set.nextStep)}</p>
+      <div class="meta-row">${chips}</div>
+      <div class="sample-list package-files">${samples}</div>
+    </article>
+  `;
+}
+
 function renderAssets(analysis) {
   const max = Math.max(1, ...analysis.categories.map((category) => category.count));
   const bars = analysis.categories
@@ -1024,6 +1361,19 @@ function buildMarkdownReport(analysis, errorText) {
     lines.push(`- [${finding.level}] ${finding.title}: ${finding.body}`);
   }
   lines.push("");
+  lines.push("## Archives and disc images");
+  if (analysis.packages.hasPackages) {
+    for (const set of [...analysis.packages.archiveSets, ...analysis.packages.discSets]) {
+      lines.push(`- ${set.format}: ${set.summary}`);
+      lines.push(`  - Next step: ${set.nextStep}`);
+      for (const item of set.files.slice(0, 8)) {
+        lines.push(`  - ${item.file.path} (${item.role})`);
+      }
+    }
+  } else {
+    lines.push("- No archives or disc images found.");
+  }
+  lines.push("");
   lines.push("## Asset map");
   for (const category of analysis.categories) {
     lines.push(`- ${category.name}: ${category.count} files, ${formatBytes(category.size)}`);
@@ -1059,6 +1409,9 @@ chooseFolderButton.addEventListener("click", () => folderInput.click());
 chooseFilesButton.addEventListener("click", () => fileInput.click());
 sampleButton.addEventListener("click", () => {
   void setFiles(SAMPLE_FILES.map(fileFromSample));
+});
+packageSampleButton.addEventListener("click", () => {
+  void setFiles(PACKAGE_SAMPLE_FILES.map(fileFromSample));
 });
 clearButton.addEventListener("click", () => {
   scanRunId += 1;
