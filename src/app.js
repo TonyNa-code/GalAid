@@ -71,6 +71,7 @@ const PACKAGE_SAMPLE_FILES = [
 let currentFiles = [];
 let currentAnalysis = null;
 let scanRunId = 0;
+const desktopApi = window.galaidDesktop || null;
 
 function normalizePath(path) {
   return String(path || "").replaceAll("\\", "/").replace(/^\/+/, "");
@@ -136,10 +137,26 @@ function fileFromSample([path, size]) {
   };
 }
 
+function normalizeFileRecord(file) {
+  const normalized = normalizePath(file.path || file.webkitRelativePath || file.relativePath || file.name);
+  const name = file.name || getBaseName(normalized);
+  return {
+    ...file,
+    name,
+    path: normalized,
+    lowerPath: (file.lowerPath || normalized).toLowerCase(),
+    ext: file.ext || getExt(name),
+    size: file.size || 0,
+    depth: typeof file.depth === "number" ? file.depth : getDepth(normalized),
+  };
+}
+
 function uniqueFiles(files) {
   const seen = new Map();
-  for (const file of files) {
-    if (!file || !file.path) continue;
+  for (const rawFile of files) {
+    if (!rawFile) continue;
+    const file = normalizeFileRecord(rawFile);
+    if (!file.path) continue;
     const key = `${file.path}:${file.size}`;
     if (!seen.has(key)) seen.set(key, file);
   }
@@ -1012,6 +1029,19 @@ function setControlsBusy(isBusy) {
   dropZone.classList.toggle("is-busy", isBusy);
 }
 
+if (desktopApi) {
+  desktopApi.onScanProgress((progress) => {
+    updateScanState({
+      title: "Desktop scan",
+      detail: `${formatNumber(progress.scanned || 0)} files indexed${
+        progress.skipped ? `, ${formatNumber(progress.skipped)} skipped` : ""
+      }`,
+      progress: progress.done ? 82 : 45,
+      phase: progress.done ? "analyzing" : "scanning",
+    });
+  });
+}
+
 function updateScanState({ title, detail, progress = 0, visible = true, phase = "ready" }) {
   scanBanner.hidden = !visible;
   scanBanner.className = `scan-banner ${phase}`;
@@ -1052,6 +1082,36 @@ async function importNativeFiles(fileList, sourceLabel) {
   }
 }
 
+async function importDesktopSelection(kind) {
+  if (!desktopApi) return;
+  const runId = ++scanRunId;
+  setControlsBusy(true);
+  updateScanState({
+    title: "Desktop scan",
+    detail: kind === "folder" ? "Choose a folder to scan..." : "Choose files to scan...",
+    progress: 6,
+    phase: "scanning",
+  });
+
+  try {
+    const result = kind === "folder" ? await desktopApi.selectFolder() : await desktopApi.selectFiles();
+    if (runId !== scanRunId || result?.canceled) {
+      updateScanState({
+        title: "Ready",
+        detail: "No desktop selection made.",
+        progress: 0,
+        visible: false,
+      });
+      return;
+    }
+    await setFiles(result.files || [], { runId, desktopMeta: result.meta });
+  } catch (error) {
+    showToast(`桌面扫描失败：${error.message || error}`);
+  } finally {
+    if (runId === scanRunId) setControlsBusy(false);
+  }
+}
+
 async function setFiles(files, options = {}) {
   const runId = options.runId || ++scanRunId;
   setControlsBusy(true);
@@ -1067,6 +1127,7 @@ async function setFiles(files, options = {}) {
 
     currentFiles = uniqueFiles(files);
     currentAnalysis = analyze(currentFiles, errorInput.value);
+    if (options.desktopMeta) currentAnalysis.desktopMeta = options.desktopMeta;
     currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value);
     updateScanState({
       title: currentAnalysis.mode.label,
@@ -1336,6 +1397,11 @@ function buildMarkdownReport(analysis, errorText) {
   lines.push(`- Mode: ${analysis.mode.label}`);
   lines.push(`- Mode detail: ${analysis.mode.detail}`);
   lines.push(`- Risk findings: ${analysis.riskTotal}`);
+  if (analysis.desktopMeta) {
+    lines.push(`- Desktop platform: ${analysis.desktopMeta.platform || "unknown"}`);
+    lines.push(`- Desktop selections: ${analysis.desktopMeta.selectedCount || 0}`);
+    lines.push(`- Desktop skipped entries: ${analysis.desktopMeta.skipped || 0}`);
+  }
   lines.push("");
   lines.push("## Launch candidates");
   if (analysis.launchCandidates.length) {
@@ -1405,8 +1471,20 @@ function showToast(message) {
   window.setTimeout(() => toast.remove(), 2400);
 }
 
-chooseFolderButton.addEventListener("click", () => folderInput.click());
-chooseFilesButton.addEventListener("click", () => fileInput.click());
+chooseFolderButton.addEventListener("click", () => {
+  if (desktopApi) {
+    void importDesktopSelection("folder");
+    return;
+  }
+  folderInput.click();
+});
+chooseFilesButton.addEventListener("click", () => {
+  if (desktopApi) {
+    void importDesktopSelection("files");
+    return;
+  }
+  fileInput.click();
+});
 sampleButton.addEventListener("click", () => {
   void setFiles(SAMPLE_FILES.map(fileFromSample));
 });

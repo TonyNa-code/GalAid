@@ -32,9 +32,11 @@ The app currently reads:
 
 The app does not read file contents for diagnosis in the MVP.
 
-## Future Desktop Guardrails
+## Desktop Beta Guardrails
 
-If GalAid gains a desktop app, it should keep these defaults:
+The desktop beta can use the native file picker and recursively scan folders. It may see absolute local paths internally so future launch profiles can be built, but the default UI and Markdown report use relative paths.
+
+The desktop beta should keep these defaults:
 
 - no telemetry by default
 - no auto-uploaded reports

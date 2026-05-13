@@ -4,7 +4,7 @@ GalAid is a local-first launch doctor for visual novel and galgame folders.
 
 It helps players and archivists answer the first painful question: "Which file do I run, and why is this game not starting?"
 
-The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes only file names, paths, sizes, and extensions in your browser.
+The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes only file names, paths, sizes, and extensions in your browser. A desktop shell is also available for native folder selection and full local path scanning.
 
 ## Why
 
@@ -28,6 +28,7 @@ GalAid turns that mess into a small diagnosis report.
 - Map common asset categories: images, audio, video, scripts, resource archives, launchers
 - Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
 - Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
+- Desktop beta with native folder/file picker and recursive local scanning
 - Copy or download a Markdown diagnosis report
 - Runs fully in the browser with no upload
 
@@ -56,6 +57,8 @@ The web app still does not inspect the contents of these files. It only checks m
 
 ## Run
 
+### Web App
+
 Open this file directly:
 
 ```text
@@ -75,6 +78,17 @@ Then open:
 http://localhost:4173
 ```
 
+### Desktop Beta
+
+Install dependencies and start the Electron shell:
+
+```bash
+npm install
+npm start
+```
+
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations.
+
 ## Safety Boundary
 
 GalAid does not provide games, cracks, DRM bypasses, or decryption keys.
@@ -86,7 +100,7 @@ The app is intended for:
 - organizing personal archives
 - assisting creators and translators with their own project folders
 
-The static web MVP only reads browser-exposed file metadata. It does not upload, execute, modify, decrypt, or extract game files.
+The static web MVP only reads browser-exposed file metadata. The desktop beta can see absolute paths while scanning, but reports and UI use relative paths by default. GalAid does not upload, execute, modify, decrypt, or extract game files.
 
 ## Roadmap
 
