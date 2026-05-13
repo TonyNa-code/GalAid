@@ -26,8 +26,21 @@ GalAid turns that mess into a small diagnosis report.
 - Warn about archive-only imports, disc images, non-English paths, long paths, and locale-sensitive engines
 - Map common asset categories: images, audio, video, scripts, resource archives, launchers
 - Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
+- Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
 - Copy or download a Markdown diagnosis report
 - Runs fully in the browser with no upload
+
+## Large Games
+
+The web app is designed around metadata scanning, so a 10GB extracted game folder is usually fine. GalAid reads file names, relative paths, extensions, and sizes; it does not read the file contents.
+
+The main limit is file count, not total bytes:
+
+- under 20,000 files: normal full metadata scan
+- 20,000+ files: large folder mode with compact rendering
+- 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
+
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app, but their internal file trees are not scanned yet. Deep archive and image inspection belongs in the future desktop app.
 
 ## Run
 

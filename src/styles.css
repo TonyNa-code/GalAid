@@ -58,6 +58,12 @@ button:hover {
   transform: translateY(-1px);
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+  transform: none;
+}
+
 button:focus-visible,
 textarea:focus-visible,
 .drop-zone:focus-visible {
@@ -156,6 +162,10 @@ h1 {
     linear-gradient(135deg, rgba(54, 167, 121, 0.18), transparent 38%),
     linear-gradient(315deg, rgba(217, 90, 72, 0.16), transparent 42%),
     #fff;
+}
+
+.drop-zone.is-busy {
+  cursor: wait;
 }
 
 .drop-art {
@@ -314,6 +324,11 @@ textarea {
   background: var(--coral);
 }
 
+.status-pill.scanning {
+  color: #fff;
+  background: var(--sky);
+}
+
 .summary-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -342,6 +357,73 @@ textarea {
 .summary-strip small {
   color: var(--muted);
   font-size: 13px;
+}
+
+.scan-banner {
+  display: grid;
+  gap: 10px;
+  margin: -4px 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--panel-soft);
+}
+
+.scan-banner[hidden] {
+  display: none;
+}
+
+.scan-banner div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+
+.scan-banner strong {
+  font-size: 14px;
+}
+
+.scan-banner span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.scan-banner.scanning,
+.scan-banner.analyzing {
+  border-color: rgba(64, 125, 163, 0.34);
+  background: rgba(64, 125, 163, 0.08);
+}
+
+.scan-banner.large {
+  border-color: rgba(217, 154, 43, 0.4);
+  background: rgba(217, 154, 43, 0.1);
+}
+
+.scan-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ece7;
+}
+
+.scan-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mint);
+  transition: width 0.18s ease;
+}
+
+.scan-banner.scanning .scan-progress span,
+.scan-banner.analyzing .scan-progress span {
+  background: var(--sky);
+}
+
+.scan-banner.large .scan-progress span {
+  background: var(--amber);
 }
 
 .tabs {

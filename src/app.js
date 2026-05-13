@@ -14,6 +14,10 @@ const fileCount = document.querySelector("#fileCount");
 const engineCount = document.querySelector("#engineCount");
 const assetCount = document.querySelector("#assetCount");
 const riskCount = document.querySelector("#riskCount");
+const scanBanner = document.querySelector("#scanBanner");
+const scanTitle = document.querySelector("#scanTitle");
+const scanDetail = document.querySelector("#scanDetail");
+const scanProgressBar = document.querySelector("#scanProgressBar");
 const launchPanel = document.querySelector("#launchPanel");
 const enginePanel = document.querySelector("#enginePanel");
 const assetsPanel = document.querySelector("#assetsPanel");
@@ -28,6 +32,10 @@ const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf"]);
+const SCAN_BATCH_SIZE = 1000;
+const LARGE_FOLDER_THRESHOLD = 20000;
+const HUGE_FOLDER_THRESHOLD = 50000;
+const MAX_SORTED_FILES = 50000;
 
 const SAMPLE_FILES = [
   ["SakuraTrial/game.exe", 1422000],
@@ -50,6 +58,7 @@ const SAMPLE_FILES = [
 
 let currentFiles = [];
 let currentAnalysis = null;
+let scanRunId = 0;
 
 function normalizePath(path) {
   return String(path || "").replaceAll("\\", "/").replace(/^\/+/, "");
@@ -79,6 +88,14 @@ function formatBytes(bytes) {
     unit += 1;
   }
   return `${size.toFixed(size >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function yieldToBrowser() {
+  return new Promise((resolve) => window.setTimeout(resolve, 0));
 }
 
 function fileFromNative(file) {
@@ -114,31 +131,54 @@ function uniqueFiles(files) {
     const key = `${file.path}:${file.size}`;
     if (!seen.has(key)) seen.set(key, file);
   }
-  return [...seen.values()].sort((a, b) => a.path.localeCompare(b.path));
+  const result = [...seen.values()];
+  if (result.length > MAX_SORTED_FILES) return result;
+  return result.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-async function collectDroppedFiles(dataTransfer) {
+async function filesFromFileList(fileList, onProgress) {
+  const files = [];
+  const total = fileList.length;
+  for (let index = 0; index < total; index += 1) {
+    files.push(fileFromNative(fileList[index]));
+    if ((index + 1) % SCAN_BATCH_SIZE === 0 || index + 1 === total) {
+      onProgress?.(index + 1, total);
+      await yieldToBrowser();
+    }
+  }
+  return files;
+}
+
+async function collectDroppedFiles(dataTransfer, onProgress) {
   const items = [...(dataTransfer.items || [])];
   const entries = items
     .map((item) => (item.webkitGetAsEntry ? item.webkitGetAsEntry() : null))
     .filter(Boolean);
 
   if (!entries.length) {
-    return [...(dataTransfer.files || [])].map(fileFromNative);
+    return filesFromFileList(dataTransfer.files || [], onProgress);
   }
 
   const files = [];
+  let scanned = 0;
   for (const entry of entries) {
-    files.push(...(await traverseEntry(entry, "")));
+    files.push(
+      ...(await traverseEntry(entry, "", () => {
+        scanned += 1;
+        if (scanned % SCAN_BATCH_SIZE === 0) onProgress?.(scanned, null);
+      })),
+    );
   }
-  return files.map(fileFromNative);
+  onProgress?.(files.length, files.length);
+  return files;
 }
 
-async function traverseEntry(entry, prefix) {
+async function traverseEntry(entry, prefix, onFile) {
   if (entry.isFile) {
     const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
     file.relativePath = normalizePath(`${prefix}${file.name}`);
-    return [file];
+    onFile?.();
+    return [fileFromNative(file)];
   }
 
   if (!entry.isDirectory) return [];
@@ -151,9 +191,7 @@ async function traverseEntry(entry, prefix) {
     children.push(...batch);
   } while (batch.length);
 
-  const nested = await Promise.all(
-    children.map((child) => traverseEntry(child, `${prefix}${entry.name}/`)),
-  );
+  const nested = await Promise.all(children.map((child) => traverseEntry(child, `${prefix}${entry.name}/`, onFile)));
   return nested.flat();
 }
 
@@ -161,9 +199,11 @@ function analyze(files, errorText = "") {
   const roots = getRoots(files);
   const extCounts = countBy(files, (file) => file.ext || "(none)");
   const categories = getCategories(files);
+  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+  const mode = getAnalysisMode(files.length, totalSize);
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
-  const findings = buildFindings(files, roots, engines, launchCandidates, errorText);
+  const findings = buildFindings(files, roots, engines, launchCandidates, errorText, mode);
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
 
@@ -172,12 +212,41 @@ function analyze(files, errorText = "") {
     roots,
     extCounts,
     categories,
+    totalSize,
+    mode,
     engines,
     launchCandidates,
     findings,
     status,
     riskTotal,
     report: "",
+  };
+}
+
+function getAnalysisMode(fileTotal, totalSize) {
+  if (fileTotal >= HUGE_FOLDER_THRESHOLD) {
+    return {
+      id: "huge",
+      label: "Large folder mode",
+      detail: `${formatNumber(fileTotal)} files, ${formatBytes(totalSize)}. Full metadata was scanned; UI samples are capped to stay responsive.`,
+      findingLevel: "warning",
+    };
+  }
+
+  if (fileTotal >= LARGE_FOLDER_THRESHOLD) {
+    return {
+      id: "large",
+      label: "Large folder mode",
+      detail: `${formatNumber(fileTotal)} files, ${formatBytes(totalSize)}. Diagnosis uses the full metadata list with compact rendering.`,
+      findingLevel: "info",
+    };
+  }
+
+  return {
+    id: "normal",
+    label: "Full metadata scan",
+    detail: `${formatNumber(fileTotal)} files, ${formatBytes(totalSize)}. File contents were not read or uploaded.`,
+    findingLevel: "good",
   };
 }
 
@@ -427,7 +496,7 @@ function isSetupLike(lowerPath) {
   return /(setup|install|installer|autorun|inst|修正|patch)/i.test(lowerPath);
 }
 
-function buildFindings(files, roots, engines, launchCandidates, errorText) {
+function buildFindings(files, roots, engines, launchCandidates, errorText, mode) {
   if (!files.length) return [];
 
   const findings = [];
@@ -438,6 +507,14 @@ function buildFindings(files, roots, engines, launchCandidates, errorText) {
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const setupFiles = samplePaths(files, (file) => isSetupLike(file.lowerPath), 3);
+
+  if (mode.id !== "normal") {
+    findings.push({
+      level: mode.findingLevel,
+      title: "已启用大文件夹模式",
+      body: `${mode.detail} 这不会读取 10GB 级游戏文件内容，只会分析文件清单。`,
+    });
+  }
 
   if (launchCandidates.length) {
     findings.push({
@@ -659,11 +736,79 @@ function getStatus(findings, launchCandidates) {
   return { label: "Ready-ish", className: "ready" };
 }
 
-function setFiles(files) {
-  currentFiles = uniqueFiles(files);
-  currentAnalysis = analyze(currentFiles, errorInput.value);
-  currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value);
-  render();
+function setControlsBusy(isBusy) {
+  [chooseFolderButton, chooseFilesButton, sampleButton, copyReportButton, downloadReportButton].forEach((button) => {
+    button.disabled = isBusy;
+  });
+  dropZone.classList.toggle("is-busy", isBusy);
+}
+
+function updateScanState({ title, detail, progress = 0, visible = true, phase = "ready" }) {
+  scanBanner.hidden = !visible;
+  scanBanner.className = `scan-banner ${phase}`;
+  scanTitle.textContent = title;
+  scanDetail.textContent = detail;
+  scanProgressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+
+  if (phase === "scanning" || phase === "analyzing") {
+    statusPill.textContent = "Scanning";
+    statusPill.className = "status-pill scanning";
+  }
+}
+
+async function importNativeFiles(fileList, sourceLabel) {
+  const runId = ++scanRunId;
+  setControlsBusy(true);
+  updateScanState({
+    title: "Scanning files",
+    detail: `Reading ${sourceLabel} metadata...`,
+    progress: 5,
+    phase: "scanning",
+  });
+
+  try {
+    const files = await filesFromFileList(fileList, (done, total) => {
+      if (runId !== scanRunId) return;
+      const progress = total ? Math.min(82, Math.round((done / total) * 80)) : 20;
+      updateScanState({
+        title: "Scanning files",
+        detail: `${formatNumber(done)} / ${formatNumber(total || done)} files indexed`,
+        progress,
+        phase: "scanning",
+      });
+    });
+    if (runId === scanRunId) await setFiles(files, { runId });
+  } finally {
+    if (runId === scanRunId) setControlsBusy(false);
+  }
+}
+
+async function setFiles(files, options = {}) {
+  const runId = options.runId || ++scanRunId;
+  setControlsBusy(true);
+  try {
+    updateScanState({
+      title: "Analyzing metadata",
+      detail: `${formatNumber(files.length)} files queued`,
+      progress: 88,
+      phase: "analyzing",
+    });
+    await yieldToBrowser();
+    if (runId !== scanRunId) return;
+
+    currentFiles = uniqueFiles(files);
+    currentAnalysis = analyze(currentFiles, errorInput.value);
+    currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value);
+    updateScanState({
+      title: currentAnalysis.mode.label,
+      detail: currentAnalysis.mode.detail,
+      progress: 100,
+      phase: currentAnalysis.mode.id === "normal" ? "ready" : "large",
+    });
+    render();
+  } finally {
+    if (runId === scanRunId) setControlsBusy(false);
+  }
 }
 
 function render() {
@@ -699,6 +844,7 @@ function renderEmpty() {
   engineCount.textContent = "0";
   assetCount.textContent = "0";
   riskCount.textContent = "0";
+  scanBanner.hidden = true;
   const empty = emptyStateTemplate.innerHTML;
   launchPanel.innerHTML = empty;
   enginePanel.innerHTML = empty;
@@ -728,6 +874,7 @@ function renderLaunch(analysis) {
     : `<article class="finding blocker"><div><h4>没有候选入口</h4><p>请换成完整解压后的游戏根目录再试。</p></div></article>`;
 
   return `
+    ${renderModeCard(analysis)}
     <div class="section-title">
       <h3>启动候选</h3>
       <span>${analysis.launchCandidates.length} items</span>
@@ -738,6 +885,18 @@ function renderLaunch(analysis) {
       <span>${analysis.findings.length} findings</span>
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
+  `;
+}
+
+function renderModeCard(analysis) {
+  if (analysis.mode.id === "normal") return "";
+  return `
+    <article class="finding ${analysis.mode.findingLevel}">
+      <div>
+        <h4>${escapeHtml(analysis.mode.label)}</h4>
+        <p>${escapeHtml(analysis.mode.detail)} 页面只展示关键样例，报告仍基于完整文件清单。</p>
+      </div>
+    </article>
   `;
 }
 
@@ -835,7 +994,10 @@ function buildMarkdownReport(analysis, errorText) {
   lines.push("");
   lines.push(`- Root: ${analysis.roots.map((root) => `${root.name} (${root.count})`).join(", ") || "unknown"}`);
   lines.push(`- Files: ${analysis.files.length}`);
+  lines.push(`- Size: ${formatBytes(analysis.totalSize)}`);
   lines.push(`- Status: ${analysis.status.label}`);
+  lines.push(`- Mode: ${analysis.mode.label}`);
+  lines.push(`- Mode detail: ${analysis.mode.detail}`);
   lines.push(`- Risk findings: ${analysis.riskTotal}`);
   lines.push("");
   lines.push("## Launch candidates");
@@ -895,22 +1057,36 @@ function showToast(message) {
 
 chooseFolderButton.addEventListener("click", () => folderInput.click());
 chooseFilesButton.addEventListener("click", () => fileInput.click());
-sampleButton.addEventListener("click", () => setFiles(SAMPLE_FILES.map(fileFromSample)));
+sampleButton.addEventListener("click", () => {
+  void setFiles(SAMPLE_FILES.map(fileFromSample));
+});
 clearButton.addEventListener("click", () => {
+  scanRunId += 1;
   currentFiles = [];
   currentAnalysis = null;
   folderInput.value = "";
   fileInput.value = "";
   errorInput.value = "";
+  setControlsBusy(false);
   renderEmpty();
 });
 
-folderInput.addEventListener("change", () => setFiles([...folderInput.files].map(fileFromNative)));
-fileInput.addEventListener("change", () => setFiles([...fileInput.files].map(fileFromNative)));
+folderInput.addEventListener("change", () => {
+  void importNativeFiles(folderInput.files, "folder");
+});
+fileInput.addEventListener("change", () => {
+  void importNativeFiles(fileInput.files, "selected files");
+});
 errorInput.addEventListener("input", () => {
   if (!currentFiles.length) return;
   currentAnalysis = analyze(currentFiles, errorInput.value);
   currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value);
+  updateScanState({
+    title: currentAnalysis.mode.label,
+    detail: currentAnalysis.mode.detail,
+    progress: 100,
+    phase: currentAnalysis.mode.id === "normal" ? "ready" : "large",
+  });
   render();
 });
 
@@ -923,8 +1099,30 @@ dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-ove
 dropZone.addEventListener("drop", async (event) => {
   event.preventDefault();
   dropZone.classList.remove("drag-over");
-  const files = await collectDroppedFiles(event.dataTransfer);
-  setFiles(files);
+  const runId = ++scanRunId;
+  setControlsBusy(true);
+  updateScanState({
+    title: "Scanning dropped folder",
+    detail: "Walking folder tree...",
+    progress: 8,
+    phase: "scanning",
+  });
+  try {
+    const files = await collectDroppedFiles(event.dataTransfer, (done, total) => {
+      if (runId !== scanRunId) return;
+      updateScanState({
+        title: "Scanning dropped folder",
+        detail: total
+          ? `${formatNumber(done)} / ${formatNumber(total)} files indexed`
+          : `${formatNumber(done)} files indexed`,
+        progress: total ? Math.min(82, Math.round((done / total) * 80)) : 45,
+        phase: "scanning",
+      });
+    });
+    if (runId === scanRunId) await setFiles(files, { runId });
+  } finally {
+    if (runId === scanRunId) setControlsBusy(false);
+  }
 });
 
 dropZone.addEventListener("keydown", (event) => {
