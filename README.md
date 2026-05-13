@@ -21,6 +21,7 @@ GalAid turns that mess into a small diagnosis report.
 ## Current Features
 
 - Detect likely launch entries: `.exe`, `.bat`, `.cmd`, `.lnk`, `index.html`
+- Build an ordered next-step roadmap that tells beginners what to try first
 - Generate safe launch profiles with command hints and portable JSON config
 - Flag installer/support tools that should not be used as the main launcher
 - Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
@@ -48,6 +49,10 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 
 Profiles do not auto-run games. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker.
 
+## Next-Step Roadmap
+
+The `路线` tab combines archive/image state, launch candidates, runtime checks, error recipes, and engine clues into an ordered checklist. It can be copied as Markdown and is also included in support bundles as `roadmap.json` and `roadmap-checklist.md`.
+
 ## Environment Checks
 
 The environment page turns common "why won't this start?" issues into a checklist before the user starts changing system settings.
@@ -70,6 +75,8 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `manifest.json`
 - `file-manifest.json`
 - `environment-checks.json`
+- `roadmap.json`
+- `roadmap-checklist.md`
 - `error-recipes.json`
 - `launch-profiles.json`
 - individual `profiles/*.galaid-profile.json` files

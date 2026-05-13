@@ -11,6 +11,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Explain common runtime errors
 - Match pasted error text against local advisory recipes
 - Explain likely runtime prerequisites and environment checks
+- Generate a local next-step roadmap without changing system settings
 - Generate a local diagnosis report
 - Generate a local support ZIP containing diagnosis metadata only
 - Preview or list assets only when the format is open or user-controlled

@@ -21,6 +21,7 @@ const scanTitle = document.querySelector("#scanTitle");
 const scanDetail = document.querySelector("#scanDetail");
 const scanProgressBar = document.querySelector("#scanProgressBar");
 const launchPanel = document.querySelector("#launchPanel");
+const roadmapPanel = document.querySelector("#roadmapPanel");
 const profilesPanel = document.querySelector("#profilesPanel");
 const environmentPanel = document.querySelector("#environmentPanel");
 const errorsPanel = document.querySelector("#errorsPanel");
@@ -253,6 +254,7 @@ function analyze(files, errorText = "") {
   const errorDiagnostics = buildErrorDiagnostics(errorText);
   const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics);
   const findings = buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics);
+  const roadmap = buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode });
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
 
@@ -269,6 +271,7 @@ function analyze(files, errorText = "") {
     profiles,
     errorDiagnostics,
     environment,
+    roadmap,
     findings,
     status,
     riskTotal,
@@ -1410,6 +1413,236 @@ function getLevelWeight(level) {
   return weights[level] ?? 4;
 }
 
+function buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode }) {
+  const steps = [];
+  const envChecks = new Map(environment.checks.map((check) => [check.id, check]));
+  const addStep = (step) => {
+    steps.push({
+      id: step.id,
+      title: step.title,
+      state: step.state || "todo",
+      stateLabel: getRoadmapStateLabel(step.state || "todo"),
+      priority: step.priority || steps.length + 1,
+      detail: step.detail,
+      action: step.action,
+      evidence: compactEvidence(step.evidence || [], 4),
+      source: step.source || "diagnosis",
+    });
+  };
+
+  if (mode.id !== "normal") {
+    addStep({
+      id: "large-folder",
+      title: "确认扫描模式",
+      state: "info",
+      priority: 5,
+      detail: mode.detail,
+      action: "页面只展示关键样例，报告和求助包仍基于完整文件清单。继续按下面步骤排查即可。",
+      source: "scan",
+    });
+  }
+
+  const extraction = envChecks.get("extraction");
+  if (extraction?.status === "blocker" || (packages.hasPackages && !launchCandidates.length)) {
+    addStep({
+      id: "extract-first",
+      title: "先处理压缩包或镜像",
+      state: "blocked",
+      priority: 10,
+      detail: extraction?.detail || "当前内容像压缩包或镜像阶段，暂时没有可靠启动入口。",
+      action: extraction?.action || "先完整解压或挂载镜像，再把解压后的游戏目录拖回 GalAid。",
+      evidence: extraction?.evidence,
+      source: "package",
+    });
+  } else if (packages.hasPackages) {
+    addStep({
+      id: "verify-packages",
+      title: "确认补丁包或附加镜像",
+      state: "todo",
+      priority: 20,
+      detail: "目录里仍有压缩包或镜像文件。它们可能是补丁、特典或附加盘。",
+      action: "确认这些包是否已经解压或安装到游戏目录；不要直接在压缩软件预览窗口里运行游戏。",
+      evidence: extraction?.evidence,
+      source: "package",
+    });
+  }
+
+  const launcher = envChecks.get("launcher");
+  if (!launchCandidates.length) {
+    addStep({
+      id: "find-launcher",
+      title: "换成完整游戏根目录",
+      state: "blocked",
+      priority: 30,
+      detail: launcher?.detail || "还没有发现可信启动入口。",
+      action: launcher?.action || "选择包含主程序、资源封包和脚本的完整目录后重新扫描。",
+      source: "launch",
+    });
+  }
+
+  for (const checkId of ["path", "locale", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
+    const check = envChecks.get(checkId);
+    if (!check || check.status !== "warning") continue;
+    const recipeId = getEnvironmentRecipeId(check.id);
+    if (recipeId && hasErrorRecipe(errorDiagnostics, recipeId)) continue;
+    addStep({
+      id: `env-${check.id}`,
+      title: check.title,
+      state: "todo",
+      priority: getEnvironmentRoadmapPriority(check.id),
+      detail: check.detail,
+      action: check.action,
+      evidence: check.evidence,
+      source: "environment",
+    });
+  }
+
+  for (const match of errorDiagnostics.matches.slice(0, 4)) {
+    addStep({
+      id: `error-${match.id}`,
+      title: match.title,
+      state: "todo",
+      priority: getRecipeRank(match) + 100,
+      detail: match.cause,
+      action: match.action,
+      evidence: match.evidence,
+      source: "error",
+    });
+  }
+
+  if (profiles.length) {
+    const profile = profiles[0];
+    addStep({
+      id: "try-launch-profile",
+      title: "按推荐配置启动",
+      state: steps.some((step) => step.state === "blocked") ? "waiting" : "ready",
+      priority: 500,
+      detail: `推荐入口是 ${profile.entryPath}，工作目录是 ${profile.workingDirectory}。`,
+      action: "先复制配置页的推荐命令；如果失败，再按启动页候选列表从上到下尝试。",
+      evidence: [profile.commandPreview],
+      source: "launch",
+    });
+  }
+
+  if (engines.length) {
+    addStep({
+      id: "engine-notes",
+      title: "按引擎线索复查",
+      state: "info",
+      priority: 700,
+      detail: `识别到 ${engines.slice(0, 3).map((engine) => engine.name).join(", ")}。`,
+      action: "如果常规步骤仍失败，到引擎页查看证据路径和对应建议。",
+      evidence: engines.flatMap((engine) => engine.evidence.slice(0, 1)),
+      source: "engine",
+    });
+  }
+
+  addStep({
+    id: "support-if-stuck",
+    title: "仍失败就导出求助包",
+    state: "info",
+    priority: 900,
+    detail: "求助包只包含诊断元数据和相对路径，不包含游戏文件。",
+    action: "到求助页复制摘要或下载求助包，再发到 issue、论坛或聊天里。",
+    source: "support",
+  });
+
+  const normalized = dedupeRoadmapSteps(steps).sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title));
+  return {
+    steps: normalized,
+    summary: summarizeRoadmap(normalized, findings, launchCandidates),
+  };
+}
+
+function dedupeRoadmapSteps(steps) {
+  const seen = new Set();
+  return steps.filter((step) => {
+    if (seen.has(step.id)) return false;
+    seen.add(step.id);
+    return true;
+  });
+}
+
+function summarizeRoadmap(steps, findings, launchCandidates) {
+  const blocked = steps.filter((step) => step.state === "blocked").length;
+  const todo = steps.filter((step) => step.state === "todo").length;
+  if (blocked) {
+    return {
+      state: "blocked",
+      label: `${blocked} 个前置步骤需要先处理`,
+      detail: steps.find((step) => step.state === "blocked")?.action || "先处理阻断项，再尝试启动。",
+      counts: getRoadmapCounts(steps),
+    };
+  }
+  if (todo) {
+    return {
+      state: "todo",
+      label: `${todo} 个建议步骤`,
+      detail: steps.find((step) => step.state === "todo")?.action || "按顺序处理建议项。",
+      counts: getRoadmapCounts(steps),
+    };
+  }
+  if (launchCandidates.length) {
+    return {
+      state: "ready",
+      label: "可以尝试启动",
+      detail: `优先尝试 ${launchCandidates[0].file.path}。`,
+      counts: getRoadmapCounts(steps),
+    };
+  }
+  return {
+    state: findings.some((finding) => finding.level === "warning") ? "todo" : "info",
+    label: "路线图已生成",
+    detail: "按顺序执行下面的步骤。",
+    counts: getRoadmapCounts(steps),
+  };
+}
+
+function getRoadmapCounts(steps) {
+  return {
+    blocked: steps.filter((step) => step.state === "blocked").length,
+    todo: steps.filter((step) => step.state === "todo").length,
+    ready: steps.filter((step) => step.state === "ready").length,
+    info: steps.filter((step) => step.state === "info" || step.state === "waiting").length,
+  };
+}
+
+function getRoadmapStateLabel(state) {
+  const labels = {
+    blocked: "先处理",
+    todo: "建议",
+    ready: "可执行",
+    waiting: "等待",
+    info: "参考",
+  };
+  return labels[state] || "参考";
+}
+
+function getEnvironmentRoadmapPriority(id) {
+  const priorities = {
+    path: 40,
+    locale: 50,
+    directx: 60,
+    vcredist: 70,
+    rtp: 80,
+    permission: 90,
+    "web-vn": 100,
+  };
+  return priorities[id] || 120;
+}
+
+function getEnvironmentRecipeId(id) {
+  const recipeIds = {
+    locale: "locale-encoding",
+    directx: "directx-legacy",
+    vcredist: "visual-cpp-redist",
+    rtp: "rpgmaker-rtp",
+    permission: "permission-write",
+    "web-vn": "web-local-files",
+  };
+  return recipeIds[id] || "";
+}
+
 function getCategories(files) {
   const definitions = [
     {
@@ -1610,6 +1843,7 @@ function render() {
   riskCount.textContent = String(analysis.riskTotal);
 
   launchPanel.innerHTML = renderLaunch(analysis);
+  roadmapPanel.innerHTML = renderRoadmap(analysis);
   profilesPanel.innerHTML = renderProfiles(analysis);
   environmentPanel.innerHTML = renderEnvironment(analysis);
   errorsPanel.innerHTML = renderErrorDiagnostics(analysis);
@@ -1640,6 +1874,7 @@ function renderEmpty() {
   scanBanner.hidden = true;
   const empty = emptyStateTemplate.innerHTML;
   launchPanel.innerHTML = empty;
+  roadmapPanel.innerHTML = empty;
   profilesPanel.innerHTML = empty;
   environmentPanel.innerHTML = empty;
   errorsPanel.innerHTML = empty;
@@ -1704,6 +1939,55 @@ function renderFinding(finding) {
       <div>
         <h4>${escapeHtml(finding.title)}</h4>
         <p>${escapeHtml(finding.body)}</p>
+      </div>
+    </article>
+  `;
+}
+
+function renderRoadmap(analysis) {
+  const counts = analysis.roadmap.summary.counts;
+  return `
+    <div class="section-title">
+      <h3>下一步路线</h3>
+      <span>${analysis.roadmap.steps.length} steps</span>
+    </div>
+    <article class="roadmap-summary ${analysis.roadmap.summary.state}">
+      <div>
+        <h4>${escapeHtml(analysis.roadmap.summary.label)}</h4>
+        <p>${escapeHtml(analysis.roadmap.summary.detail)}</p>
+      </div>
+      <div class="roadmap-actions">
+        <button type="button" data-roadmap-action="copy-checklist">复制路线清单</button>
+      </div>
+    </article>
+    <div class="roadmap-counts">
+      <span class="blocked">${counts.blocked} 先处理</span>
+      <span class="todo">${counts.todo} 建议</span>
+      <span class="ready">${counts.ready} 可执行</span>
+      <span>${counts.info} 参考</span>
+    </div>
+    <div class="roadmap-list">
+      ${analysis.roadmap.steps.map((step, index) => renderRoadmapStep(step, index)).join("")}
+    </div>
+  `;
+}
+
+function renderRoadmapStep(step, index) {
+  const evidence = step.evidence.length
+    ? `<div class="sample-list roadmap-evidence">${step.evidence.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</div>`
+    : "";
+
+  return `
+    <article class="roadmap-step ${step.state}">
+      <div class="roadmap-index">${index + 1}</div>
+      <div>
+        <div class="roadmap-step-header">
+          <h4>${escapeHtml(step.title)}</h4>
+          <span class="roadmap-state ${step.state}">${escapeHtml(step.stateLabel)}</span>
+        </div>
+        <p>${escapeHtml(step.detail)}</p>
+        <div class="roadmap-action">${escapeHtml(step.action)}</div>
+        ${evidence}
       </div>
     </article>
   `;
@@ -2096,6 +2380,22 @@ function renderSupport(analysis) {
   `;
 }
 
+function buildRoadmapChecklistText(analysis) {
+  const lines = [];
+  lines.push("# GalAid next-step checklist");
+  lines.push("");
+  lines.push(`Project: ${getDisplayTitle(analysis)}`);
+  lines.push(`Summary: ${analysis.roadmap.summary.label}`);
+  lines.push("");
+  analysis.roadmap.steps.forEach((step, index) => {
+    const marker = step.state === "info" ? "-" : "- [ ]";
+    lines.push(`${marker} ${index + 1}. ${step.title} (${step.stateLabel})`);
+    lines.push(`  - ${step.action}`);
+    if (step.evidence.length) lines.push(`  - Evidence: ${step.evidence.join(", ")}`);
+  });
+  return lines.join("\n");
+}
+
 function buildMarkdownReport(analysis, errorText) {
   const lines = [];
   lines.push("# GalAid diagnosis report");
@@ -2132,6 +2432,14 @@ function buildMarkdownReport(analysis, errorText) {
     }
   } else {
     lines.push("- No launch profiles generated.");
+  }
+  lines.push("");
+  lines.push("## Next-step roadmap");
+  lines.push(`- Summary: ${analysis.roadmap.summary.label}`);
+  lines.push(`- Detail: ${analysis.roadmap.summary.detail}`);
+  for (const [index, step] of analysis.roadmap.steps.entries()) {
+    lines.push(`- ${index + 1}. [${step.state}] ${step.title}: ${step.action}`);
+    for (const evidence of step.evidence) lines.push(`  - Evidence: ${evidence}`);
   }
   lines.push("");
   lines.push("## Environment checks");
@@ -2219,6 +2527,12 @@ function buildSupportBundle(analysis, errorText) {
     summary: analysis.environment.summary,
     checks: analysis.environment.checks,
   };
+  const roadmapReport = {
+    schema: "galaid.roadmap.v1",
+    summary: analysis.roadmap.summary,
+    steps: analysis.roadmap.steps,
+    checklist: buildRoadmapChecklistText(analysis),
+  };
   const profiles = analysis.profiles.map(getPublicProfile);
   const entries = [
     {
@@ -2245,6 +2559,16 @@ function buildSupportBundle(analysis, errorText) {
       path: "environment-checks.json",
       content: JSON.stringify(environmentReport, null, 2),
       type: "application/json;charset=utf-8",
+    },
+    {
+      path: "roadmap.json",
+      content: JSON.stringify(roadmapReport, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "roadmap-checklist.md",
+      content: roadmapReport.checklist,
+      type: "text/markdown;charset=utf-8",
     },
     {
       path: "error-recipes.json",
@@ -2304,6 +2628,7 @@ function buildSupportManifest(analysis, title, generatedAt) {
       engineClues: analysis.engines.length,
       errorRecipeMatches: analysis.errorDiagnostics.matches.length,
       environmentChecks: analysis.environment.checks.length,
+      roadmapSteps: analysis.roadmap.steps.length,
     },
     roots: analysis.roots,
     desktopMeta: analysis.desktopMeta
@@ -2337,6 +2662,7 @@ function buildSupportReadme(analysis, title, generatedAt) {
     "- manifest.json: bundle summary",
     "- file-manifest.json: sanitized file list metadata",
     "- environment-checks.json: environment checklist",
+    "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
     "- launch-profiles.json and profiles/*.json: safe launch profile hints",
   ].join("\n");
@@ -2359,6 +2685,7 @@ function buildSupportSummaryText(analysis, manifest, filename) {
   lines.push(`- 推荐入口：${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : "未找到"}`);
   lines.push(`- 引擎线索：${engineNames.length ? engineNames.join(", ") : "未识别"}`);
   lines.push(`- 环境结论：${analysis.environment.summary.label}`);
+  lines.push(`- 下一步：${analysis.roadmap.summary.label}`);
   lines.push(`- 报错配方：${analysis.errorDiagnostics.summary.label}`);
   lines.push(`- 求助包：${filename}`);
   lines.push("");
@@ -2367,6 +2694,11 @@ function buildSupportSummaryText(analysis, manifest, filename) {
     for (const finding of warnings) lines.push(`- [${finding.level}] ${finding.title}: ${finding.body}`);
   } else {
     lines.push("- 暂无明显阻断项。");
+  }
+  lines.push("");
+  lines.push("### 路线图");
+  for (const [index, step] of analysis.roadmap.steps.slice(0, 6).entries()) {
+    lines.push(`- ${index + 1}. ${step.title}: ${step.action}`);
   }
   lines.push("");
   lines.push("### 隐私说明");
@@ -2621,6 +2953,15 @@ profilesPanel.addEventListener("click", (event) => {
     void copyText(profileJson, "配置 JSON 已复制");
   } else if (action === "download-json") {
     downloadText(`${profile.id}.galaid-profile.json`, profileJson);
+  }
+});
+
+roadmapPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-roadmap-action]");
+  if (!button || !currentAnalysis) return;
+
+  if (button.dataset.roadmapAction === "copy-checklist") {
+    void copyText(buildRoadmapChecklistText(currentAnalysis), "路线清单已复制");
   }
 });
 
