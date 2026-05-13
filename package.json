@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "check": "node --check src/error-recipes.js && node --check src/app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
+    "build:recipes": "node scripts/build-error-recipes.js",
+    "check": "node --check scripts/build-error-recipes.js && node scripts/build-error-recipes.js --check && node --check src/error-recipes.js && node --check src/app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
   },
   "devDependencies": {
     "electron": "^42.0.1"

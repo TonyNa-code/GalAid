@@ -1,21 +1,23 @@
 # Error Recipe Guide
 
-GalAid keeps common startup-error rules in `src/error-recipes.js`.
+GalAid keeps common startup-error rules in `data/error-recipes.json`.
+
+`src/error-recipes.js` is generated so the app can still run by opening `index.html` directly. Do not edit the generated file by hand.
 
 Each recipe is advisory. It should help the user understand the likely cause and the next safe local action. It must not include download links to games, cracks, bypass tools, serials, or decryption instructions.
 
 ## Recipe Shape
 
-```js
+```json
 {
-  id: "directx-legacy",
-  title: "DirectX old components",
-  category: "runtime",
-  level: "warning",
-  patterns: ["d3dx\\d+_\\d+\\.dll", "xinput1_3\\.dll"],
-  cause: "Short explanation of why this error happens.",
-  action: "One clear next step.",
-  checklist: ["Step one", "Step two"]
+  "id": "directx-legacy",
+  "title": "DirectX old components",
+  "category": "runtime",
+  "level": "warning",
+  "patterns": ["d3dx\\d+_\\d+\\.dll", "xinput1_3\\.dll"],
+  "cause": "Short explanation of why this error happens.",
+  "action": "One clear next step.",
+  "checklist": ["Step one", "Step two"]
 }
 ```
 
@@ -37,4 +39,5 @@ Each recipe is advisory. It should help the user understand the likely cause and
 - Explain prerequisites without pretending GalAid can install them.
 - Keep advice local-first and non-destructive.
 - Do not add piracy, DRM bypass, cracking, or decryption instructions.
-- Run `npm run check` after editing recipes.
+- Run `npm run build:recipes` after editing recipes.
+- Run `npm run check` before opening a pull request.
