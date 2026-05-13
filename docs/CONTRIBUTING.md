@@ -53,4 +53,4 @@ npm run check
 - Any pasted logs are redacted.
 - Docs mention safe official prerequisites, not unofficial downloads or bypasses.
 
-GitHub Actions runs `npm run check` on pull requests and pushes to `main`. That covers generated recipe freshness, template sanity checks, and JavaScript syntax checks.
+GitHub Actions runs `npm run check` on pull requests and pushes to `main`. That covers generated recipe freshness, GitHub template sanity checks, Pages source checks, and JavaScript syntax checks. The Pages workflow also runs `npm run build:pages` before publishing the static demo.

@@ -25,6 +25,7 @@ const REQUIRED_FILES = [
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   ".github/workflows/ci.yml",
+  ".github/workflows/pages.yml",
   "docs/CONTRIBUTING.md",
 ];
 
@@ -108,7 +109,7 @@ function checkConfig(errors) {
   assert(text.includes("blank_issues_enabled: false"), `${file} must disable blank issues`, errors);
 }
 
-function checkWorkflow(errors) {
+function checkCiWorkflow(errors) {
   const file = ".github/workflows/ci.yml";
   const text = readRelative(file);
   checkNoTrailingWhitespace(file, text, errors);
@@ -128,6 +129,26 @@ function checkWorkflow(errors) {
   }
 }
 
+function checkPagesWorkflow(errors) {
+  const file = ".github/workflows/pages.yml";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "workflow_dispatch:",
+    "pages: write",
+    "id-token: write",
+    "actions/configure-pages@v5",
+    "actions/upload-pages-artifact@v3",
+    "actions/deploy-pages@v4",
+    "npm run check",
+    "npm run build:pages",
+    "path: dist",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -142,7 +163,8 @@ function main() {
 
   ISSUE_FORMS.forEach((form) => checkIssueForm(form, errors));
   checkConfig(errors);
-  checkWorkflow(errors);
+  checkCiWorkflow(errors);
+  checkPagesWorkflow(errors);
   checkPrTemplate(errors);
   checkContributing(errors);
 
@@ -150,7 +172,7 @@ function main() {
     throw new Error(`Invalid GitHub templates:\n- ${errors.join("\n- ")}`);
   }
 
-  console.log(`Validated ${ISSUE_FORMS.length} issue forms, PR template, contribution guide, and CI workflow.`);
+  console.log(`Validated ${ISSUE_FORMS.length} issue forms, PR template, contribution guide, CI workflow, and Pages workflow.`);
 }
 
 main();

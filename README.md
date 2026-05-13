@@ -146,6 +146,16 @@ Then open:
 http://localhost:4173
 ```
 
+### GitHub Pages Demo
+
+For a public repository, enable GitHub Pages with GitHub Actions as the source. The `Deploy Pages` workflow builds the static demo from `index.html`, `src/`, `data/error-recipes.json`, and `LICENSE`, then publishes the `dist/` artifact. The demo URL is usually `https://<owner>.github.io/GalAid/`.
+
+Build the same artifact locally:
+
+```bash
+npm run build:pages
+```
+
 ### Desktop Beta
 
 Install dependencies and start the Electron shell:
