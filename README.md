@@ -33,6 +33,7 @@ GalAid turns that mess into a small diagnosis report.
 - Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
 - Desktop beta with native folder/file picker and recursive local scanning
 - Copy or download a Markdown diagnosis report
+- Download a local support ZIP with report, safe launch profiles, matched error recipes, environment checks, and sanitized file metadata
 - Runs fully in the browser with no upload
 
 ## Launch Profiles
@@ -59,6 +60,20 @@ GalAid only explains likely prerequisites. It does not install runtimes, change 
 Common startup errors live in `src/error-recipes.js` as small data objects. The app can match pasted logs against recipes for DirectX, VC++ redistributables, RPG Maker RTP, locale issues, missing files, archive damage, web VN local-file restrictions, Unity runtime files, mounted-disc checks, and .NET tools.
 
 See `docs/ERROR_RECIPES.md` for the recipe format and contribution notes.
+
+## Support Bundle
+
+The support bundle is a local `.zip` for asking for help in an issue, forum, or chat. It includes:
+
+- `galaid-report.md`
+- `manifest.json`
+- `file-manifest.json`
+- `environment-checks.json`
+- `error-recipes.json`
+- `launch-profiles.json`
+- individual `profiles/*.galaid-profile.json` files
+
+It does not include game files or file contents. File paths are relative, and desktop absolute paths are omitted. Very large folders are capped in `file-manifest.json` to keep the bundle small.
 
 ## Large Games
 

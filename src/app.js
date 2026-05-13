@@ -7,6 +7,7 @@ const packageSampleButton = document.querySelector("#packageSampleButton");
 const clearButton = document.querySelector("#clearButton");
 const copyReportButton = document.querySelector("#copyReportButton");
 const downloadReportButton = document.querySelector("#downloadReportButton");
+const downloadBundleButton = document.querySelector("#downloadBundleButton");
 const dropZone = document.querySelector("#dropZone");
 const errorInput = document.querySelector("#errorInput");
 const projectTitle = document.querySelector("#projectTitle");
@@ -41,6 +42,7 @@ const SCAN_BATCH_SIZE = 1000;
 const LARGE_FOLDER_THRESHOLD = 20000;
 const HUGE_FOLDER_THRESHOLD = 50000;
 const MAX_SORTED_FILES = 50000;
+const SUPPORT_BUNDLE_FILE_LIMIT = 5000;
 const ERROR_RECIPES = Array.isArray(window.GALAID_ERROR_RECIPES) ? window.GALAID_ERROR_RECIPES : [];
 
 const SAMPLE_FILES = [
@@ -109,6 +111,15 @@ function formatBytes(bytes) {
 
 function formatNumber(value) {
   return new Intl.NumberFormat("en-US").format(value);
+}
+
+function slugifyFilename(value, fallback = "galaid") {
+  const slug = String(value || "")
+    .trim()
+    .replace(/[^\w.-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return slug || fallback;
 }
 
 function yieldToBrowser() {
@@ -1452,11 +1463,17 @@ function getStatus(findings, launchCandidates) {
 }
 
 function setControlsBusy(isBusy) {
-  [chooseFolderButton, chooseFilesButton, sampleButton, packageSampleButton, copyReportButton, downloadReportButton].forEach(
-    (button) => {
-      button.disabled = isBusy;
-    },
-  );
+  [
+    chooseFolderButton,
+    chooseFilesButton,
+    sampleButton,
+    packageSampleButton,
+    copyReportButton,
+    downloadReportButton,
+    downloadBundleButton,
+  ].forEach((button) => {
+    button.disabled = isBusy;
+  });
   dropZone.classList.toggle("is-busy", isBusy);
 }
 
@@ -2114,6 +2131,318 @@ function buildMarkdownReport(analysis, errorText) {
   return lines.join("\n");
 }
 
+function buildSupportBundle(analysis, errorText) {
+  const title = getDisplayTitle(analysis);
+  const generatedAt = new Date().toISOString();
+  const safeTitle = slugifyFilename(title, "galaid-diagnosis");
+  const manifest = buildSupportManifest(analysis, title, generatedAt);
+  const fileManifest = buildFileManifest(analysis);
+  const errorRecipeReport = {
+    schema: "galaid.errorRecipes.v1",
+    hasErrorText: analysis.errorDiagnostics.hasText,
+    summary: analysis.errorDiagnostics.summary,
+    matches: analysis.errorDiagnostics.matches.map(publicErrorMatch),
+  };
+  const environmentReport = {
+    schema: "galaid.environmentChecks.v1",
+    summary: analysis.environment.summary,
+    checks: analysis.environment.checks,
+  };
+  const profiles = analysis.profiles.map(getPublicProfile);
+  const entries = [
+    {
+      path: "README.txt",
+      content: buildSupportReadme(analysis, title, generatedAt),
+      type: "text/plain;charset=utf-8",
+    },
+    {
+      path: "galaid-report.md",
+      content: analysis.report,
+      type: "text/markdown;charset=utf-8",
+    },
+    {
+      path: "manifest.json",
+      content: JSON.stringify(manifest, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "file-manifest.json",
+      content: JSON.stringify(fileManifest, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "environment-checks.json",
+      content: JSON.stringify(environmentReport, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "error-recipes.json",
+      content: JSON.stringify(errorRecipeReport, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "launch-profiles.json",
+      content: JSON.stringify({ schema: "galaid.launchProfiles.v1", profiles }, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+  ];
+
+  for (const profile of profiles) {
+    entries.push({
+      path: `profiles/${profile.title ? slugifyFilename(profile.title, profile.entryPath) : profile.entryPath}.galaid-profile.json`,
+      content: JSON.stringify(profile, null, 2),
+      type: "application/json;charset=utf-8",
+    });
+  }
+
+  if (String(errorText || "").trim()) {
+    entries.push({
+      path: "error-text.txt",
+      content: String(errorText).trim(),
+      type: "text/plain;charset=utf-8",
+    });
+  }
+
+  return {
+    filename: `${safeTitle}-galaid-support.zip`,
+    entries,
+  };
+}
+
+function buildSupportManifest(analysis, title, generatedAt) {
+  return {
+    schema: "galaid.supportBundle.v1",
+    generatedAt,
+    title,
+    privacy: {
+      localOnly: true,
+      includesGameFiles: false,
+      includesFileContents: false,
+      includesAbsolutePaths: false,
+      pathPolicy: "relative paths only",
+    },
+    summary: {
+      files: analysis.files.length,
+      totalSize: analysis.totalSize,
+      totalSizeLabel: formatBytes(analysis.totalSize),
+      status: analysis.status.label,
+      mode: analysis.mode.label,
+      riskFindings: analysis.riskTotal,
+      launchCandidates: analysis.launchCandidates.length,
+      launchProfiles: analysis.profiles.length,
+      engineClues: analysis.engines.length,
+      errorRecipeMatches: analysis.errorDiagnostics.matches.length,
+      environmentChecks: analysis.environment.checks.length,
+    },
+    roots: analysis.roots,
+    desktopMeta: analysis.desktopMeta
+      ? {
+          platform: analysis.desktopMeta.platform || "unknown",
+          selectedCount: analysis.desktopMeta.selectedCount || 0,
+          skipped: analysis.desktopMeta.skipped || 0,
+        }
+      : null,
+  };
+}
+
+function buildSupportReadme(analysis, title, generatedAt) {
+  return [
+    "GalAid support bundle",
+    "",
+    `Project: ${title}`,
+    `Generated: ${generatedAt}`,
+    `Status: ${analysis.status.label}`,
+    `Files indexed: ${formatNumber(analysis.files.length)}`,
+    `Size: ${formatBytes(analysis.totalSize)}`,
+    "",
+    "Privacy:",
+    "- This ZIP contains diagnosis metadata only.",
+    "- It does not contain game files or file contents.",
+    "- Paths are relative paths from the selected folder/file list.",
+    "- Desktop absolute paths are intentionally omitted.",
+    "",
+    "Included files:",
+    "- galaid-report.md: human-readable diagnosis",
+    "- manifest.json: bundle summary",
+    "- file-manifest.json: sanitized file list metadata",
+    "- environment-checks.json: environment checklist",
+    "- error-recipes.json: matched error recipes",
+    "- launch-profiles.json and profiles/*.json: safe launch profile hints",
+  ].join("\n");
+}
+
+function buildFileManifest(analysis) {
+  const files = analysis.files.slice(0, SUPPORT_BUNDLE_FILE_LIMIT).map((file) => ({
+    path: file.path,
+    name: file.name,
+    ext: file.ext,
+    size: file.size,
+    sizeLabel: formatBytes(file.size),
+    depth: file.depth,
+  }));
+
+  return {
+    schema: "galaid.fileManifest.v1",
+    fileCount: analysis.files.length,
+    includedCount: files.length,
+    truncated: analysis.files.length > files.length,
+    limit: SUPPORT_BUNDLE_FILE_LIMIT,
+    totalSize: analysis.totalSize,
+    totalSizeLabel: formatBytes(analysis.totalSize),
+    roots: analysis.roots,
+    categories: analysis.categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      count: category.count,
+      size: category.size,
+      sizeLabel: formatBytes(category.size),
+      samples: category.samples,
+    })),
+    files,
+  };
+}
+
+function publicErrorMatch(match) {
+  return {
+    id: match.id,
+    title: match.title,
+    category: match.category,
+    level: match.level,
+    confidence: match.confidence,
+    evidence: match.evidence,
+    cause: match.cause,
+    action: match.action,
+    checklist: match.checklist || [],
+  };
+}
+
+function downloadSupportBundle(analysis, errorText) {
+  const bundle = buildSupportBundle(analysis, errorText);
+  const blob = createZipBlob(bundle.entries);
+  downloadBlob(bundle.filename, blob);
+  showToast("求助包已生成");
+}
+
+function createZipBlob(entries) {
+  const encoder = new TextEncoder();
+  const localParts = [];
+  const centralParts = [];
+  const now = new Date();
+  const dosTime = getDosTime(now);
+  const dosDate = getDosDate(now);
+  let offset = 0;
+
+  for (const entry of entries) {
+    const nameBytes = encoder.encode(cleanZipPath(entry.path));
+    const dataBytes = typeof entry.content === "string" ? encoder.encode(entry.content) : new Uint8Array(entry.content || []);
+    const crc = crc32(dataBytes);
+    const localHeader = makeZipLocalHeader(nameBytes, dataBytes, crc, dosTime, dosDate);
+    const centralHeader = makeZipCentralHeader(nameBytes, dataBytes, crc, dosTime, dosDate, offset);
+
+    localParts.push(localHeader, dataBytes);
+    centralParts.push(centralHeader);
+    offset += localHeader.length + dataBytes.length;
+  }
+
+  const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+  const end = makeZipEndRecord(entries.length, centralSize, offset);
+  return new Blob([...localParts, ...centralParts, end], { type: "application/zip" });
+}
+
+function cleanZipPath(pathValue) {
+  return String(pathValue || "file.txt")
+    .replaceAll("\\", "/")
+    .replace(/^\/+/, "")
+    .split("/")
+    .filter((part) => part && part !== "." && part !== "..")
+    .join("/");
+}
+
+function makeZipLocalHeader(nameBytes, dataBytes, crc, dosTime, dosDate) {
+  const header = new Uint8Array(30 + nameBytes.length);
+  const view = new DataView(header.buffer);
+  view.setUint32(0, 0x04034b50, true);
+  view.setUint16(4, 20, true);
+  view.setUint16(6, 0x0800, true);
+  view.setUint16(8, 0, true);
+  view.setUint16(10, dosTime, true);
+  view.setUint16(12, dosDate, true);
+  view.setUint32(14, crc, true);
+  view.setUint32(18, dataBytes.length, true);
+  view.setUint32(22, dataBytes.length, true);
+  view.setUint16(26, nameBytes.length, true);
+  view.setUint16(28, 0, true);
+  header.set(nameBytes, 30);
+  return header;
+}
+
+function makeZipCentralHeader(nameBytes, dataBytes, crc, dosTime, dosDate, offset) {
+  const header = new Uint8Array(46 + nameBytes.length);
+  const view = new DataView(header.buffer);
+  view.setUint32(0, 0x02014b50, true);
+  view.setUint16(4, 20, true);
+  view.setUint16(6, 20, true);
+  view.setUint16(8, 0x0800, true);
+  view.setUint16(10, 0, true);
+  view.setUint16(12, dosTime, true);
+  view.setUint16(14, dosDate, true);
+  view.setUint32(16, crc, true);
+  view.setUint32(20, dataBytes.length, true);
+  view.setUint32(24, dataBytes.length, true);
+  view.setUint16(28, nameBytes.length, true);
+  view.setUint16(30, 0, true);
+  view.setUint16(32, 0, true);
+  view.setUint16(34, 0, true);
+  view.setUint16(36, 0, true);
+  view.setUint32(38, 0, true);
+  view.setUint32(42, offset, true);
+  header.set(nameBytes, 46);
+  return header;
+}
+
+function makeZipEndRecord(entryCount, centralSize, centralOffset) {
+  const record = new Uint8Array(22);
+  const view = new DataView(record.buffer);
+  view.setUint32(0, 0x06054b50, true);
+  view.setUint16(4, 0, true);
+  view.setUint16(6, 0, true);
+  view.setUint16(8, entryCount, true);
+  view.setUint16(10, entryCount, true);
+  view.setUint32(12, centralSize, true);
+  view.setUint32(16, centralOffset, true);
+  view.setUint16(20, 0, true);
+  return record;
+}
+
+function getDosTime(date) {
+  return (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+}
+
+function getDosDate(date) {
+  const year = Math.max(1980, date.getFullYear()) - 1980;
+  return (year << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc = CRC32_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+const CRC32_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let index = 0; index < 256; index += 1) {
+    let value = index;
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    }
+    table[index] = value >>> 0;
+  }
+  return table;
+})();
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -2147,6 +2476,10 @@ async function copyText(text, successMessage) {
 
 function downloadText(filename, text, type = "application/json;charset=utf-8") {
   const blob = new Blob([text], { type });
+  downloadBlob(filename, blob);
+}
+
+function downloadBlob(filename, blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -2289,13 +2622,15 @@ downloadReportButton.addEventListener("click", () => {
     showToast("还没有报告");
     return;
   }
-  const blob = new Blob([currentAnalysis.report], { type: "text/markdown;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "galaid-report.md";
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadText("galaid-report.md", currentAnalysis.report, "text/markdown;charset=utf-8");
+});
+
+downloadBundleButton.addEventListener("click", () => {
+  if (!currentAnalysis) {
+    showToast("还没有可导出的诊断");
+    return;
+  }
+  downloadSupportBundle(currentAnalysis, errorInput.value);
 });
 
 renderEmpty();

@@ -232,6 +232,10 @@ h1 {
   font-size: 14px;
 }
 
+.support-bundle-button {
+  grid-column: 1 / -1;
+}
+
 .primary-action {
   border-color: #182019;
   color: #fff;

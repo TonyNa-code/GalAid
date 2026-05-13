@@ -12,6 +12,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Match pasted error text against local advisory recipes
 - Explain likely runtime prerequisites and environment checks
 - Generate a local diagnosis report
+- Generate a local support ZIP containing diagnosis metadata only
 - Preview or list assets only when the format is open or user-controlled
 
 ## Out of Scope
@@ -35,6 +36,8 @@ The app currently reads:
 - extension
 
 The app does not read file contents for diagnosis in the MVP.
+
+Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents.
 
 ## Desktop Beta Guardrails
 
