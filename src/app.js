@@ -27,6 +27,7 @@ const errorsPanel = document.querySelector("#errorsPanel");
 const packagesPanel = document.querySelector("#packagesPanel");
 const enginePanel = document.querySelector("#enginePanel");
 const assetsPanel = document.querySelector("#assetsPanel");
+const supportPanel = document.querySelector("#supportPanel");
 const reportPanel = document.querySelector("#reportPanel");
 const emptyStateTemplate = document.querySelector("#emptyStateTemplate");
 
@@ -1615,6 +1616,7 @@ function render() {
   packagesPanel.innerHTML = renderPackages(analysis);
   enginePanel.innerHTML = renderEngines(analysis);
   assetsPanel.innerHTML = renderAssets(analysis);
+  supportPanel.innerHTML = renderSupport(analysis);
   reportPanel.innerHTML = `<div class="report-box">${escapeHtml(analysis.report)}</div>`;
 }
 
@@ -1644,6 +1646,7 @@ function renderEmpty() {
   packagesPanel.innerHTML = empty;
   enginePanel.innerHTML = empty;
   assetsPanel.innerHTML = empty;
+  supportPanel.innerHTML = empty;
   reportPanel.innerHTML = empty;
 }
 
@@ -2025,6 +2028,74 @@ function renderAssets(analysis) {
   `;
 }
 
+function renderSupport(analysis) {
+  const bundle = buildSupportBundle(analysis, errorInput.value);
+  const manifest = buildSupportManifest(analysis, getDisplayTitle(analysis), new Date().toISOString());
+  const entries = bundle.entries.map((entry) => entry.path);
+  const topIssues = analysis.findings
+    .filter((finding) => finding.level === "blocker" || finding.level === "warning")
+    .slice(0, 4);
+  const issueCards = topIssues.length
+    ? topIssues.map((finding) => `<li><strong>${escapeHtml(finding.title)}</strong><span>${escapeHtml(finding.body)}</span></li>`).join("")
+    : `<li><strong>没有明显阻断项</strong><span>可以先按推荐启动配置尝试；失败后再补充报错文本。</span></li>`;
+
+  return `
+    <div class="section-title">
+      <h3>求助包</h3>
+      <span>${entries.length} files</span>
+    </div>
+    <article class="support-summary-card">
+      <div>
+        <h4>${escapeHtml(bundle.filename)}</h4>
+        <p>适合发 issue、论坛或聊天求助。只包含诊断元数据，不包含游戏文件。</p>
+      </div>
+      <div class="support-actions">
+        <button type="button" data-support-action="copy-summary">复制求助摘要</button>
+        <button type="button" data-support-action="copy-manifest">复制清单 JSON</button>
+        <button type="button" data-support-action="download-bundle">下载求助包</button>
+      </div>
+    </article>
+    <div class="support-grid">
+      <article class="support-card">
+        <h4>隐私边界</h4>
+        <div class="support-privacy-list">
+          <span>不包含游戏文件</span>
+          <span>不读取文件内容</span>
+          <span>只保留相对路径</span>
+          <span>不上传任何内容</span>
+        </div>
+      </article>
+      <article class="support-card">
+        <h4>诊断摘要</h4>
+        <div class="support-stat-grid">
+          <span><strong>${analysis.status.label}</strong><small>status</small></span>
+          <span><strong>${formatNumber(analysis.files.length)}</strong><small>files</small></span>
+          <span><strong>${analysis.errorDiagnostics.matches.length}</strong><small>recipes</small></span>
+          <span><strong>${analysis.environment.checks.length}</strong><small>checks</small></span>
+        </div>
+      </article>
+    </div>
+    <div class="section-title">
+      <h3>会包含的文件</h3>
+      <span>metadata only</span>
+    </div>
+    <article class="support-card">
+      <div class="support-file-list">
+        ${entries.map((path) => `<code>${escapeHtml(path)}</code>`).join("")}
+      </div>
+      <p class="support-note">文件清单最多导出 ${formatNumber(SUPPORT_BUNDLE_FILE_LIMIT)} 条相对路径；超出时会在 file-manifest.json 标记 truncated。</p>
+    </article>
+    <div class="section-title">
+      <h3>可复制摘要</h3>
+      <span>issue-ready</span>
+    </div>
+    <article class="support-card">
+      <ul class="support-issue-list">${issueCards}</ul>
+      <pre class="support-preview"><code>${escapeHtml(buildSupportSummaryText(analysis, manifest, bundle.filename))}</code></pre>
+    </article>
+  `;
+}
+
 function buildMarkdownReport(analysis, errorText) {
   const lines = [];
   lines.push("# GalAid diagnosis report");
@@ -2271,6 +2342,39 @@ function buildSupportReadme(analysis, title, generatedAt) {
   ].join("\n");
 }
 
+function buildSupportSummaryText(analysis, manifest, filename) {
+  const lines = [];
+  const topLaunch = analysis.launchCandidates[0];
+  const engineNames = analysis.engines.slice(0, 3).map((engine) => engine.name);
+  const warnings = analysis.findings
+    .filter((finding) => finding.level === "blocker" || finding.level === "warning")
+    .slice(0, 5);
+
+  lines.push("## GalAid 求助摘要");
+  lines.push("");
+  lines.push(`- 项目：${manifest.title}`);
+  lines.push(`- 状态：${analysis.status.label}`);
+  lines.push(`- 文件：${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
+  lines.push(`- 模式：${analysis.mode.label}`);
+  lines.push(`- 推荐入口：${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : "未找到"}`);
+  lines.push(`- 引擎线索：${engineNames.length ? engineNames.join(", ") : "未识别"}`);
+  lines.push(`- 环境结论：${analysis.environment.summary.label}`);
+  lines.push(`- 报错配方：${analysis.errorDiagnostics.summary.label}`);
+  lines.push(`- 求助包：${filename}`);
+  lines.push("");
+  lines.push("### 主要提示");
+  if (warnings.length) {
+    for (const finding of warnings) lines.push(`- [${finding.level}] ${finding.title}: ${finding.body}`);
+  } else {
+    lines.push("- 暂无明显阻断项。");
+  }
+  lines.push("");
+  lines.push("### 隐私说明");
+  lines.push("- 求助包只包含诊断元数据，不包含游戏文件或文件内容。");
+  lines.push("- 文件路径为相对路径，桌面绝对路径已省略。");
+  return lines.join("\n");
+}
+
 function buildFileManifest(analysis) {
   const files = analysis.files.slice(0, SUPPORT_BUNDLE_FILE_LIMIT).map((file) => ({
     path: file.path,
@@ -2470,7 +2574,20 @@ function getPublicProfile(profile) {
 }
 
 async function copyText(text, successMessage) {
-  await navigator.clipboard.writeText(text);
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.append(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    textArea.remove();
+  }
   showToast(successMessage);
 }
 
@@ -2504,6 +2621,24 @@ profilesPanel.addEventListener("click", (event) => {
     void copyText(profileJson, "配置 JSON 已复制");
   } else if (action === "download-json") {
     downloadText(`${profile.id}.galaid-profile.json`, profileJson);
+  }
+});
+
+supportPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-support-action]");
+  if (!button || !currentAnalysis) return;
+
+  const bundle = buildSupportBundle(currentAnalysis, errorInput.value);
+  const manifestEntry = bundle.entries.find((entry) => entry.path === "manifest.json");
+  const manifest = JSON.parse(manifestEntry.content);
+  const action = button.dataset.supportAction;
+
+  if (action === "copy-summary") {
+    void copyText(buildSupportSummaryText(currentAnalysis, manifest, bundle.filename), "求助摘要已复制");
+  } else if (action === "copy-manifest") {
+    void copyText(manifestEntry.content, "求助包清单已复制");
+  } else if (action === "download-bundle") {
+    downloadSupportBundle(currentAnalysis, errorInput.value);
   }
 });
 
@@ -2613,8 +2748,7 @@ copyReportButton.addEventListener("click", async () => {
     showToast("还没有报告");
     return;
   }
-  await navigator.clipboard.writeText(currentAnalysis.report);
-  showToast("报告已复制");
+  await copyText(currentAnalysis.report, "报告已复制");
 });
 
 downloadReportButton.addEventListener("click", () => {

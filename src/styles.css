@@ -493,6 +493,8 @@ textarea {
 .error-summary,
 .error-recipe,
 .recipe-library-card,
+.support-summary-card,
+.support-card,
 .package-card,
 .package-roadmap article {
   border: 1px solid var(--line);
@@ -538,6 +540,8 @@ textarea {
 .error-summary h4,
 .error-recipe h4,
 .recipe-library-card h4,
+.support-summary-card h4,
+.support-card h4,
 .package-card h4,
 .package-roadmap h4 {
   margin: 0 0 6px;
@@ -554,6 +558,8 @@ textarea {
 .error-summary p,
 .error-recipe p,
 .recipe-library-card p,
+.support-summary-card p,
+.support-card p,
 .package-card p,
 .package-roadmap p,
 .empty-state p {
@@ -776,6 +782,120 @@ textarea {
   margin-top: 0;
 }
 
+.support-summary-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  border-color: rgba(54, 167, 121, 0.32);
+}
+
+.support-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.support-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.support-card {
+  display: grid;
+  gap: 12px;
+}
+
+.support-privacy-list,
+.support-file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.support-privacy-list span,
+.support-file-list code {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.support-file-list code {
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+
+.support-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.support-stat-grid span {
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+  background: var(--panel-soft);
+}
+
+.support-stat-grid strong {
+  font-size: 18px;
+}
+
+.support-stat-grid small,
+.support-note {
+  color: var(--muted);
+}
+
+.support-issue-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.support-issue-list li {
+  display: grid;
+  gap: 3px;
+  border-left: 3px solid var(--amber);
+  padding-left: 10px;
+}
+
+.support-issue-list span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.support-preview {
+  overflow: auto;
+  max-height: 260px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfb;
+  white-space: pre-wrap;
+  color: #334039;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .candidate-score {
   align-self: start;
   min-width: 54px;
@@ -976,7 +1096,8 @@ textarea {
   }
 
   .grid-two,
-  .environment-grid {
+  .environment-grid,
+  .support-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1004,8 +1125,18 @@ textarea {
   }
 
   .error-summary,
-  .error-recipe-header {
+  .error-recipe-header,
+  .support-summary-card {
     grid-template-columns: 1fr;
+  }
+
+  .support-actions,
+  .support-actions button {
+    width: 100%;
+  }
+
+  .support-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .error-recipe-header .env-status {

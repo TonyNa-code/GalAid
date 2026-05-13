@@ -37,7 +37,7 @@ The app currently reads:
 
 The app does not read file contents for diagnosis in the MVP.
 
-Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents.
+Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. The support tab previews the included file list before download.
 
 ## Desktop Beta Guardrails
 

@@ -33,7 +33,8 @@ GalAid turns that mess into a small diagnosis report.
 - Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
 - Desktop beta with native folder/file picker and recursive local scanning
 - Copy or download a Markdown diagnosis report
-- Download a local support ZIP with report, safe launch profiles, matched error recipes, environment checks, and sanitized file metadata
+- Preview and download a local support ZIP with report, safe launch profiles, matched error recipes, environment checks, and sanitized file metadata
+- Copy an issue-ready support summary without exposing game files
 - Runs fully in the browser with no upload
 
 ## Launch Profiles
@@ -74,6 +75,8 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - individual `profiles/*.galaid-profile.json` files
 
 It does not include game files or file contents. File paths are relative, and desktop absolute paths are omitted. Very large folders are capped in `file-manifest.json` to keep the bundle small.
+
+The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary.
 
 ## Large Games
 
