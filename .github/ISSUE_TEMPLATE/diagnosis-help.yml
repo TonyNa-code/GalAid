@@ -1,0 +1,43 @@
+name: Diagnosis help
+description: Ask for help understanding a GalAid report or startup issue.
+title: "[Help] "
+labels: ["help wanted", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        GalAid works best with metadata-only reports.
+
+        Please use the `求助` tab to copy the issue-ready summary. Do not upload game files or copyrighted assets.
+  - type: textarea
+    id: summary
+    attributes:
+      label: GalAid support summary
+      description: Paste the redacted summary from the 求助 tab.
+      placeholder: "## GalAid 求助摘要 ..."
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: List the route steps you already tried.
+      placeholder: "Example: extracted all parts, moved folder to C:/Games, tried the recommended profile."
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: "The game should start from the recommended launcher."
+    validations:
+      required: false
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed private paths, usernames, machine names, emails, and tokens.
+          required: true
+        - label: I did not attach game files, extracted scripts, CG, audio, video, cracks, serials, or bypass instructions.
+          required: true

@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a GalAid UI, diagnosis, desktop, or reporting bug.
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please keep examples metadata-only and redact private paths.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What went wrong?
+      placeholder: "Example: The route tab says a package-only scan can be launched."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest set of steps that shows the bug.
+      placeholder: |
+        1. Open index.html
+        2. Click 包/镜像样例
+        3. Open 路线
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "It should tell me to extract or mount the package first."
+    validations:
+      required: true
+  - type: textarea
+    id: galaid-output
+    attributes:
+      label: Redacted GalAid output
+      description: Paste a support summary or relevant report lines if useful.
+      placeholder: "Relative paths only. No game files."
+    validations:
+      required: false
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Web app
+        - Desktop beta
+        - Error recipe
+        - Launch profile
+        - Support bundle
+        - Documentation
+        - Unsure
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed private paths, usernames, machine names, emails, and tokens.
+          required: true
+        - label: I did not attach game files, extracted scripts, CG, audio, video, cracks, serials, or bypass instructions.
+          required: true

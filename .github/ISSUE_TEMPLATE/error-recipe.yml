@@ -1,0 +1,67 @@
+name: New error recipe
+description: Suggest a safe GalAid diagnosis rule for a startup error.
+title: "[Recipe] "
+labels: ["recipe", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping grow GalAid's community recipe library.
+
+        Please redact personal paths, usernames, machine names, serials, and any game content. A short error message is enough.
+  - type: textarea
+    id: error-text
+    attributes:
+      label: Redacted error text
+      description: Paste only the relevant error line or dialog text. Do not attach game files or logs with private paths.
+      placeholder: "Example: The program can't start because d3dx9_43.dll is missing."
+    validations:
+      required: true
+  - type: textarea
+    id: likely-cause
+    attributes:
+      label: Likely cause
+      description: What do you think this error usually means?
+      placeholder: "Old DirectX 9 component missing."
+    validations:
+      required: false
+  - type: textarea
+    id: safe-action
+    attributes:
+      label: Safe next step
+      description: Suggest a local, legal, non-destructive action.
+      placeholder: "Install the official DirectX End-User Runtime and retry from the recommended launcher."
+    validations:
+      required: false
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - runtime
+        - locale
+        - files
+        - package
+        - web
+        - engine
+        - system
+        - unsure
+    validations:
+      required: true
+  - type: textarea
+    id: galaid-output
+    attributes:
+      label: GalAid output
+      description: Paste the redacted support summary or relevant report lines if available.
+      placeholder: "Use the 求助 tab's issue-ready summary. Relative paths only."
+    validations:
+      required: false
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed private paths, usernames, machine names, emails, and tokens.
+          required: true
+        - label: I did not attach game files, extracted scripts, CG, audio, video, cracks, serials, or bypass instructions.
+          required: true

@@ -72,7 +72,13 @@ npm run build:recipes
 npm run check
 ```
 
-See `docs/ERROR_RECIPES.md` for the recipe format and contribution notes.
+See [docs/ERROR_RECIPES.md](docs/ERROR_RECIPES.md) for the recipe format and contribution notes.
+
+## Contributing
+
+Recipe improvements, engine fingerprints, docs, and redacted false-positive reports are welcome. Start with [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+For new startup-error rules, open a "New error recipe" issue or edit `data/error-recipes.json` directly in a pull request.
 
 ## Support Bundle
 
