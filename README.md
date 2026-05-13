@@ -21,6 +21,7 @@ GalAid turns that mess into a small diagnosis report.
 ## Current Features
 
 - Detect likely launch entries: `.exe`, `.bat`, `.cmd`, `.lnk`, `index.html`
+- Generate safe launch profiles with command hints and portable JSON config
 - Flag installer/support tools that should not be used as the main launcher
 - Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
 - Detect engine clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, and TyranoScript
@@ -31,6 +32,17 @@ GalAid turns that mess into a small diagnosis report.
 - Desktop beta with native folder/file picker and recursive local scanning
 - Copy or download a Markdown diagnosis report
 - Runs fully in the browser with no upload
+
+## Launch Profiles
+
+GalAid can generate a launch profile from the best executable candidate. A profile includes:
+
+- entry file and working directory
+- a Windows command hint
+- engine and locale notes
+- a portable `.galaid-profile.json` file
+
+Profiles do not auto-run games. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker.
 
 ## Large Games
 

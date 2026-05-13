@@ -20,6 +20,7 @@ const scanTitle = document.querySelector("#scanTitle");
 const scanDetail = document.querySelector("#scanDetail");
 const scanProgressBar = document.querySelector("#scanProgressBar");
 const launchPanel = document.querySelector("#launchPanel");
+const profilesPanel = document.querySelector("#profilesPanel");
 const packagesPanel = document.querySelector("#packagesPanel");
 const enginePanel = document.querySelector("#enginePanel");
 const assetsPanel = document.querySelector("#assetsPanel");
@@ -233,6 +234,7 @@ function analyze(files, errorText = "") {
   const packages = analyzePackages(files);
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
+  const profiles = buildLaunchProfiles(launchCandidates, engines, packages);
   const findings = buildFindings(files, roots, engines, launchCandidates, errorText, mode, packages);
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
@@ -247,6 +249,7 @@ function analyze(files, errorText = "") {
     packages,
     engines,
     launchCandidates,
+    profiles,
     findings,
     status,
     riskTotal,
@@ -768,6 +771,88 @@ function detectLaunchCandidates(files, engines) {
     .slice(0, 8);
 }
 
+function buildLaunchProfiles(launchCandidates, engines, packages) {
+  if (!launchCandidates.length) return [];
+  const topEngines = engines.slice(0, 2).map((engine) => engine.name);
+  const localeSensitive = engines.some((engine) => ["kirikiri", "nscript", "siglus"].includes(engine.id));
+  const packageBlocked = packages.hasPackages && !launchCandidates.length;
+
+  return launchCandidates.slice(0, 4).map((candidate, index) => {
+    const file = candidate.file;
+    const workingDirectory = getDirectoryName(file.path);
+    const workingDirectoryFull = file.fullPath ? getDirectoryName(file.fullPath) : "";
+    const entryName = file.name;
+    const notes = [];
+    const checks = [
+      "先确认游戏已经完整解压，不要在压缩软件预览窗口里直接运行。",
+      "如果闪退或乱码，优先尝试英文短路径和日区环境。",
+    ];
+
+    if (topEngines.length) notes.push(`Engine clues: ${topEngines.join(", ")}`);
+    if (localeSensitive) notes.push("Likely needs Japanese locale or Locale Emulator.");
+    if (/[^\x00-\x7F]/.test(file.path)) notes.push("Path contains non-ASCII characters; old games may fail.");
+    if (packageBlocked) notes.push("Archive/image handling should happen before launching.");
+    if (candidate.reasons.length) notes.push(`Reason: ${candidate.reasons.join(", ")}`);
+
+    const commandPreview = buildWindowsCommand({
+      entryName,
+      entryPath: file.path,
+      workingDirectory,
+      useAbsolute: false,
+    });
+    const commandAbsolute = buildWindowsCommand({
+      entryName,
+      entryPath: file.fullPath || file.path,
+      workingDirectory: workingDirectoryFull || workingDirectory,
+      useAbsolute: Boolean(file.fullPath),
+    });
+
+    return {
+      id: `profile-${index + 1}`,
+      title: index === 0 ? "Recommended launch profile" : `Alternative profile ${index + 1}`,
+      entryName,
+      entryPath: file.path,
+      entryFullPath: file.fullPath || "",
+      workingDirectory,
+      hasDesktopPath: Boolean(file.fullPath),
+      confidence: candidate.score,
+      commandPreview,
+      commandAbsolute,
+      notes,
+      checks,
+      config: {
+        schema: "galaid.launchProfile.v1",
+        title: index === 0 ? "Recommended launch profile" : `Alternative profile ${index + 1}`,
+        entryPath: file.path,
+        workingDirectory,
+        command: commandPreview,
+        confidence: candidate.score,
+        engineClues: topEngines,
+        localeSensitive,
+      },
+    };
+  });
+}
+
+function getDirectoryName(pathValue) {
+  const normalized = String(pathValue || "").replaceAll("\\", "/");
+  const index = normalized.lastIndexOf("/");
+  return index > 0 ? normalized.slice(0, index) : ".";
+}
+
+function buildWindowsCommand({ entryName, entryPath, workingDirectory, useAbsolute }) {
+  if (useAbsolute) {
+    return `cd /d "${toWindowsPath(workingDirectory || ".")}" && start "" "${entryName}"`;
+  }
+  const directory = workingDirectory && workingDirectory !== "." ? toWindowsPath(workingDirectory) : ".";
+  const commandEntry = entryName || toWindowsPath(entryPath);
+  return `cd /d "${directory}" && start "" "${commandEntry}"`;
+}
+
+function toWindowsPath(pathValue) {
+  return String(pathValue || ".").replaceAll("/", "\\");
+}
+
 function isSetupLike(lowerPath) {
   return /(setup|install|installer|autorun|inst|修正|patch)/i.test(lowerPath);
 }
@@ -1161,6 +1246,7 @@ function render() {
   riskCount.textContent = String(analysis.riskTotal);
 
   launchPanel.innerHTML = renderLaunch(analysis);
+  profilesPanel.innerHTML = renderProfiles(analysis);
   packagesPanel.innerHTML = renderPackages(analysis);
   enginePanel.innerHTML = renderEngines(analysis);
   assetsPanel.innerHTML = renderAssets(analysis);
@@ -1187,6 +1273,7 @@ function renderEmpty() {
   scanBanner.hidden = true;
   const empty = emptyStateTemplate.innerHTML;
   launchPanel.innerHTML = empty;
+  profilesPanel.innerHTML = empty;
   packagesPanel.innerHTML = empty;
   enginePanel.innerHTML = empty;
   assetsPanel.innerHTML = empty;
@@ -1247,6 +1334,64 @@ function renderFinding(finding) {
       <div>
         <h4>${escapeHtml(finding.title)}</h4>
         <p>${escapeHtml(finding.body)}</p>
+      </div>
+    </article>
+  `;
+}
+
+function renderProfiles(analysis) {
+  if (!analysis.profiles.length) {
+    return `
+      <div class="section-title"><h3>启动配置</h3><span>0 profiles</span></div>
+      <article class="finding warning">
+        <div>
+          <h4>还不能生成启动配置</h4>
+          <p>当前没有可信启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。</p>
+        </div>
+      </article>
+    `;
+  }
+
+  return `
+    <div class="section-title">
+      <h3>启动配置</h3>
+      <span>${analysis.profiles.length} profiles</span>
+    </div>
+    <article class="finding info">
+      <div>
+        <h4>安全模式</h4>
+        <p>GalAid 只生成配置和命令，不会自动运行游戏。桌面版复制命令时可使用本机真实路径，报告和页面默认保留相对路径。</p>
+      </div>
+    </article>
+    <div class="card-list profile-list">
+      ${analysis.profiles.map(renderProfileCard).join("")}
+    </div>
+  `;
+}
+
+function renderProfileCard(profile) {
+  return `
+    <article class="profile-card">
+      <div class="profile-header">
+        <div>
+          <h4>${escapeHtml(profile.title)}</h4>
+          <p>${escapeHtml(profile.entryPath)}</p>
+        </div>
+        <div class="candidate-score">${profile.confidence}</div>
+      </div>
+      <div class="meta-row">
+        <span class="chip good">entry: ${escapeHtml(profile.entryName)}</span>
+        <span class="chip">workdir: ${escapeHtml(profile.workingDirectory)}</span>
+        <span class="chip ${profile.hasDesktopPath ? "good" : "warn"}">${profile.hasDesktopPath ? "desktop path ready" : "relative path only"}</span>
+      </div>
+      <pre class="command-box"><code>${escapeHtml(profile.commandPreview)}</code></pre>
+      <div class="profile-notes">
+        ${profile.notes.map((note) => `<span>${escapeHtml(note)}</span>`).join("")}
+      </div>
+      <div class="profile-actions">
+        <button type="button" data-profile-action="copy-command" data-profile-id="${profile.id}">复制命令</button>
+        <button type="button" data-profile-action="copy-json" data-profile-id="${profile.id}">复制 JSON</button>
+        <button type="button" data-profile-action="download-json" data-profile-id="${profile.id}">下载配置</button>
       </div>
     </article>
   `;
@@ -1412,6 +1557,18 @@ function buildMarkdownReport(analysis, errorText) {
     lines.push("- No launch candidates found.");
   }
   lines.push("");
+  lines.push("## Launch profiles");
+  if (analysis.profiles.length) {
+    for (const profile of analysis.profiles) {
+      lines.push(`- ${profile.title}: ${profile.entryPath}`);
+      lines.push(`  - Workdir: ${profile.workingDirectory}`);
+      lines.push(`  - Command: ${profile.commandPreview}`);
+      for (const note of profile.notes.slice(0, 4)) lines.push(`  - ${note}`);
+    }
+  } else {
+    lines.push("- No launch profiles generated.");
+  }
+  lines.push("");
   lines.push("## Engine clues");
   if (analysis.engines.length) {
     for (const engine of analysis.engines) {
@@ -1470,6 +1627,49 @@ function showToast(message) {
   document.body.append(toast);
   window.setTimeout(() => toast.remove(), 2400);
 }
+
+function getPublicProfile(profile) {
+  return {
+    ...profile.config,
+    checks: profile.checks,
+    notes: profile.notes,
+    privacy: "This profile intentionally omits absolute local paths.",
+  };
+}
+
+async function copyText(text, successMessage) {
+  await navigator.clipboard.writeText(text);
+  showToast(successMessage);
+}
+
+function downloadText(filename, text, type = "application/json;charset=utf-8") {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+profilesPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-profile-action]");
+  if (!button || !currentAnalysis) return;
+
+  const profile = currentAnalysis.profiles.find((item) => item.id === button.dataset.profileId);
+  if (!profile) return;
+
+  const action = button.dataset.profileAction;
+  const profileJson = JSON.stringify(getPublicProfile(profile), null, 2);
+  if (action === "copy-command") {
+    const command = profile.hasDesktopPath ? profile.commandAbsolute : profile.commandPreview;
+    void copyText(command, profile.hasDesktopPath ? "已复制桌面命令" : "已复制相对命令");
+  } else if (action === "copy-json") {
+    void copyText(profileJson, "配置 JSON 已复制");
+  } else if (action === "download-json") {
+    downloadText(`${profile.id}.galaid-profile.json`, profileJson);
+  }
+});
 
 chooseFolderButton.addEventListener("click", () => {
   if (desktopApi) {

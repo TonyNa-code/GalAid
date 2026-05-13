@@ -6,6 +6,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 
 - Inspect local file names, paths, extensions, and sizes
 - Identify likely launchers and setup tools
+- Generate local launch profiles that the user can inspect before using
 - Detect common visual novel engine markers
 - Explain common runtime errors
 - Generate a local diagnosis report
@@ -43,3 +44,4 @@ The desktop beta should keep these defaults:
 - no background process scanning unrelated folders
 - clear confirmation before opening external tools
 - visible warnings before running executables
+- launch profiles should stay inspectable and should not auto-run by default

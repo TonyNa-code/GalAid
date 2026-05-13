@@ -483,6 +483,7 @@ textarea {
 .candidate,
 .engine-card,
 .asset-card,
+.profile-card,
 .package-card,
 .package-roadmap article {
   border: 1px solid var(--line);
@@ -522,6 +523,7 @@ textarea {
 .candidate h4,
 .engine-card h4,
 .asset-card h4,
+.profile-card h4,
 .package-card h4,
 .package-roadmap h4 {
   margin: 0 0 6px;
@@ -532,6 +534,7 @@ textarea {
 .candidate p,
 .engine-card p,
 .asset-card p,
+.profile-card p,
 .package-card p,
 .package-roadmap p,
 .empty-state p {
@@ -543,6 +546,58 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
+}
+
+.profile-list {
+  margin-top: 10px;
+}
+
+.profile-card {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+}
+
+.command-box {
+  overflow-x: auto;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfb;
+  color: #334039;
+  font-size: 13px;
+}
+
+.profile-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-notes span {
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: rgba(64, 125, 163, 0.08);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
 }
 
 .candidate-score {
