@@ -46,6 +46,16 @@ async function main() {
       "Packed Size = 1200000000",
       "Encrypted = -",
       "",
+      "Path = MoonlightCafe/script.ypf",
+      "Size = 188000000",
+      "Packed Size = 160000000",
+      "Encrypted = -",
+      "",
+      "Path = MoonlightCafe/graphics.gxp",
+      "Size = 512000000",
+      "Packed Size = 410000000",
+      "Encrypted = -",
+      "",
       "Path = MoonlightCafe/system.dat",
       "Size = 4800000",
       "Packed Size = 2800000",
@@ -57,11 +67,12 @@ async function main() {
   );
   assert.equal(rarPreview.status, "ok");
   assert.equal(rarPreview.format, "RAR");
-  assert.equal(rarPreview.fileCount, 4);
+  assert.equal(rarPreview.fileCount, 6);
   assert.equal(rarPreview.encryptedEntries, 1);
   assert.deepEqual(rarPreview.signals.launchSamples, ["MoonlightCafe/Game.exe"]);
   assert.deepEqual(rarPreview.signals.installerSamples, ["MoonlightCafe/setup.exe"]);
-  assert.equal(rarPreview.signals.assetCounts.commercialArchives, 2);
+  assert.equal(rarPreview.signals.assetCounts.commercialArchives, 4);
+  assert.equal(rarPreview.signals.engineHints[0].id, "commercial-proprietary");
 
   const isoPath = path.join(tempDir, "MoonlightCafe_Bonus.iso");
   await fs.writeFile(isoPath, Buffer.alloc(32));

@@ -24,8 +24,8 @@ const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "bmp", "webp", "tga", "dds", "
 const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "mid", "midi"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
-const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
-const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]));
+const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
+const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf", "ypf", "int", "gxp", "noa", "med", "wsm"]));
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 
 async function previewArchiveFile(filePath, ext) {

@@ -45,6 +45,12 @@ Engine cards show:
 - sample metadata paths
 - a next step for startup diagnosis
 
+## Commercial / Self-Developed Structure
+
+The `commercial-proprietary` rule is intentionally generic. It covers common VN startup-chain metadata such as root launchers, same-folder DLL plugins, config files, and resource families like `.arc`, `.dat`, `.pak`, `.pck`, `.cpk`, `.pac`, `.vol`, `.ypf`, `.int`, and `.gxp`.
+
+Use this route when the folder clearly looks like a company-specific engine but does not expose a reliable public engine name. The advice should stay focused on startup diagnosis: keep the original relative layout, launch from the correct working directory, verify locale/path/runtimes, and avoid copying only the `.exe`.
+
 ## Safety Notes
 
 - Use fake or redacted sample paths in issues and tests.

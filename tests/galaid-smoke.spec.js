@@ -55,8 +55,19 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(page.locator(".package-roadmap")).toContainText("包里看到启动线索");
   await expect(page.locator("main")).toContainText("Blocked");
 
+  await page.locator('[data-tab="roadmap"]').click();
+  await expect(page.locator(".roadmap-step").first()).toContainText("先处理压缩包或镜像");
+  await expect(page.locator(".roadmap-step").first()).toContainText("解压/挂载并重扫");
+
+  await page.locator('[data-tab="support"]').click();
+  await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+
+  await page.locator("#assistantLanguageSelect").selectOption("en");
+  await page.locator('[data-tab="report"]').click();
+  await expect(page.locator("#reportPanel")).toContainText("## Next-step roadmap");
+
   await page.locator('[data-tab="launch"]').click();
-  await expect(page.getByRole("heading", { name: "没有候选入口" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No launch candidate" })).toBeVisible();
 });
 
 test("prepared desktop handoff highlights the next launch entry", async ({ page }) => {
@@ -156,6 +167,7 @@ test("commercial sample promotes proprietary engine startup route", async ({ pag
   await expect(page.locator("#enginePanel")).toContainText("商业/自研引擎（文件结构）");
   await expect(page.locator("#enginePanel")).toContainText("data02.pak");
   await expect(page.locator("#enginePanel")).toContainText("movie.cpk");
+  await expect(page.locator("#enginePanel")).toContainText("graphics.gxp");
   await expect(page.locator("#enginePanel")).toContainText("MovieRuntime.dll");
   await expect(page.locator("#enginePanel")).toContainText("为什么命中");
   await expect(page.locator("#enginePanel")).toContainText("commercial resource archive family");

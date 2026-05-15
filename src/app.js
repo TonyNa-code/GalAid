@@ -41,9 +41,9 @@ const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
-const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
+const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
 const ENGINE_RULES = Array.isArray(window.GALAID_ENGINE_RULES) ? window.GALAID_ENGINE_RULES : [];
-const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]));
+const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf", "ypf", "int", "gxp", "noa", "med", "wsm"]));
 const SCAN_BATCH_SIZE = 1000;
 const LARGE_FOLDER_THRESHOLD = 20000;
 const HUGE_FOLDER_THRESHOLD = 50000;
@@ -1085,6 +1085,8 @@ const COMMERCIAL_SAMPLE_FILES = [
   ["AsterCompanyGame/data00.arc", 1380000000],
   ["AsterCompanyGame/data01.arc", 824000000],
   ["AsterCompanyGame/data02.pak", 712000000],
+  ["AsterCompanyGame/script.ypf", 188000000],
+  ["AsterCompanyGame/graphics.gxp", 512000000],
   ["AsterCompanyGame/voice.pck", 356000000],
   ["AsterCompanyGame/movie.cpk", 604000000],
   ["AsterCompanyGame/patch.pac", 99000000],
@@ -1613,7 +1615,7 @@ function getArchiveInfo(file) {
       family: match[1],
       volumeIndex,
       role: volumeIndex === 1 ? "start here" : "follow-up volume",
-      action: volumeIndex === 1 ? "把所有 .part*.rar 分卷放在同一目录，再从 part1.rar 开始完整解压" : "不要单独打开这个分卷；先和 part1.rar 放在同一目录",
+      action: volumeIndex === 1 ? "把所有 .part*.rar 放在同一目录；桌面版可点解压并重扫，或手动从 part1.rar 完整解压" : "这是后续分卷，不要单独打开；先和 part1.rar 放在同一目录",
       file,
     };
   }
@@ -1627,7 +1629,7 @@ function getArchiveInfo(file) {
       family: match[1],
       volumeIndex,
       role: volumeIndex === 1 ? "start here" : "follow-up volume",
-      action: volumeIndex === 1 ? `把所有 .${match[2]} 分卷放在同一目录，再从 .${match[2]}.001 开始完整解压` : "不要单独打开这个分卷；先和第一分卷放在同一目录",
+      action: volumeIndex === 1 ? `把所有 .${match[2]} 分卷放在同一目录；桌面版可点解压并重扫，或手动从 .${match[2]}.001 完整解压` : "这是后续分卷，不要单独打开；先和第一分卷放在同一目录",
       file,
     };
   }
@@ -1640,7 +1642,7 @@ function getArchiveInfo(file) {
       family: match[1],
       volumeIndex: Number(match[2]) + 2,
       role: "follow-up volume",
-      action: "这是旧式 RAR 后续分卷；请和同名 .rar 主分卷放在同一目录后再解压",
+      action: "这是旧式 RAR 后续分卷；请和同名 .rar 主分卷放在同一目录后再从主分卷解压",
       file,
     };
   }
@@ -1652,7 +1654,7 @@ function getArchiveInfo(file) {
       family: stripLastExtension(lower),
       volumeIndex: file.ext === "rar" ? 1 : null,
       role: "single archive or first volume",
-      action: "先完整解压到短英文路径，再把解压后的游戏文件夹拖进 GalAid",
+      action: "桌面版可点解压并重扫；也可以手动完整解压到短英文路径，再把解压后的游戏文件夹拖进 GalAid",
       file,
     };
   }
@@ -1682,7 +1684,7 @@ function getDiscInfo(file) {
     format: `${ext.toUpperCase()} disc image`,
     family,
     role: roleByExt[ext] || "disc image file",
-    action: ext === "iso" || ext === "nrg" || ext === "isz" || ext === "cdi" ? "先挂载或解包镜像，再从虚拟光驱运行安装器或复制完整游戏目录" : "先和配套镜像描述/数据文件放在同一目录，再挂载或解包",
+    action: ext === "iso" || ext === "nrg" || ext === "isz" || ext === "cdi" ? "桌面版可点挂载/解包并重扫；挂载后从虚拟光驱运行安装器，或使用解包后的完整目录" : "先把配套描述/数据文件放在同一目录，再挂载或解包并重扫",
     file,
   };
 }
@@ -1733,11 +1735,11 @@ function buildArchiveSets(archives) {
         ? `可能缺少分卷：${missing.join(", ")}`
         : isSplit
           ? "分卷看起来放在一起了"
-          : "单个压缩包，网页版不会读取内部目录";
+          : "单个压缩包，网页只识别外层文件";
       const nextStep = archivePreview?.status === "ok" && previewLaunchSample
-        ? `先完整解压，再优先检查 ${previewLaunchSample}`
+        ? `点击解压并重扫或手动完整解压，再优先检查 ${previewLaunchSample}`
         : archivePreview?.status === "ok" && previewInstallerSample
-          ? `先完整解压，再检查安装器/介质线索 ${previewInstallerSample}`
+          ? `点击准备动作或手动完整解压，再检查安装器/介质线索 ${previewInstallerSample}`
         : first.action;
 
       return {
@@ -1765,11 +1767,11 @@ function summarizeArchivePreview(preview) {
   const label = getPreviewFormatLabel(preview);
   if (preview.status !== "ok") return `${label} 预检不可用：${preview.warnings?.[0] || "无法读取元数据"}`;
   if (preview.packageKind === "disc-image") {
-    const pieces = [`${label} 已识别：镜像元数据`];
+    const pieces = [`${label} 已识别：只读取镜像介质元数据`];
     if (preview.warnings?.length) pieces.push(preview.warnings[0]);
     return pieces.join("，");
   }
-  const pieces = [`${label} 目录已预检：${formatNumber(preview.fileCount || 0)} files`];
+  const pieces = [`${label} 目录已预检：${formatNumber(preview.fileCount || 0)} 个内部文件`];
   const launchCount = preview.signals?.launchCandidateCount || 0;
   if (launchCount) pieces.push(`${formatNumber(launchCount)} 个解压后启动线索`);
   const installerCount = preview.signals?.installerCount || 0;
@@ -1808,7 +1810,7 @@ function buildDiscSets(discs) {
       if (exts.has("cue") && !exts.has("bin")) {
         level = "warning";
         summary = "有 .cue 但没看到同名 .bin";
-        nextStep = "把 .cue 和配套 .bin 放在同一目录后再挂载";
+        nextStep = "把 .cue 和配套 .bin 放在同一目录后再挂载或解包";
       } else if (exts.has("bin") && !exts.has("cue") && byExt.get("cue")) {
         level = "warning";
         summary = "有 .bin，但没有同名 .cue";
@@ -1816,11 +1818,11 @@ function buildDiscSets(discs) {
       } else if (exts.has("mds") && !exts.has("mdf")) {
         level = "warning";
         summary = "有 .mds 但没看到同名 .mdf";
-        nextStep = "把 .mds 和配套 .mdf 放在同一目录后再挂载";
+        nextStep = "把 .mds 和配套 .mdf 放在同一目录后再挂载或解包";
       } else if (exts.has("ccd") && !exts.has("img")) {
         level = "warning";
         summary = "有 .ccd 但没看到同名 .img";
-        nextStep = "把 .ccd/.img/.sub 放在同一目录后再挂载";
+        nextStep = "把 .ccd/.img/.sub 放在同一目录后再挂载或解包";
       } else if (exts.has("iso")) {
         summary = archivePreview ? summarizeArchivePreview(archivePreview) : "ISO 通常可以直接挂载";
       }
@@ -1851,7 +1853,7 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
   if (archives.length && !executableCount) {
     steps.push({
       title: "先解压，再诊断",
-      body: "当前更像压缩包阶段。先确认所有分卷都在同一目录，从 part1.rar、.7z.001 或 .zip.001 这类第一分卷开始完整解压，再把解压后的游戏文件夹拖回来。",
+      body: "当前更像压缩包阶段。先确认所有分卷都在同一目录；桌面版可点解压并重扫，或手动从 part1.rar、.7z.001、.zip.001 这类第一分卷完整解压。",
     });
   }
 
@@ -1868,32 +1870,32 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
     const engineNames = (preview.signals.engineHints || []).slice(0, 2).map((hint) => hint.name).join(" / ");
     steps.push({
       title: "包里看到启动线索",
-      body: `桌面预检只读取本地目录/介质元数据；已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。需要时点击准备动作完整解压、挂载或解包，再扫描处理后的文件夹。`,
+      body: `预检只读取本地目录/介质元数据；已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。需要时点击准备动作，GalAid 才会本地解压、挂载或解包并重扫。`,
     });
   } else if (previewWithInstaller) {
     const sample = previewWithInstaller.archivePreview.signals.installerSamples[0];
     steps.push({
       title: "看到古早安装盘线索",
-      body: `预检里看到了 ${sample} 这类安装/介质线索。先按压缩包或镜像的正常流程解压、挂载或安装，再把安装后的完整目录拖回 GalAid。`,
+      body: `预检里看到了 ${sample} 这类安装/介质线索。先按压缩包或镜像的正常流程解压、挂载或安装，再用安装后的完整目录重新诊断。`,
     });
   } else if (previewedArchiveSet) {
     steps.push({
       title: "包/镜像元数据已预检",
-      body: "桌面版已读取本地目录或介质元数据，但还没有发现明确启动入口。先完整解压、挂载或安装，再用处理后的目录重新诊断。",
+      body: "桌面版已读取本地目录或介质元数据，但还没有发现明确启动入口。下一步是点击准备动作或手动完整解压/挂载，再用处理后的目录重新诊断。",
     });
   }
 
   if (packageSets.some((set) => set.archivePreview?.encryptedEntries)) {
     steps.push({
       title: "压缩包可能包含加密条目",
-      body: "GalAid 只做目录预检，不破解密码也不绕过保护。请只处理你合法拥有且有权限解压的文件。",
+      body: "GalAid 只做目录预检，不破解密码也不绕过保护。你可以在准备时输入自己已经知道的解压密码，密码不会写入报告或求助包。",
     });
   }
 
   if (discSets.length) {
     steps.push({
       title: "镜像需要挂载或解包",
-      body: "镜像文件不是直接运行的游戏目录。.iso 通常可以挂载；.cue/.bin、.mds/.mdf 需要配套文件放在一起。挂载或解包后，从虚拟光驱运行安装器，或把安装后的完整游戏目录拖进 GalAid。",
+      body: "镜像文件不是直接运行的游戏目录。.iso 通常可以挂载；.cue/.bin、.mds/.mdf 需要配套文件同名同目录。桌面版可点挂载/解包并重扫，处理后再尝试启动。",
     });
   }
 
@@ -2408,7 +2410,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
         title: "完整解压状态",
         status: "blocker",
         detail: "当前更像压缩包或镜像阶段，而且没有发现可靠启动入口。",
-        action: "先补齐分卷、挂载或完整解压，再把解压后的游戏目录拖回来诊断。",
+        action: "先补齐分卷；桌面版可点解压/挂载并重扫，或手动处理后把完整游戏目录拖回来诊断。",
         evidence: packageEvidence,
       }),
     );
@@ -2430,7 +2432,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
         title: "完整解压状态",
         status: "warning",
         detail: "发现压缩包或镜像。它们可能是补丁、附加盘，也可能说明还没有处理到可运行目录。",
-        action: "如果这是主游戏包，先完成解压或挂载；如果是补丁包，确认它已被正确放到游戏目录。",
+        action: "如果这是主游戏包，先点击准备动作或手动完成解压/挂载；如果是补丁包，确认它已正确合并到游戏目录。",
         evidence: packageEvidence,
       }),
     );
@@ -2747,7 +2749,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     findings.push({
       level: "warning",
       title: "看起来还停在压缩包阶段",
-      body: "先完整解压 zip/rar/7z 等压缩包，再把解压后的游戏文件夹拖进来。分卷包要从 part1.rar、.7z.001 或 .zip.001 开始；直接在压缩软件里双击游戏经常会缺文件。",
+      body: "桌面版可点解压并重扫；手动处理时先完整解压 zip/rar/7z 等压缩包，再把解压后的游戏文件夹拖进来。分卷包要从 part1.rar、.7z.001 或 .zip.001 开始。",
       evidence: archivePaths,
     });
   } else if (archiveCount) {
@@ -2763,7 +2765,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     findings.push({
       level: "warning",
       title: "发现镜像文件",
-      body: "iso/mds/mdf/cue/bin 通常需要先挂载或解包；cue/bin 与 mds/mdf 要保持配套文件同名同目录。挂载后再从虚拟光驱运行安装器或复制完整游戏目录。",
+      body: "iso/mds/mdf/cue/bin 通常需要先挂载或解包；cue/bin 与 mds/mdf 要保持配套文件同名同目录。桌面版可点挂载/解包并重扫，处理后再从推荐入口启动。",
       evidence: discPaths,
     });
   }
@@ -3016,7 +3018,7 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
       state: "blocked",
       priority: 10,
       detail: extraction?.detail || "当前内容像压缩包或镜像阶段，暂时没有可靠启动入口。",
-      action: extraction?.action || "先完整解压压缩包，或挂载/解包镜像，再把可运行的游戏目录拖回 GalAid。",
+      action: extraction?.action || "先点击准备动作完整解压压缩包，或挂载/解包镜像，再把可运行的游戏目录拖回 GalAid。",
       evidence: extraction?.evidence,
       source: "package",
     });

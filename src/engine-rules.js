@@ -168,7 +168,24 @@ window.GALAID_ENGINE_RULES = [
         "pac",
         "vol",
         "iro",
-        "wolf"
+        "wolf",
+        "ypf",
+        "int",
+        "gxp",
+        "noa",
+        "med",
+        "wsm"
+      ],
+      "pathIncludes": [
+        "/plugin/",
+        "/plugins/",
+        "/movie/",
+        "/voice/",
+        "/bgm/",
+        "/system/"
+      ],
+      "filenameRegex": [
+        "^(data|arc|archive|pack|patch|voice|movie|bgm|se|scenario|script|system|sysgrp|startup)\\d*\\.(arc|dat|pak|pck|cpk|pac|vol|ypf|int|gxp|noa|med|wsm)$"
       ],
       "pathRegex": [
         "(^|/)(boot|config|env|game|setting|startup|system)\\.(ini|cfg|dat)$"
@@ -178,7 +195,12 @@ window.GALAID_ENGINE_RULES = [
         "audio",
         "plugin",
         "system",
-        "engine"
+        "engine",
+        "codec",
+        "render",
+        "sound",
+        "video",
+        "input"
       ]
     },
     "advice": "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。"

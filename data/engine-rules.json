@@ -91,9 +91,13 @@
     "description": "Commercial or self-developed VN engine startup-chain structure. This route stays generic unless filenames strongly identify a public engine.",
     "score": 0,
     "match": {
-      "extensions": ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"],
+      "extensions": ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf", "ypf", "int", "gxp", "noa", "med", "wsm"],
+      "pathIncludes": ["/plugin/", "/plugins/", "/movie/", "/voice/", "/bgm/", "/system/"],
+      "filenameRegex": [
+        "^(data|arc|archive|pack|patch|voice|movie|bgm|se|scenario|script|system|sysgrp|startup)\\d*\\.(arc|dat|pak|pck|cpk|pac|vol|ypf|int|gxp|noa|med|wsm)$"
+      ],
       "pathRegex": ["(^|/)(boot|config|env|game|setting|startup|system)\\.(ini|cfg|dat)$"],
-      "dllNameIncludes": ["movie", "audio", "plugin", "system", "engine"]
+      "dllNameIncludes": ["movie", "audio", "plugin", "system", "engine", "codec", "render", "sound", "video", "input"]
     },
     "advice": "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。"
   }
