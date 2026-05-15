@@ -7,7 +7,7 @@
 
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
-    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.5-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.6-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
     <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
@@ -59,7 +59,7 @@ GalAid turns that mess into a small diagnosis report.
 | Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts with evidence explanations and next steps. | The game uses a private or company-specific structure instead of a famous public engine. |
 | Runtime checks | Checks extraction state, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, web VN local-server needs, and manual launch-failure follow-up evidence. | The right launcher exists, but the game crashes, shows mojibake, or complains about missing DLLs. |
 | Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, launch-failure notes, environment checks, and sanitized file metadata. | A player needs to ask for help without uploading game files or private paths. |
-| Desktop beta | Adds native folder selection, recursive local scanning, ZIP/RAR/7z package preflight, disc-image metadata preflight, trusted Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
+| Desktop beta | Adds native folder selection, recursive local scanning, ZIP/RAR/7z package preflight, local archive extraction handoff, disc-image metadata preflight, trusted Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
 
 ## Product Shape
 
@@ -77,7 +77,7 @@ GalAid turns that mess into a small diagnosis report.
 | Surface | Start here | Best for |
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
-| Windows beta | [v0.1.5-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.5-beta) | Native folder picking, recursive scans, package/image preflight, trusted one-click launch, shortcuts, launch history, locale launch templates, and launch-failure follow-up. |
+| Windows beta | [v0.1.6-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.6-beta) | Native folder picking, recursive scans, package/image preflight, archive extraction handoff, trusted one-click launch, shortcuts, launch history, locale launch templates, and launch-failure follow-up. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
@@ -199,6 +199,8 @@ The main limit is file count, not total bytes:
 
 Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through a local 7z-compatible command when available, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, and engine clues without extracting, mounting, uploading, or reading game file contents.
 
+When the user explicitly clicks `Extract and rescan`, the desktop beta can use a local `7zz` / `7z` / `7za` command to extract ZIP/RAR/7z packages into a newly created output folder, ask for a known password when needed, then automatically rescan the extracted folder so the launch page can recommend the next executable.
+
 ## Archive and Disc Image Guidance
 
 The web MVP can recognize common package stages and tell the user what to do next:
@@ -210,7 +212,7 @@ The web MVP can recognize common package stages and tell the user what to do nex
 
 The web app still does not inspect the contents of these files. It only checks metadata and naming patterns.
 
-The desktop package preflight also stays metadata-only: it reads ZIP directory records directly, can ask local `7zz`/`7z`/`7za` to list RAR/7z directory metadata, and treats disc images as media/descriptor files unless the user handles mounting outside GalAid.
+The desktop package preflight stays metadata-only until the user clicks the extraction action. That action still stays local: it asks the user for an output folder, uses the password only for that extraction attempt, does not store it, and returns to scanning after extraction finishes.
 
 ## Run
 
@@ -247,7 +249,7 @@ npm run build:pages
 
 ### Desktop Beta
 
-Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.5-beta), or run the Electron shell locally:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.6-beta), or run the Electron shell locally:
 
 ```bash
 npm install
@@ -275,7 +277,7 @@ The app is intended for:
 - organizing personal archives
 - assisting creators and translators with their own project folders
 
-The static web MVP only reads browser-exposed file metadata. The desktop beta can see absolute paths while scanning, but reports and UI use relative paths by default. Package preflight reads local directory or media metadata only. GalAid does not upload, execute, modify, decrypt, mount, or extract game files.
+The static web MVP only reads browser-exposed file metadata. The desktop beta can see absolute paths while scanning, but reports and UI use relative paths by default. Package preflight reads local directory or media metadata only. Archive extraction only happens after an explicit desktop action and a user-chosen output folder. GalAid does not upload, silently execute, modify original packages, decrypt unknown passwords, or mount game files.
 
 ## Roadmap
 

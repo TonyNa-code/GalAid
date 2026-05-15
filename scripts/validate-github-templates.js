@@ -40,11 +40,13 @@ const REQUIRED_FILES = [
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
   "desktop/archive-preview.js",
+  "desktop/package-prep.js",
   "desktop/launcher.js",
   "playwright.config.js",
   "scripts/build-engine-rules.js",
   "scripts/test-desktop-launcher.js",
   "scripts/test-archive-preview.js",
+  "scripts/test-package-prep.js",
   "scripts/release-audit.js",
   "src/engine-rules.js",
   "tests/galaid-smoke.spec.js",
@@ -212,11 +214,11 @@ function checkReadmes(errors) {
     },
     {
       file: "README.zh-CN.md",
-      phrases: ["GalAid 是一个本地优先", "诊断语言", "商业/自研", "不上传、不运行、不修改、不解密、不解压"],
+      phrases: ["GalAid 是一个本地优先", "诊断语言", "商业/自研", "不上传、不偷偷运行、不修改原包、不破解密码"],
     },
     {
       file: "README.ja.md",
-      phrases: ["GalAid は", "診断言語", "商用/自社", "アップロード、実行、変更、復号、展開、マウントしません"],
+      phrases: ["GalAid は", "診断言語", "商用/自社", "アップロード、密かに実行、原本変更、未知パスワードの復号"],
     },
   ];
 
@@ -452,7 +454,7 @@ function checkDesktopLauncher(errors) {
     assert(launcherText.includes(phrase), `${launcherFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["desktop:launch-entry", "desktop:create-shortcut", "launchEntry", "createShortcut"]) {
+  for (const phrase of ["desktop:launch-entry", "desktop:create-shortcut", "desktop:prepare-package", "launchEntry", "createShortcut", "preparePackage"]) {
     assert(preloadText.includes(phrase) || mainText.includes(phrase), `desktop launch bridge is missing phrase: ${phrase}`, errors);
   }
 
@@ -487,6 +489,24 @@ function checkArchivePreview(errors) {
   }
 }
 
+function checkPackagePrep(errors) {
+  const prepFile = "desktop/package-prep.js";
+  const testFile = "scripts/test-package-prep.js";
+  const prepText = readRelative(prepFile);
+  const testText = readRelative(testFile);
+
+  checkNoTrailingWhitespace(prepFile, prepText, errors);
+  checkNoTrailingWhitespace(testFile, testText, errors);
+
+  for (const phrase of ["prepareArchivePackage", "isPrepareSupportedArchive", "password-failed", "tool-missing"]) {
+    assert(prepText.includes(phrase), `${prepFile} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of ["Package prep smoke passed", "knownPassword", "Game.part2.rar", "tool-missing"]) {
+    assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
+  }
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -509,6 +529,7 @@ function main() {
   checkGoodFirstIssues(errors);
   checkBrowserSmoke(errors);
   checkArchivePreview(errors);
+  checkPackagePrep(errors);
   checkEngineRules(errors);
   checkDesktopRelease(errors);
   checkDesktopLauncher(errors);

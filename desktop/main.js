@@ -3,8 +3,10 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { scanSelectedPaths } = require("./scanner");
 const { buildLaunchAllowlist, createShortcutForAllowedEntry, launchAllowedEntry } = require("./launcher");
+const { isPrepareSupportedArchive, prepareArchivePackage } = require("./package-prep");
 
 const launchAllowlists = new Map();
+const packageAllowlists = new Map();
 const cleanupRegisteredWebContents = new Set();
 const LAUNCH_HISTORY_LIMIT = 20;
 let launchHistory = [];
@@ -118,13 +120,61 @@ ipcMain.handle("desktop:create-shortcut", async (event, payload = {}) => {
   }
 });
 
+ipcMain.handle("desktop:prepare-package", async (event, payload = {}) => {
+  const allowlist = packageAllowlists.get(event.sender.id);
+  const packageFullPath = path.resolve(payload.packageFullPath || "");
+  const packageFile = allowlist?.get(packageFullPath);
+  if (!packageFile) return { ok: false, errorCode: "not-allowed", message: "Package was not part of the trusted scan." };
+
+  const window = BrowserWindow.fromWebContents(event.sender);
+  const outputParentResult = await dialog.showOpenDialog(window, {
+    title: "Choose where GalAid should prepare this package",
+    defaultPath: path.dirname(packageFullPath),
+    properties: ["openDirectory", "createDirectory"],
+  });
+  if (outputParentResult.canceled || !outputParentResult.filePaths.length) {
+    return { ok: false, errorCode: "canceled" };
+  }
+
+  try {
+    const outputDirectory = await makeUniqueOutputDirectory(outputParentResult.filePaths[0], packageFile.name);
+    const prepareResult = await prepareArchivePackage({
+      packagePath: packageFullPath,
+      outputDirectory,
+      password: String(payload.password || ""),
+      onProgress: (progress) => {
+        event.sender.send("desktop:prepare-progress", progress);
+      },
+    });
+
+    if (!prepareResult.ok) return prepareResult;
+    const scanResult = await scanForRenderer([outputDirectory], event.sender, {
+      selectedCount: 1,
+      preparedFrom: packageFile.path,
+      preparedOutputName: path.basename(outputDirectory),
+      platform: process.platform,
+    });
+    return {
+      ...prepareResult,
+      files: scanResult.files,
+      meta: scanResult.meta,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      errorCode: "prepare-failed",
+      message: error?.message || "Package preparation failed.",
+    };
+  }
+});
+
 ipcMain.handle("desktop:get-launch-history", () => getPublicLaunchHistory());
 
-async function scanForRenderer(selectedPaths, webContents) {
+async function scanForRenderer(selectedPaths, webContents, metaOverrides = {}) {
   const result = await scanSelectedPaths(selectedPaths, (progress) => {
     webContents.send("desktop:scan-progress", progress);
   });
-  rememberLaunchAllowlist(webContents, result.files);
+  rememberScanAllowlists(webContents, result.files);
   return {
     canceled: false,
     files: result.files,
@@ -132,19 +182,31 @@ async function scanForRenderer(selectedPaths, webContents) {
       selectedCount: selectedPaths.length,
       skipped: result.skipped,
       platform: process.platform,
+      ...metaOverrides,
     },
   };
 }
 
-function rememberLaunchAllowlist(webContents, files) {
+function rememberScanAllowlists(webContents, files) {
   launchAllowlists.set(webContents.id, buildLaunchAllowlist(files));
+  packageAllowlists.set(webContents.id, buildPackageAllowlist(files));
   if (cleanupRegisteredWebContents.has(webContents.id)) return;
 
   cleanupRegisteredWebContents.add(webContents.id);
   webContents.once("destroyed", () => {
     launchAllowlists.delete(webContents.id);
+    packageAllowlists.delete(webContents.id);
     cleanupRegisteredWebContents.delete(webContents.id);
   });
+}
+
+function buildPackageAllowlist(files) {
+  const allowlist = new Map();
+  for (const file of files || []) {
+    if (!file?.fullPath || !isPrepareSupportedArchive(file.fullPath)) continue;
+    allowlist.set(path.resolve(file.fullPath), file);
+  }
+  return allowlist;
 }
 
 async function readLaunchHistory() {
@@ -194,6 +256,40 @@ function getPublicLaunchHistory() {
 
 function getLaunchHistoryPath() {
   return path.join(app.getPath("userData"), "launch-history.json");
+}
+
+async function makeUniqueOutputDirectory(parentDirectory, packageName) {
+  const safeBase = stripArchiveExt(stripUnsafePathChars(packageName || "GalAid-package")) || "GalAid-package";
+  let candidate = path.join(parentDirectory, `${safeBase}-prepared`);
+  for (let index = 2; index < 200; index += 1) {
+    if (await pathExists(candidate)) {
+      candidate = path.join(parentDirectory, `${safeBase}-prepared-${index}`);
+      continue;
+    }
+    await fs.mkdir(candidate, { recursive: true });
+    return candidate;
+  }
+  throw new Error("Could not create a unique output folder.");
+}
+
+async function pathExists(filePath) {
+  try {
+    await fs.stat(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function stripUnsafePathChars(value) {
+  return path.basename(String(value || "")).replace(/[<>:"/\\|?*\x00-\x1F]/g, "_").slice(0, 120);
+}
+
+function stripArchiveExt(filename) {
+  return String(filename || "")
+    .replace(/\.(zip|rar|7z)$/i, "")
+    .replace(/\.(zip|7z)\.001$/i, "")
+    .replace(/\.part0*1\.rar$/i, "");
 }
 
 function stripShortcutExt(filename) {

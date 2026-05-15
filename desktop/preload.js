@@ -1,9 +1,14 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 const progressListeners = new Set();
+const prepareProgressListeners = new Set();
 
 ipcRenderer.on("desktop:scan-progress", (_event, payload) => {
   for (const listener of progressListeners) listener(payload);
+});
+
+ipcRenderer.on("desktop:prepare-progress", (_event, payload) => {
+  for (const listener of prepareProgressListeners) listener(payload);
 });
 
 contextBridge.exposeInMainWorld("galaidDesktop", {
@@ -12,9 +17,14 @@ contextBridge.exposeInMainWorld("galaidDesktop", {
   selectFiles: () => ipcRenderer.invoke("desktop:select-files"),
   launchEntry: (payload) => ipcRenderer.invoke("desktop:launch-entry", payload),
   createShortcut: (payload) => ipcRenderer.invoke("desktop:create-shortcut", payload),
+  preparePackage: (payload) => ipcRenderer.invoke("desktop:prepare-package", payload),
   getLaunchHistory: () => ipcRenderer.invoke("desktop:get-launch-history"),
   onScanProgress(listener) {
     progressListeners.add(listener);
     return () => progressListeners.delete(listener);
+  },
+  onPrepareProgress(listener) {
+    prepareProgressListeners.add(listener);
+    return () => prepareProgressListeners.delete(listener);
   },
 });

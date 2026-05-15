@@ -614,6 +614,28 @@ textarea {
   background: #eef3ee;
 }
 
+.package-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.package-actions button {
+  min-height: 34px;
+  border-color: rgba(22, 116, 87, 0.5);
+  padding: 0 12px;
+  color: #fff;
+  background: var(--mint-dark);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.package-actions button:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  background: #eef3ee;
+}
+
 .launch-failure-title {
   margin-top: 18px;
 }

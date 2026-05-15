@@ -343,6 +343,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noPackagesBody: "当前文件更像已经解压后的目录，可以直接看启动页。",
       zipPreview: "ZIP 目录预检",
       packagePreview: "包/镜像预检",
+      preparePackage: "解压并重扫",
+      preparingPackage: "解压中...",
+      preparePasswordPrompt: "这个包可能需要解压密码。请输入你已经知道的密码；留空会取消。",
+      preparePasswordRetryPrompt: "密码不正确或缺少密码。请重新输入解压密码；留空会取消。",
       metadataOnly: "仅元数据",
       unavailable: "不可用",
       internalFiles: "内部文件",
@@ -408,6 +412,12 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchFailed: "启动失败",
       toastShortcutCreated: "快捷方式已创建：{name}",
       toastShortcutFailed: "快捷方式创建失败",
+      toastPackagePrepared: "已解压并重新扫描：{name}",
+      toastPrepareFailed: "解压准备失败",
+      toastPrepareToolMissing: "需要本机可用的 7z/7zz 才能解压这个包",
+      toastPrepareUnsupported: "这个类型暂时不能自动解压",
+      toastPrepareMissingVolume: "分卷不完整，请补齐后从第一分卷开始",
+      toastPrepareDamaged: "压缩包可能损坏或不完整",
       toastRoadmapCopied: "路线清单已复制",
       toastSummaryCopied: "求助摘要已复制",
       toastManifestCopied: "求助包清单已复制",
@@ -597,6 +607,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noPackagesBody: "These files look like an extracted folder, so the launch page is the next stop.",
       zipPreview: "ZIP directory preflight",
       packagePreview: "Package/image preflight",
+      preparePackage: "Extract and rescan",
+      preparingPackage: "Extracting...",
+      preparePasswordPrompt: "This package may need an extraction password. Enter the password you already have; leave blank to cancel.",
+      preparePasswordRetryPrompt: "The password is missing or incorrect. Enter the extraction password again; leave blank to cancel.",
       metadataOnly: "metadata only",
       unavailable: "unavailable",
       internalFiles: "internal files",
@@ -662,6 +676,12 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchFailed: "Launch failed",
       toastShortcutCreated: "Shortcut created: {name}",
       toastShortcutFailed: "Shortcut creation failed",
+      toastPackagePrepared: "Extracted and rescanned: {name}",
+      toastPrepareFailed: "Package preparation failed",
+      toastPrepareToolMissing: "A local 7z/7zz command is needed to extract this package",
+      toastPrepareUnsupported: "This package type cannot be extracted automatically yet",
+      toastPrepareMissingVolume: "A split volume is missing; start from the first volume after collecting all parts",
+      toastPrepareDamaged: "The package may be damaged or incomplete",
       toastRoadmapCopied: "Roadmap checklist copied",
       toastSummaryCopied: "Support summary copied",
       toastManifestCopied: "Support manifest copied",
@@ -851,6 +871,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noPackagesBody: "展開済みフォルダに見えるため、次は起動画面を確認してください。",
       zipPreview: "ZIP ディレクトリ事前チェック",
       packagePreview: "パッケージ/イメージ事前チェック",
+      preparePackage: "展開して再スキャン",
+      preparingPackage: "展開中...",
+      preparePasswordPrompt: "このパッケージは展開パスワードが必要な可能性があります。既に知っているパスワードを入力してください。空欄ならキャンセルします。",
+      preparePasswordRetryPrompt: "パスワードが不足しているか正しくありません。展開パスワードをもう一度入力してください。空欄ならキャンセルします。",
       metadataOnly: "メタデータのみ",
       unavailable: "利用不可",
       internalFiles: "内部ファイル",
@@ -916,6 +940,12 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchFailed: "起動に失敗しました",
       toastShortcutCreated: "ショートカットを作成しました: {name}",
       toastShortcutFailed: "ショートカット作成に失敗しました",
+      toastPackagePrepared: "展開して再スキャンしました: {name}",
+      toastPrepareFailed: "パッケージ準備に失敗しました",
+      toastPrepareToolMissing: "このパッケージの展開にはローカルの 7z/7zz が必要です",
+      toastPrepareUnsupported: "この種類はまだ自動展開できません",
+      toastPrepareMissingVolume: "分割ボリュームが不足しています。すべて揃えて最初のボリュームから開始してください",
+      toastPrepareDamaged: "パッケージが破損または不完全な可能性があります",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
       toastSummaryCopied: "サポート概要をコピーしました",
       toastManifestCopied: "サポートマニフェストをコピーしました",
@@ -3235,6 +3265,14 @@ if (desktopApi) {
       phase: progress.done ? "analyzing" : "scanning",
     });
   });
+  desktopApi.onPrepareProgress?.((progress) => {
+    updateScanState({
+      title: getUiText("preparingPackage"),
+      detail: progress?.packageName || getUiText("scanDesktop"),
+      progress: 38,
+      phase: "scanning",
+    });
+  });
   void refreshDesktopLaunchHistory();
 }
 
@@ -4029,7 +4067,19 @@ function renderPackageSet(set) {
       <div class="meta-row">${chips}</div>
       <div class="sample-list package-files">${samples}</div>
       ${renderArchivePreview(set.archivePreview)}
+      ${renderPreparePackageAction(set)}
     </article>
+  `;
+}
+
+function renderPreparePackageAction(set) {
+  if (!desktopApi?.preparePackage || set.type !== "archive" || !set.firstFile?.fullPath || set.missing?.length) return "";
+  return `
+    <div class="package-actions">
+      <button type="button" data-package-action="prepare" data-package-path="${escapeHtml(set.firstFile.fullPath)}">
+        ${escapeHtml(getUiText("preparePackage"))}
+      </button>
+    </div>
   `;
 }
 
@@ -4920,6 +4970,90 @@ async function createDesktopShortcut(file, button) {
   }
 }
 
+async function prepareDesktopPackage(packageFile, packageSet, button) {
+  if (!desktopApi?.preparePackage || !packageFile?.fullPath) {
+    showToast(getUiText("toastLaunchUnavailable"));
+    return;
+  }
+
+  let password = "";
+  if ((packageSet?.archivePreview?.encryptedEntries || 0) > 0) {
+    const entered = window.prompt(getUiText("preparePasswordPrompt"), "");
+    if (!entered) return;
+    password = entered;
+  }
+
+  const originalLabel = button?.textContent || "";
+  const runId = ++scanRunId;
+  setControlsBusy(true);
+  if (button) {
+    button.disabled = true;
+    button.textContent = getUiText("preparingPackage");
+  }
+
+  try {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      updateScanState({
+        title: getUiText("preparingPackage"),
+        detail: packageFile.name,
+        progress: 22,
+        phase: "scanning",
+      });
+
+      const result = await desktopApi.preparePackage({
+        packageFullPath: packageFile.fullPath,
+        password,
+      });
+
+      if (runId !== scanRunId) return;
+      if (result?.ok) {
+        await setFiles(result.files || [], { runId, desktopMeta: result.meta });
+        showToast(getUiText("toastPackagePrepared", { name: result.meta?.preparedOutputName || packageFile.name }));
+        if (currentAnalysis?.launchCandidates?.length) activateTab("launch");
+        return;
+      }
+
+      if (result?.errorCode === "canceled") return;
+      if (result?.errorCode === "password-required" || result?.errorCode === "password-failed") {
+        const entered = window.prompt(getUiText("preparePasswordRetryPrompt"), "");
+        if (!entered) return;
+        password = entered;
+        continue;
+      }
+
+      showToast(getPrepareFailureMessage(result));
+      return;
+    }
+  } catch {
+    showToast(getUiText("toastPrepareFailed"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+    if (runId === scanRunId) setControlsBusy(false);
+  }
+}
+
+function getPrepareFailureMessage(result) {
+  const code = result?.errorCode;
+  if (code === "tool-missing") return getUiText("toastPrepareToolMissing");
+  if (code === "unsupported-package" || code === "follow-up-volume") return getUiText("toastPrepareUnsupported");
+  if (code === "missing-volume") return getUiText("toastPrepareMissingVolume");
+  if (code === "damaged-package") return getUiText("toastPrepareDamaged");
+  return result?.message || getUiText("toastPrepareFailed");
+}
+
+function findPackageSetByFullPath(fullPath) {
+  return currentAnalysis?.packages?.archiveSets?.find((set) =>
+    set.files.some((item) => item.file.fullPath === fullPath),
+  );
+}
+
+function activateTab(tabName) {
+  document.querySelector(`[data-tab="${tabName}"]`)?.click();
+}
+
 function readLaunchFailureForm() {
   return {
     symptoms: [...launchPanel.querySelectorAll("[data-failure-symptom]:checked")].map((input) => input.dataset.failureSymptom),
@@ -5025,6 +5159,18 @@ supportPanel.addEventListener("click", (event) => {
     void copyText(manifestEntry.content, getUiText("toastManifestCopied"));
   } else if (action === "download-bundle") {
     downloadSupportBundle(currentAnalysis, errorInput.value);
+  }
+});
+
+packagesPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-package-action]");
+  if (!button || !currentAnalysis) return;
+
+  if (button.dataset.packageAction === "prepare") {
+    const fullPath = button.dataset.packagePath || "";
+    const packageSet = findPackageSetByFullPath(fullPath);
+    const packageFile = packageSet?.files.find((item) => item.file.fullPath === fullPath)?.file;
+    if (packageFile) void prepareDesktopPackage(packageFile, packageSet, button);
   }
 });
 

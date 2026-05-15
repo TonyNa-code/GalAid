@@ -15,6 +15,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Generate a local diagnosis report
 - Generate a local support ZIP containing diagnosis metadata only
 - Preflight ZIP/RAR/7z package metadata and disc-image media roles in the desktop beta without extraction or mounting
+- Extract ZIP/RAR/7z packages locally only after the user explicitly chooses an output folder and supplies any known password
 - Preview or list assets only when the format is open or user-controlled
 
 ## Out of Scope
@@ -24,7 +25,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Sharing cracks, serials, patches, or bypass instructions
 - Decrypting protected archives without permission
 - Uploading user game files to a third-party server
-- Installing system runtimes, changing locale settings, mounting images, or running executables automatically
+- Installing system runtimes, changing locale settings, mounting images, extracting without user confirmation, or running executables automatically
 
 ## Default Privacy Model
 
@@ -41,7 +42,9 @@ The app does not read file contents for diagnosis in the MVP.
 
 Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. The support tab previews the included file list before download.
 
-Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z can be listed through a local 7z-compatible command when available, and disc images are treated as media/descriptor files. GalAid does not extract, decrypt, mount, or execute files inside packages.
+Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z can be listed through a local 7z-compatible command when available, and disc images are treated as media/descriptor files.
+
+Desktop archive preparation is separate from preflight. It only starts after a user click, uses a user-selected output folder, accepts a password the user already knows, and immediately rescans the prepared folder. GalAid does not save package passwords, crack passwords, upload package contents, mount disc images, or run extracted executables automatically.
 
 ## Desktop Beta Guardrails
 

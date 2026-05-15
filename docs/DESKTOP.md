@@ -6,6 +6,8 @@ The Windows desktop beta can also launch trusted local `.exe/.com` entries that 
 
 The profile tab can create a `.lnk` shortcut for the same allowlisted entry. GalAid also keeps a small local recent-launch history with entry names, relative paths, and timestamps so users can see what they tried without adding those details to reports or support bundles.
 
+The package tab can prepare ZIP/RAR/7z archives after the user clicks `Extract and rescan`. GalAid asks for an output parent folder, creates a fresh prepared subfolder, passes a user-provided password only to the local extraction attempt, then scans the extracted folder and refreshes launch recommendations.
+
 ## Run Locally
 
 ```bash
@@ -30,6 +32,8 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 - The path must come from the latest desktop scan result.
 - Shortcut creation uses the same latest-scan allowlist and writes a normal Windows `.lnk` only after the user chooses the save location.
 - Recent-launch history is local app data and is not included in exported reports or support ZIPs.
+- Archive extraction requires an explicit user click and a chosen output folder.
+- Package passwords are not saved to reports, support bundles, or launch history.
 - GalAid does not add hidden arguments, bypass checks, patch files, or run installers automatically.
 - Web mode cannot launch local programs because browsers intentionally block that ability.
 

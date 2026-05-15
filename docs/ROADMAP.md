@@ -28,6 +28,7 @@
 
 - Real folder picker with full paths
 - Package and disc-image metadata preflight without extraction or mounting
+- Archive extraction handoff with password prompt and automatic rescan
 - One-click launch for trusted scanned `.exe/.com` entries
 - Launch history
 - Create shortcuts
