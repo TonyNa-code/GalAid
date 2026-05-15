@@ -666,6 +666,42 @@ textarea {
   font-size: 13px;
 }
 
+.launch-history-title {
+  margin-top: 18px;
+}
+
+.launch-history-list {
+  margin-top: 8px;
+}
+
+.launch-history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.launch-history-item h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.launch-history-item p {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.launch-history-item span {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .roadmap-summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1317,10 +1353,15 @@ textarea {
 
   .error-summary,
   .error-recipe-header,
+  .launch-history-item,
   .roadmap-summary,
   .roadmap-step-header,
   .support-summary-card {
     grid-template-columns: 1fr;
+  }
+
+  .launch-history-item span {
+    white-space: normal;
   }
 
   .roadmap-actions,

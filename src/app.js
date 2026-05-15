@@ -131,6 +131,12 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "启动中...",
       launchUnavailable: "仅桌面版可启动",
       launchUnsupported: "仅支持 Windows .exe/.com",
+      createShortcut: "创建快捷方式",
+      creatingShortcut: "创建中...",
+      launchHistoryTitle: "最近启动",
+      noLaunchHistoryTitle: "还没有启动历史",
+      noLaunchHistoryBody: "用桌面版启动一次可信入口后，这里会记录最近启动过的文件。",
+      launchedAt: "启动时间",
       copyCommand: "复制命令",
       copyJson: "复制 JSON",
       downloadConfig: "下载配置",
@@ -221,6 +227,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "已启动 {name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
       toastLaunchFailed: "启动失败",
+      toastShortcutCreated: "快捷方式已创建：{name}",
+      toastShortcutFailed: "快捷方式创建失败",
       toastRoadmapCopied: "路线清单已复制",
       toastSummaryCopied: "求助摘要已复制",
       toastManifestCopied: "求助包清单已复制",
@@ -352,6 +360,12 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "Launching...",
       launchUnavailable: "Desktop only",
       launchUnsupported: "Windows .exe/.com only",
+      createShortcut: "Create shortcut",
+      creatingShortcut: "Creating...",
+      launchHistoryTitle: "Recent launches",
+      noLaunchHistoryTitle: "No launch history yet",
+      noLaunchHistoryBody: "After the desktop app launches a trusted entry, recent files will appear here.",
+      launchedAt: "Launched",
       copyCommand: "Copy command",
       copyJson: "Copy JSON",
       downloadConfig: "Download config",
@@ -442,6 +456,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "Launched {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
       toastLaunchFailed: "Launch failed",
+      toastShortcutCreated: "Shortcut created: {name}",
+      toastShortcutFailed: "Shortcut creation failed",
       toastRoadmapCopied: "Roadmap checklist copied",
       toastSummaryCopied: "Support summary copied",
       toastManifestCopied: "Support manifest copied",
@@ -573,6 +589,12 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "起動中...",
       launchUnavailable: "デスクトップ版のみ",
       launchUnsupported: "Windows .exe/.com のみ",
+      createShortcut: "ショートカット作成",
+      creatingShortcut: "作成中...",
+      launchHistoryTitle: "最近の起動",
+      noLaunchHistoryTitle: "起動履歴はまだありません",
+      noLaunchHistoryBody: "デスクトップ版で信頼済みの入口を起動すると、最近使ったファイルがここに表示されます。",
+      launchedAt: "起動日時",
       copyCommand: "コマンドをコピー",
       copyJson: "JSON をコピー",
       downloadConfig: "設定を保存",
@@ -663,6 +685,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "{name} を起動しました",
       toastLaunchUnavailable: "ここでは直接起動できません",
       toastLaunchFailed: "起動に失敗しました",
+      toastShortcutCreated: "ショートカットを作成しました: {name}",
+      toastShortcutFailed: "ショートカット作成に失敗しました",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
       toastSummaryCopied: "サポート概要をコピーしました",
       toastManifestCopied: "サポートマニフェストをコピーしました",
@@ -808,6 +832,7 @@ const PACKAGE_SAMPLE_FILES = [
 let currentFiles = [];
 let currentAnalysis = null;
 let scanRunId = 0;
+let desktopLaunchHistory = [];
 const desktopApi = window.galaidDesktop || null;
 
 assistantLanguageSelect.value = getStoredAssistantLanguage();
@@ -2659,6 +2684,7 @@ if (desktopApi) {
       phase: progress.done ? "analyzing" : "scanning",
     });
   });
+  void refreshDesktopLaunchHistory();
 }
 
 function updateScanState({ title, detail, progress = 0, visible = true, phase = "ready" }) {
@@ -2893,6 +2919,15 @@ function canDesktopLaunchFile(file) {
   );
 }
 
+function canDesktopCreateShortcut(file) {
+  return Boolean(
+    desktopApi?.createShortcut &&
+      desktopApi.platform === "win32" &&
+      file?.fullPath &&
+      ["exe", "com"].includes(file.ext),
+  );
+}
+
 function renderModeCard(analysis) {
   if (analysis.mode.id === "normal") return "";
   return `
@@ -2988,6 +3023,7 @@ function renderProfiles(analysis) {
           <p>${escapeHtml(getUiText("noProfilesBody"))}</p>
         </div>
       </article>
+      ${renderLaunchHistory()}
     `;
   }
 
@@ -3005,6 +3041,7 @@ function renderProfiles(analysis) {
     <div class="card-list profile-list">
       ${analysis.profiles.map(renderProfileCard).join("")}
     </div>
+    ${renderLaunchHistory()}
   `;
 }
 
@@ -3029,6 +3066,7 @@ function renderProfileCard(profile) {
       </div>
       <div class="profile-actions">
         ${renderProfileLaunchButton(profile)}
+        ${renderProfileShortcutButton(profile)}
         <button type="button" data-profile-action="copy-command" data-profile-id="${profile.id}">${escapeHtml(getUiText("copyCommand"))}</button>
         <button type="button" data-profile-action="copy-json" data-profile-id="${profile.id}">${escapeHtml(getUiText("copyJson"))}</button>
         <button type="button" data-profile-action="download-json" data-profile-id="${profile.id}">${escapeHtml(getUiText("downloadConfig"))}</button>
@@ -3051,6 +3089,57 @@ function renderProfileLaunchButton(profile) {
     >
       ${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}
     </button>
+  `;
+}
+
+function renderProfileShortcutButton(profile) {
+  if (!desktopApi) return "";
+  const canCreate = canDesktopCreateShortcut({ ext: getExt(profile.entryName), fullPath: profile.entryFullPath });
+  return `
+    <button
+      type="button"
+      data-profile-action="create-shortcut"
+      data-profile-id="${profile.id}"
+      ${canCreate ? "" : "disabled"}
+      title="${escapeHtml(canCreate ? getUiText("createShortcut") : getUiText("launchUnsupported"))}"
+    >
+      ${escapeHtml(canCreate ? getUiText("createShortcut") : getUiText("launchUnsupported"))}
+    </button>
+  `;
+}
+
+function renderLaunchHistory() {
+  if (!desktopApi?.getLaunchHistory) return "";
+  const items = desktopLaunchHistory.length
+    ? desktopLaunchHistory
+        .slice(0, 5)
+        .map(
+          (item) => `
+            <article class="launch-history-item">
+              <div>
+                <h4>${escapeHtml(item.entryName)}</h4>
+                <p>${escapeHtml(item.relativePath)}</p>
+              </div>
+              <span>${escapeHtml(getUiText("launchedAt"))}: ${escapeHtml(formatLaunchHistoryTime(item.launchedAt))}</span>
+            </article>
+          `,
+        )
+        .join("")
+    : `
+      <article class="finding info">
+        <div>
+          <h4>${escapeHtml(getUiText("noLaunchHistoryTitle"))}</h4>
+          <p>${escapeHtml(getUiText("noLaunchHistoryBody"))}</p>
+        </div>
+      </article>
+    `;
+
+  return `
+    <div class="section-title launch-history-title">
+      <h3>${escapeHtml(getUiText("launchHistoryTitle"))}</h3>
+      <span>${desktopLaunchHistory.length} ${escapeHtml(getUiText("items"))}</span>
+    </div>
+    <div class="card-list launch-history-list">${items}</div>
   `;
 }
 
@@ -4020,6 +4109,28 @@ function downloadBlob(filename, blob) {
   URL.revokeObjectURL(url);
 }
 
+async function refreshDesktopLaunchHistory({ rerender = false } = {}) {
+  if (!desktopApi?.getLaunchHistory) return;
+  try {
+    const history = await desktopApi.getLaunchHistory();
+    desktopLaunchHistory = Array.isArray(history) ? history : [];
+    if (rerender && currentAnalysis) render();
+  } catch {
+    desktopLaunchHistory = [];
+  }
+}
+
+function formatLaunchHistoryTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value || "";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 async function launchDesktopFile(file, button) {
   if (!desktopApi?.launchEntry) {
     showToast(getUiText("toastLaunchUnavailable"));
@@ -4040,11 +4151,45 @@ async function launchDesktopFile(file, button) {
     const result = await desktopApi.launchEntry({ entryFullPath: file.fullPath });
     if (result?.ok) {
       showToast(getUiText("toastLaunchStarted", { name: result.entryName || file.name }));
+      await refreshDesktopLaunchHistory({ rerender: true });
     } else {
       showToast(result?.message || getUiText("toastLaunchFailed"));
     }
   } catch {
     showToast(getUiText("toastLaunchFailed"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+}
+
+async function createDesktopShortcut(file, button) {
+  if (!desktopApi?.createShortcut) {
+    showToast(getUiText("toastLaunchUnavailable"));
+    return;
+  }
+  if (!canDesktopCreateShortcut(file)) {
+    showToast(getUiText(desktopApi.platform === "win32" ? "launchUnsupported" : "toastLaunchUnavailable"));
+    return;
+  }
+
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = getUiText("creatingShortcut");
+  }
+
+  try {
+    const result = await desktopApi.createShortcut({ entryFullPath: file.fullPath });
+    if (result?.ok) {
+      showToast(getUiText("toastShortcutCreated", { name: result.shortcutName || file.name }));
+    } else if (result?.errorCode !== "canceled") {
+      showToast(result?.message || getUiText("toastShortcutFailed"));
+    }
+  } catch {
+    showToast(getUiText("toastShortcutFailed"));
   } finally {
     if (button) {
       button.disabled = false;
@@ -4074,6 +4219,15 @@ profilesPanel.addEventListener("click", (event) => {
   const profileJson = JSON.stringify(getPublicProfile(profile), null, 2);
   if (action === "launch") {
     void launchDesktopFile(
+      {
+        name: profile.entryName,
+        ext: getExt(profile.entryName),
+        fullPath: profile.entryFullPath,
+      },
+      button,
+    );
+  } else if (action === "create-shortcut") {
+    void createDesktopShortcut(
       {
         name: profile.entryName,
         ext: getExt(profile.entryName),

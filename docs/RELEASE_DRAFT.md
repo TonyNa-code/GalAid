@@ -64,7 +64,7 @@ npm start
 
 - Web mode does not inspect inside large archives or disc images yet.
 - Desktop ZIP preflight reads directory metadata only; RAR/7z and disc-image internals are not inspected yet.
-- Desktop beta is for local recursive scanning, not automatic launching.
+- Desktop beta only launches trusted scanned `.exe/.com` entries after an explicit user click.
 - Desktop one-click launch only starts trusted scanned `.exe/.com` entries after the user clicks.
 - Launch profiles are hints only; GalAid does not run games automatically.
 - Error recipes are advisory and should be improved through safe community reports.

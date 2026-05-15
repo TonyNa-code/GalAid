@@ -3,6 +3,7 @@ const path = require("node:path");
 const { spawn } = require("node:child_process");
 
 const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com"]);
+const SHORTCUT_EXT = ".lnk";
 
 function buildLaunchAllowlist(files) {
   const allowlist = new Map();
@@ -33,6 +34,64 @@ async function launchAllowedEntry({
   spawnImpl = spawn,
   statImpl = fs.stat,
 } = {}) {
+  const resolved = await resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform, statImpl });
+  if (!resolved.ok) return resolved;
+  const { entry } = resolved;
+
+  const child = spawnImpl(entry.entryFullPath, [], {
+    cwd: entry.workingDirectoryFull,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: false,
+  });
+  child?.unref?.();
+
+  return {
+    ok: true,
+    pid: child?.pid || null,
+    entryName: entry.entryName,
+    relativePath: entry.relativePath,
+    entryFullPath: entry.entryFullPath,
+    workingDirectory: entry.workingDirectoryFull,
+  };
+}
+
+async function createShortcutForAllowedEntry({
+  allowlist,
+  entryFullPath,
+  shortcutPath,
+  platform = process.platform,
+  statImpl = fs.stat,
+  writeShortcutLinkImpl,
+} = {}) {
+  const resolved = await resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform, statImpl });
+  if (!resolved.ok) return resolved;
+  if (typeof writeShortcutLinkImpl !== "function") return { ok: false, errorCode: "shortcut-unavailable" };
+
+  const normalizedShortcutPath = normalizeShortcutPath(shortcutPath);
+  if (!normalizedShortcutPath) return { ok: false, errorCode: "invalid-shortcut-path" };
+
+  const { entry } = resolved;
+  const created = writeShortcutLinkImpl(normalizedShortcutPath, {
+    target: entry.entryFullPath,
+    cwd: entry.workingDirectoryFull,
+    description: `Launch ${entry.entryName} with GalAid`,
+    icon: entry.entryFullPath,
+    iconIndex: 0,
+  });
+
+  if (!created) return { ok: false, errorCode: "shortcut-failed" };
+
+  return {
+    ok: true,
+    shortcutPath: normalizedShortcutPath,
+    shortcutName: path.basename(normalizedShortcutPath),
+    entryName: entry.entryName,
+    relativePath: entry.relativePath,
+  };
+}
+
+async function resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform = process.platform, statImpl = fs.stat } = {}) {
   if (platform !== "win32") {
     return { ok: false, errorCode: "unsupported-platform" };
   }
@@ -52,26 +111,21 @@ async function launchAllowedEntry({
     return { ok: false, errorCode: "not-a-file" };
   }
 
-  const child = spawnImpl(entry.entryFullPath, [], {
-    cwd: entry.workingDirectoryFull,
-    detached: true,
-    stdio: "ignore",
-    windowsHide: false,
-  });
-  child?.unref?.();
+  return { ok: true, entry };
+}
 
-  return {
-    ok: true,
-    pid: child?.pid || null,
-    entryName: entry.entryName,
-    relativePath: entry.relativePath,
-    workingDirectory: entry.workingDirectoryFull,
-  };
+function normalizeShortcutPath(shortcutPath) {
+  if (!shortcutPath) return "";
+  const resolved = path.resolve(shortcutPath);
+  return path.extname(resolved).toLowerCase() === SHORTCUT_EXT ? resolved : `${resolved}${SHORTCUT_EXT}`;
 }
 
 module.exports = {
   WINDOWS_LAUNCH_EXTS,
   buildLaunchAllowlist,
+  createShortcutForAllowedEntry,
   isWindowsLaunchablePath,
   launchAllowedEntry,
+  normalizeShortcutPath,
+  resolveAllowedLaunchEntry,
 };

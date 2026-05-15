@@ -2,8 +2,10 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const {
   buildLaunchAllowlist,
+  createShortcutForAllowedEntry,
   isWindowsLaunchablePath,
   launchAllowedEntry,
+  normalizeShortcutPath,
 } = require("../desktop/launcher");
 
 async function main() {
@@ -57,6 +59,38 @@ async function main() {
     platform: "darwin",
   });
   assert.deepEqual(unsupported, { ok: false, errorCode: "unsupported-platform" });
+
+  const shortcuts = [];
+  const shortcutResult = await createShortcutForAllowedEntry({
+    allowlist,
+    entryFullPath: gamePath,
+    shortcutPath: path.resolve("Desktop", "Game"),
+    platform: "win32",
+    statImpl: async () => ({ isFile: () => true }),
+    writeShortcutLinkImpl: (shortcutPath, options) => {
+      shortcuts.push({ shortcutPath, options });
+      return true;
+    },
+  });
+
+  assert.equal(shortcutResult.ok, true);
+  assert.equal(shortcutResult.shortcutName, "Game.lnk");
+  assert.equal(shortcuts.length, 1);
+  assert.equal(shortcuts[0].shortcutPath, normalizeShortcutPath(path.resolve("Desktop", "Game")));
+  assert.equal(shortcuts[0].options.target, gamePath);
+  assert.equal(shortcuts[0].options.cwd, path.dirname(gamePath));
+
+  const rejectedShortcut = await createShortcutForAllowedEntry({
+    allowlist,
+    entryFullPath: path.resolve("Other", "Game.exe"),
+    shortcutPath: path.resolve("Desktop", "Other.lnk"),
+    platform: "win32",
+    statImpl: async () => ({ isFile: () => true }),
+    writeShortcutLinkImpl: () => {
+      throw new Error("shortcut should not be created for rejected paths");
+    },
+  });
+  assert.deepEqual(rejectedShortcut, { ok: false, errorCode: "not-allowed" });
 
   console.log("Desktop launcher smoke passed.");
 }

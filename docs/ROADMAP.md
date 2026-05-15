@@ -29,9 +29,10 @@
 - Real folder picker with full paths
 - ZIP directory preflight without extraction
 - One-click launch for trusted scanned `.exe/.com` entries
+- Launch history
+- Create shortcuts
 - Portable Windows release workflow
 - Create launch profiles
-- Create shortcuts
 - Optional Locale Emulator command template
 - Optional Wine/Proton notes for advanced users
 

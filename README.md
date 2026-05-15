@@ -59,7 +59,7 @@ GalAid turns that mess into a small diagnosis report.
 | Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts. | The game uses a private or company-specific structure instead of a famous public engine. |
 | Runtime checks | Checks extraction state, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs. | The right launcher exists, but the game crashes, shows mojibake, or complains about missing DLLs. |
 | Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, environment checks, and sanitized file metadata. | A player needs to ask for help without uploading game files or private paths. |
-| Desktop beta | Adds native folder selection, recursive local scanning, ZIP directory preflight, and trusted Windows `.exe/.com` launching. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
+| Desktop beta | Adds native folder selection, recursive local scanning, ZIP directory preflight, trusted Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
 
 ## Product Shape
 
@@ -89,7 +89,7 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - engine and locale notes
 - a portable `.galaid-profile.json` file
 
-Profiles do not auto-run games by themselves. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker, and a deliberate click can launch a trusted scanned Windows `.exe/.com` entry with the correct working directory.
+Profiles do not auto-run games by themselves. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a trusted scanned Windows `.exe/.com` entry with the correct working directory, and users can create a Windows shortcut for the same allowlisted entry.
 
 ## Next-Step Roadmap
 
@@ -249,7 +249,7 @@ npm install
 npm start
 ```
 
-The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations. It can also launch trusted scanned Windows `.exe/.com` entries after the user clicks `Launch`; GalAid sets the working directory to the entry's folder and does not add hidden arguments.
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations. It can also launch trusted scanned Windows `.exe/.com` entries after the user clicks `Launch`; GalAid sets the working directory to the entry's folder and does not add hidden arguments. The profile tab can create a Windows shortcut for an allowlisted entry and shows a recent-launch history using relative path metadata.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
 
@@ -274,7 +274,7 @@ The static web MVP only reads browser-exposed file metadata. The desktop beta ca
 
 ## Roadmap
 
-- Desktop launch assistant: shortcut creation, launch history, and richer failure follow-up
+- Desktop launch assistant: richer launch-failure follow-up and environment templates
 - Locale Emulator / Wine / Proton hint integration
 - Screenshot OCR for error dialogs
 - Better engine fingerprints

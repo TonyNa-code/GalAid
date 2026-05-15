@@ -438,6 +438,7 @@ function checkDesktopLauncher(errors) {
 
   for (const phrase of [
     "buildLaunchAllowlist",
+    "createShortcutForAllowedEntry",
     "launchAllowedEntry",
     "unsupported-platform",
     "not-allowed",
@@ -446,11 +447,11 @@ function checkDesktopLauncher(errors) {
     assert(launcherText.includes(phrase), `${launcherFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["desktop:launch-entry", "launchEntry"]) {
+  for (const phrase of ["desktop:launch-entry", "desktop:create-shortcut", "launchEntry", "createShortcut"]) {
     assert(preloadText.includes(phrase) || mainText.includes(phrase), `desktop launch bridge is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["Desktop launcher smoke passed", "platform: \"win32\"", "not-allowed"]) {
+  for (const phrase of ["Desktop launcher smoke passed", "platform: \"win32\"", "not-allowed", "normalizeShortcutPath"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }

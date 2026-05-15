@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("galaidDesktop", {
   selectFolder: () => ipcRenderer.invoke("desktop:select-folder"),
   selectFiles: () => ipcRenderer.invoke("desktop:select-files"),
   launchEntry: (payload) => ipcRenderer.invoke("desktop:launch-entry", payload),
+  createShortcut: (payload) => ipcRenderer.invoke("desktop:create-shortcut", payload),
+  getLaunchHistory: () => ipcRenderer.invoke("desktop:get-launch-history"),
   onScanProgress(listener) {
     progressListeners.add(listener);
     return () => progressListeners.delete(listener);
