@@ -13,15 +13,17 @@ async function main() {
       { name: "SnowTrial/Game.exe", content: "launcher" },
       { name: "SnowTrial/data.xp3", content: "resource" },
       { name: "SnowTrial/scenario/common.ks", content: "script" },
+      { name: "SnowTrial/system/Config.tjs", content: "config" },
     ]),
   );
 
   const preview = await previewZipFile(zipPath);
   assert.equal(preview.status, "ok");
-  assert.equal(preview.fileCount, 3);
+  assert.equal(preview.fileCount, 4);
   assert.equal(preview.signals.launchCandidateCount, 1);
   assert.deepEqual(preview.signals.launchSamples, ["SnowTrial/Game.exe"]);
   assert.equal(preview.signals.engineHints[0].id, "kirikiri");
+  assert.ok(preview.signals.engineHints[0].samples.includes("SnowTrial/system/Config.tjs"));
   assert.equal(preview.sampleFiles[1].path, "SnowTrial/data.xp3");
 
   await fs.rm(tempDir, { recursive: true, force: true });

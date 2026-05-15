@@ -37,12 +37,14 @@ const emptyStateTemplate = document.querySelector("#emptyStateTemplate");
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "bmp", "webp", "tga", "dds", "gif", "psd"]);
 const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "mid", "midi"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
-const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
+const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
 const COMMERCIAL_RESOURCE_ARCHIVES = new Set(["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]);
+const KIRIKIRI_LAUNCHERS = new Set(["krkr.exe", "krkrz.exe", "kirikiri.exe", "kag.exe"]);
+const KIRIKIRI_SCRIPT_HINTS = new Set(["startup.tjs", "config.tjs", "envinit.tjs"]);
 const SCAN_BATCH_SIZE = 1000;
 const LARGE_FOLDER_THRESHOLD = 20000;
 const HUGE_FOLDER_THRESHOLD = 50000;
@@ -697,6 +699,8 @@ const SAMPLE_FILES = [
   ["SakuraTrial/data.xp3", 423000000],
   ["SakuraTrial/patch.xp3", 59000000],
   ["SakuraTrial/plugin/AlphaMovie.dll", 480000],
+  ["SakuraTrial/startup.tjs", 2200],
+  ["SakuraTrial/system/Config.tjs", 4100],
   ["SakuraTrial/save/readme.txt", 2800],
   ["SakuraTrial/manual/startup_error_jp_locale.txt", 1300],
   ["SakuraTrial/BGM/theme01.ogg", 6920000],
@@ -1400,13 +1404,18 @@ function detectEngines(files) {
       test(file) {
         const hit =
           file.ext === "xp3" ||
+          file.ext === "tjs" ||
+          file.ext === "tpm" ||
+          KIRIKIRI_LAUNCHERS.has(file.name.toLowerCase()) ||
+          KIRIKIRI_SCRIPT_HINTS.has(file.name.toLowerCase()) ||
           file.lowerPath.includes("kirikiri") ||
           file.lowerPath.includes("krkr") ||
           file.lowerPath.endsWith(".ks") ||
-          file.lowerPath.includes("/scenario/");
+          file.lowerPath.includes("/scenario/") ||
+          file.lowerPath.includes("/system/");
         return hit;
       },
-      advice: "优先尝试根目录主程序；乱码或闪退时先检查日区/Locale Emulator 与路径编码。",
+      advice: "KiriKiri/KAG 线索常来自 .xp3 资源、.ks 剧本、.tjs 配置或 krkr/krkrz 启动器；优先尝试根目录主程序，乱码或闪退时先检查日区/Locale Emulator 与路径编码。",
     },
     {
       id: "renpy",
@@ -1652,6 +1661,11 @@ function detectLaunchCandidates(files, engines) {
       if (engineIds.has("siglus") && base === "siglusengine.exe") {
         score += 18;
         reasons.push("engine executable");
+      }
+
+      if (engineIds.has("kirikiri") && KIRIKIRI_LAUNCHERS.has(base)) {
+        score += 18;
+        reasons.push("KiriKiri/KAG launcher");
       }
 
       if (isSetupLike(lower)) {
