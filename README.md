@@ -1,18 +1,19 @@
+<br>
+
 <div align="center">
   <h1>GalAid</h1>
   <p><strong>A local-first launch doctor for visual novel and galgame folders.</strong></p>
-  <p>From archive chaos to a launch-ready route, without uploading game files.</p>
+  <p><sub>Archive chaos in. Launch-ready evidence out. No game files uploaded.</sub></p>
 
   <p>
-    <a href="https://TonyNa-code.github.io/GalAid/">Live Demo</a>
-    ·
-    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.0-beta">Windows Beta</a>
-    ·
-    <a href="docs/CONTRIBUTING.md">Contribute</a>
+    <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.1-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
   <p>
     <img alt="Local-first" src="https://img.shields.io/badge/local--first-no_upload-36a779">
+    <img alt="Metadata only" src="https://img.shields.io/badge/metadata-only-5b5f97">
     <img alt="Static web app" src="https://img.shields.io/badge/web-static_app-20252b">
     <img alt="Desktop beta" src="https://img.shields.io/badge/desktop-Windows_beta-407da3">
     <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-d95a48">
@@ -25,17 +26,19 @@ GalAid is a local-first launch doctor for visual novel and galgame folders. It h
 
 <table>
   <tr>
-    <td><strong>Diagnose</strong><br>Drop in a folder, archive, or disc-image file list and get launch candidates, engine clues, runtime checks, and an ordered route.</td>
-    <td><strong>Launch</strong><br>The desktop beta can start trusted local Windows <code>.exe/.com</code> entries with the correct working directory after an explicit click.</td>
-    <td><strong>Ask safely</strong><br>Export a metadata-only support bundle for GitHub issues, forums, or chat without shipping game files.</td>
+    <td width="33%" valign="top"><strong>1. Read the package</strong><br>Drop a folder, archive, or disc-image file list. GalAid looks at names, paths, sizes, and extensions only.</td>
+    <td width="33%" valign="top"><strong>2. Find the route</strong><br>Get launch candidates, engine clues, runtime checks, archive guidance, and an ordered next-step roadmap.</td>
+    <td width="33%" valign="top"><strong>3. Launch or ask</strong><br>Use the desktop beta to launch trusted entries, or export a metadata-only support bundle for help.</td>
   </tr>
 </table>
 
-![GalAid roadmap demo](docs/assets/galaid-roadmap-demo.png)
+<p align="center">
+  <img alt="GalAid roadmap demo" src="docs/assets/galaid-roadmap-demo.png">
+</p>
 
 The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes only file names, paths, sizes, and extensions in your browser. A desktop shell is also available for native folder selection and full local path scanning.
 
-## Why
+## Why It Exists
 
 Many visual novel players get stuck before the game even opens:
 
@@ -47,29 +50,35 @@ Many visual novel players get stuck before the game even opens:
 
 GalAid turns that mess into a small diagnosis report.
 
-## Current Features
+## Feature Map
 
-- Detect likely launch entries: `.exe`, `.bat`, `.cmd`, `.lnk`, `index.html`
-- Build an ordered next-step roadmap that tells beginners what to try first
-- Generate safe launch profiles with command hints and portable JSON config
-- Launch trusted local Windows `.exe/.com` entries from the desktop beta with the correct working directory
-- Flag installer/support tools that should not be used as the main launcher
-- Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
-- Detect engine and file-structure clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/proprietary VN engines
-- Warn about archive-only imports, disc images, non-English paths, long paths, and locale-sensitive engines
-- Run a runtime/environment checklist for extraction state, launch entry, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
-- Treat commercial/self-developed engine layouts as a first-class startup route: root executable, same-folder DLLs, resource archives, config files, and working directory
-- Match pasted error text against a community-editable JSON recipe library for common VN startup failures
-- Map common asset categories: images, audio, video, scripts, resource archives, launchers
-- Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
-- Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
-- Desktop beta with native folder/file picker and recursive local scanning
-- Desktop ZIP directory preflight that reads archive file lists without extracting game files
-- Copy or download a Markdown diagnosis report
-- Switch diagnosis output language between Chinese, English, and Japanese
-- Preview and download a local support ZIP with report, safe launch profiles, matched error recipes, environment checks, and sanitized file metadata
-- Copy an issue-ready support summary without exposing game files
-- Runs fully in the browser with no upload
+| Area | What GalAid does | Useful when |
+| --- | --- | --- |
+| Launch route | Ranks `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html` candidates, while flagging installers and support tools. | A folder has many executables and no obvious start button. |
+| Package diagnosis | Identifies archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, and `.mds/.mdf`. | The download still looks like a pile of compressed parts or old disc files. |
+| Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts. | The game uses a private or company-specific structure instead of a famous public engine. |
+| Runtime checks | Checks extraction state, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs. | The right launcher exists, but the game crashes, shows mojibake, or complains about missing DLLs. |
+| Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, environment checks, and sanitized file metadata. | A player needs to ask for help without uploading game files or private paths. |
+| Desktop beta | Adds native folder selection, recursive local scanning, ZIP directory preflight, and trusted Windows `.exe/.com` launching. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
+
+## Product Shape
+
+<table>
+  <tr>
+    <td width="25%" valign="top"><strong>Local-first</strong><br>No server is required for diagnosis. The web app runs as static files, and the desktop beta keeps scanning local.</td>
+    <td width="25%" valign="top"><strong>Metadata-only</strong><br>GalAid reads filenames, relative paths, extensions, and sizes. It does not upload or include game contents.</td>
+    <td width="25%" valign="top"><strong>Beginner-readable</strong><br>The output is an ordered route: extract this, mount that, try this launcher, check this runtime.</td>
+    <td width="25%" valign="top"><strong>Contributor-friendly</strong><br>Most improvements are small data rules, redacted evidence, docs, or focused tests around real user flows.</td>
+  </tr>
+</table>
+
+## Quick Start
+
+| Surface | Start here | Best for |
+| --- | --- | --- |
+| Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
+| Windows beta | [v0.1.1-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.1-beta) | Native folder picking, recursive scans, ZIP preflight, and trusted one-click launch. |
+| Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
 
@@ -133,6 +142,15 @@ npm run test:smoke
 ## Contributing
 
 Recipe improvements, engine fingerprints, docs, and redacted false-positive reports are welcome. Start with [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+High-signal pull requests usually land in one of these lanes:
+
+| Lane | Good contribution |
+| --- | --- |
+| Engine evidence | Add a narrow, metadata-only fingerprint with sample filenames and a regression check. |
+| Error recipes | Improve a startup-error pattern with safer wording, clearer evidence, and a beginner action. |
+| Package guidance | Make archive, split-volume, or disc-image diagnosis less confusing for real users. |
+| Safety and docs | Clarify what GalAid does locally, what it never uploads, and how users should ask for help. |
 
 For new startup-error rules, open a "New error recipe" issue or edit `data/error-recipes.json` directly in a pull request.
 
@@ -224,7 +242,7 @@ npm run build:pages
 
 ### Desktop Beta
 
-Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.0-beta), or run the Electron shell locally:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.1-beta), or run the Electron shell locally:
 
 ```bash
 npm install
