@@ -21,6 +21,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-privacy-list")).toContainText("不包含游戏文件");
+  await expect(page.locator(".support-privacy-list")).toContainText("ZIP 只预检目录");
 
   const supportPreview = page.locator(".support-preview");
   await expect(supportPreview).toContainText("## GalAid 求助摘要");
