@@ -10,6 +10,8 @@ The package tab can prepare ZIP/RAR/7z archives after the user clicks `Extract a
 
 Disc-image rows can use `Mount/extract and rescan`. On Windows, `.iso` files are mounted with the built-in `Mount-DiskImage` command when available. Other supported image files are handled as a best-effort local extraction through the bundled 7z-compatible helper before GalAid rescans the prepared output folder.
 
+After a package or image is prepared, the launch tab shows a prepared handoff card with the original package, the prepared target, and the top recommended launch entry. On Windows, that handoff card can start the same allowlisted `.exe/.com` entry as the normal launch candidate button.
+
 ## Run Locally
 
 ```bash

@@ -59,6 +59,33 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(page.getByRole("heading", { name: "没有候选入口" })).toBeVisible();
 });
 
+test("prepared desktop handoff highlights the next launch entry", async ({ page }) => {
+  await page.goto("/");
+
+  const handoffHtml = await page.evaluate(() => {
+    const files = SAMPLE_FILES.map(fileFromSample).map((file) => ({
+      ...file,
+      fullPath: `C:\\VN\\${file.path.replaceAll("/", "\\")}`,
+    }));
+    const analysis = analyze(files);
+    analysis.desktopMeta = {
+      platform: "win32",
+      selectedCount: 1,
+      skipped: 0,
+      preparedFrom: "SakuraTrial.zip",
+      preparedOutputName: "SakuraTrial-prepared",
+      preparedKind: "extracted-archive",
+    };
+    return renderLaunch(analysis);
+  });
+
+  expect(handoffHtml).toContain("准备完成");
+  expect(handoffHtml).toContain("SakuraTrial.zip");
+  expect(handoffHtml).toContain("SakuraTrial-prepared");
+  expect(handoffHtml).toContain("SakuraTrial/game.exe");
+  expect(handoffHtml).toContain('data-candidate-index="0"');
+});
+
 test("launch failure follow-up updates roadmap and support bundle", async ({ page }) => {
   await page.goto("/");
 

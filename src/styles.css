@@ -500,6 +500,7 @@ textarea {
 .engine-card,
 .asset-card,
 .profile-card,
+.prepared-handoff,
 .roadmap-summary,
 .roadmap-step,
 .environment-summary,
@@ -549,6 +550,7 @@ textarea {
 .engine-card h4,
 .asset-card h4,
 .profile-card h4,
+.prepared-handoff h4,
 .roadmap-summary h4,
 .roadmap-step h4,
 .environment-summary h4,
@@ -569,6 +571,7 @@ textarea {
 .engine-card p,
 .asset-card p,
 .profile-card p,
+.prepared-handoff p,
 .roadmap-summary p,
 .roadmap-step p,
 .environment-summary p,
@@ -589,6 +592,29 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
+}
+
+.prepared-handoff {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.prepared-handoff.ready {
+  border-color: rgba(54, 167, 121, 0.34);
+  background: rgba(54, 167, 121, 0.06);
+}
+
+.prepared-handoff.todo {
+  border-color: rgba(217, 154, 43, 0.44);
+  background: rgba(217, 154, 43, 0.06);
+}
+
+.handoff-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .candidate-side {
@@ -1525,6 +1551,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .prepared-handoff {
+    grid-template-columns: 1fr;
+  }
+
   .environment-summary {
     grid-template-columns: 1fr;
   }
@@ -1544,6 +1574,8 @@ textarea {
   }
 
   .roadmap-actions,
+  .handoff-actions,
+  .handoff-actions button,
   .roadmap-actions button {
     width: 100%;
   }

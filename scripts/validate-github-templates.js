@@ -350,6 +350,8 @@ function checkBrowserSmoke(errors) {
     "不包含游戏文件",
     "ZIP 目录预检",
     "商业/自研引擎启动链",
+    "prepared desktop handoff",
+    "SakuraTrial-prepared",
   ]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }

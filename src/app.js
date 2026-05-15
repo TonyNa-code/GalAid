@@ -278,6 +278,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchFailureEvidenceReady: "已记录 {count} 条现象",
       applyFailureFollowup: "更新路线",
       clearFailureFollowup: "清空跟进",
+      preparedHandoffTitle: "准备完成",
+      preparedHandoffReadyBody: "已从 {source} 准备并重扫 {target}。下一步优先尝试 {entry}。",
+      preparedHandoffNoLaunchBody: "已从 {source} 准备并重扫 {target}，但还没有找到可信启动入口。请查看下面的诊断结论，或把安装后的完整游戏目录拖回来。",
+      preparedRecommendedEntry: "推荐入口",
       noLaunchTitle: "没有候选入口",
       noLaunchBody: "请换成完整解压后的游戏根目录再试。",
       items: "项",
@@ -414,7 +418,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchFailed: "启动失败",
       toastShortcutCreated: "快捷方式已创建：{name}",
       toastShortcutFailed: "快捷方式创建失败",
-      toastPackagePrepared: "已解压并重新扫描：{name}",
+      toastPackagePrepared: "已准备并重新扫描：{name}",
       toastPrepareFailed: "解压准备失败",
       toastPrepareToolMissing: "内置或本机 7z 工具暂时不可用，无法处理这个包",
       toastPrepareUnsupported: "这个类型暂时不能自动解压",
@@ -545,6 +549,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchFailureEvidenceReady: "{count} symptoms recorded",
       applyFailureFollowup: "Update roadmap",
       clearFailureFollowup: "Clear follow-up",
+      preparedHandoffTitle: "Prepared and rescanned",
+      preparedHandoffReadyBody: "GalAid prepared {target} from {source}. Try {entry} first.",
+      preparedHandoffNoLaunchBody: "GalAid prepared {target} from {source}, but no trusted launch entry was found yet. Review the findings below or drop the installed game folder back into GalAid.",
+      preparedRecommendedEntry: "Recommended entry",
       noLaunchTitle: "No launch candidate",
       noLaunchBody: "Try again with the fully extracted game root folder.",
       items: "items",
@@ -681,7 +689,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchFailed: "Launch failed",
       toastShortcutCreated: "Shortcut created: {name}",
       toastShortcutFailed: "Shortcut creation failed",
-      toastPackagePrepared: "Extracted and rescanned: {name}",
+      toastPackagePrepared: "Prepared and rescanned: {name}",
       toastPrepareFailed: "Package preparation failed",
       toastPrepareToolMissing: "A bundled or local 7z-compatible extractor is needed to prepare this package",
       toastPrepareUnsupported: "This package type cannot be extracted automatically yet",
@@ -812,6 +820,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchFailureEvidenceReady: "{count} 件の症状を記録済み",
       applyFailureFollowup: "手順を更新",
       clearFailureFollowup: "フォローを消去",
+      preparedHandoffTitle: "準備と再スキャンが完了",
+      preparedHandoffReadyBody: "{source} から {target} を準備して再スキャンしました。まず {entry} を試してください。",
+      preparedHandoffNoLaunchBody: "{source} から {target} を準備して再スキャンしましたが、信頼できる起動入口はまだ見つかっていません。下の診断結果を確認するか、インストール後の完全なゲームフォルダをもう一度投入してください。",
+      preparedRecommendedEntry: "推奨起動ファイル",
       noLaunchTitle: "起動候補なし",
       noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
       items: "件",
@@ -948,7 +960,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchFailed: "起動に失敗しました",
       toastShortcutCreated: "ショートカットを作成しました: {name}",
       toastShortcutFailed: "ショートカット作成に失敗しました",
-      toastPackagePrepared: "展開して再スキャンしました: {name}",
+      toastPackagePrepared: "準備して再スキャンしました: {name}",
       toastPrepareFailed: "パッケージ準備に失敗しました",
       toastPrepareToolMissing: "このパッケージの準備には同梱またはローカルの 7z 互換ツールが必要です",
       toastPrepareUnsupported: "この種類はまだ自動展開できません",
@@ -3479,6 +3491,7 @@ function renderLaunch(analysis) {
 
   return `
     ${renderModeCard(analysis)}
+    ${renderPreparedHandoff(analysis)}
     <div class="section-title">
       <h3>${escapeHtml(getUiText("launchCandidates"))}</h3>
       <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
@@ -3490,6 +3503,44 @@ function renderLaunch(analysis) {
       <span>${analysis.findings.length} ${escapeHtml(getUiText("findings"))}</span>
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
+  `;
+}
+
+function renderPreparedHandoff(analysis) {
+  const meta = analysis.desktopMeta;
+  if (!meta?.preparedFrom) return "";
+
+  const topCandidate = analysis.launchCandidates[0] || null;
+  const source = meta.preparedFrom || getUiText("packagesTitle");
+  const target = meta.preparedOutputName || getUiText("importedFiles");
+  const body = topCandidate
+    ? getUiText("preparedHandoffReadyBody", { source, target, entry: topCandidate.file.path })
+    : getUiText("preparedHandoffNoLaunchBody", { source, target });
+  const canLaunchTopCandidate = topCandidate ? canDesktopLaunchFile(topCandidate.file) : false;
+  const action = topCandidate
+    ? `
+      <button
+        class="launch-entry-button"
+        type="button"
+        data-launch-action="candidate"
+        data-candidate-index="0"
+        ${canLaunchTopCandidate ? "" : "disabled"}
+        title="${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : getUiText("launchUnsupported"))}"
+      >
+        ${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : getUiText("launchUnsupported"))}
+      </button>
+    `
+    : "";
+
+  return `
+    <article class="prepared-handoff ${topCandidate ? "ready" : "todo"}">
+      <div>
+        <h4>${escapeHtml(getUiText("preparedHandoffTitle"))}</h4>
+        <p>${escapeHtml(body)}</p>
+        ${topCandidate ? `<div class="meta-row"><span class="chip good">${escapeHtml(getUiText("preparedRecommendedEntry"))}: ${escapeHtml(topCandidate.file.name)}</span><span class="chip">${escapeHtml(topCandidate.file.path)}</span></div>` : ""}
+      </div>
+      <div class="handoff-actions">${action}</div>
+    </article>
   `;
 }
 
@@ -4292,6 +4343,9 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
     lines.push(`- Desktop platform: ${analysis.desktopMeta.platform || "unknown"}`);
     lines.push(`- Desktop selections: ${analysis.desktopMeta.selectedCount || 0}`);
     lines.push(`- Desktop skipped entries: ${analysis.desktopMeta.skipped || 0}`);
+    if (analysis.desktopMeta.preparedFrom) lines.push(`- Prepared from: ${analysis.desktopMeta.preparedFrom}`);
+    if (analysis.desktopMeta.preparedOutputName) lines.push(`- Prepared output: ${analysis.desktopMeta.preparedOutputName}`);
+    if (analysis.desktopMeta.preparedKind) lines.push(`- Prepared kind: ${analysis.desktopMeta.preparedKind}`);
   }
   lines.push("");
   lines.push(`## ${labels.launchCandidates}`);
@@ -4566,6 +4620,9 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
           platform: analysis.desktopMeta.platform || "unknown",
           selectedCount: analysis.desktopMeta.selectedCount || 0,
           skipped: analysis.desktopMeta.skipped || 0,
+          preparedFrom: analysis.desktopMeta.preparedFrom || "",
+          preparedOutputName: analysis.desktopMeta.preparedOutputName || "",
+          preparedKind: analysis.desktopMeta.preparedKind || "",
         }
       : null,
   };
