@@ -27,8 +27,9 @@
 ## 0.4 Windows Desktop
 
 - Real folder picker with full paths
-- Package and disc-image metadata preflight without extraction or mounting
-- Archive extraction handoff with password prompt and automatic rescan
+- Package and disc-image metadata preflight before extraction or mounting
+- Bundled archive extraction handoff with password prompt and automatic rescan
+- Disc-image mount/extract handoff with automatic rescan
 - One-click launch for trusted scanned `.exe/.com` entries
 - Launch history
 - Create shortcuts

@@ -26,7 +26,7 @@ Do not include:
 - game downloads, serials, cracks, DRM bypasses, or decryption instructions
 - copyrighted game files, scripts, CG, audio, video, or extracted assets
 - private absolute paths, real names, email addresses, machine names, or access tokens
-- advice that asks GalAid to install software, edit registry settings, mount images, or run games automatically
+- advice that asks GalAid to install software, edit registry settings, mount/extract images without confirmation, or run games automatically
 
 Prefer:
 

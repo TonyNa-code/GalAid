@@ -484,7 +484,7 @@ function checkArchivePreview(errors) {
     assert(previewText.includes(phrase), `${previewFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["makeZip", "SnowTrial/Game.exe", "MoonlightCafe/Game.exe", "does not mount", "Archive preview smoke passed"]) {
+  for (const phrase of ["makeZip", "SnowTrial/Game.exe", "MoonlightCafe/Game.exe", "metadata only", "Archive preview smoke passed"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }
@@ -498,11 +498,11 @@ function checkPackagePrep(errors) {
   checkNoTrailingWhitespace(prepFile, prepText, errors);
   checkNoTrailingWhitespace(testFile, testText, errors);
 
-  for (const phrase of ["prepareArchivePackage", "isPrepareSupportedArchive", "password-failed", "tool-missing"]) {
+  for (const phrase of ["prepareArchivePackage", "prepareDiscImagePackage", "isPrepareSupportedPackage", "7zip-bin", "Mount-DiskImage", "password-failed", "tool-missing"]) {
     assert(prepText.includes(phrase), `${prepFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["Package prep smoke passed", "knownPassword", "Game.part2.rar", "tool-missing"]) {
+  for (const phrase of ["Package prep smoke passed", "knownPassword", "Game.part2.rar", "Disc.iso", "Windows Mount-DiskImage", "tool-missing"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }

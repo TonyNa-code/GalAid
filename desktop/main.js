@@ -3,7 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { scanSelectedPaths } = require("./scanner");
 const { buildLaunchAllowlist, createShortcutForAllowedEntry, launchAllowedEntry } = require("./launcher");
-const { isPrepareSupportedArchive, prepareArchivePackage } = require("./package-prep");
+const { isPrepareSupportedPackage, prepareLocalPackage } = require("./package-prep");
 
 const launchAllowlists = new Map();
 const packageAllowlists = new Map();
@@ -138,7 +138,7 @@ ipcMain.handle("desktop:prepare-package", async (event, payload = {}) => {
 
   try {
     const outputDirectory = await makeUniqueOutputDirectory(outputParentResult.filePaths[0], packageFile.name);
-    const prepareResult = await prepareArchivePackage({
+    const prepareResult = await prepareLocalPackage({
       packagePath: packageFullPath,
       outputDirectory,
       password: String(payload.password || ""),
@@ -148,10 +148,12 @@ ipcMain.handle("desktop:prepare-package", async (event, payload = {}) => {
     });
 
     if (!prepareResult.ok) return prepareResult;
-    const scanResult = await scanForRenderer([outputDirectory], event.sender, {
+    const scanPath = prepareResult.scanPath || outputDirectory;
+    const scanResult = await scanForRenderer([scanPath], event.sender, {
       selectedCount: 1,
       preparedFrom: packageFile.path,
-      preparedOutputName: path.basename(outputDirectory),
+      preparedOutputName: path.basename(scanPath),
+      preparedKind: prepareResult.mounted ? "mounted-image" : prepareResult.imageExtracted ? "extracted-image" : "extracted-archive",
       platform: process.platform,
     });
     return {
@@ -203,7 +205,7 @@ function rememberScanAllowlists(webContents, files) {
 function buildPackageAllowlist(files) {
   const allowlist = new Map();
   for (const file of files || []) {
-    if (!file?.fullPath || !isPrepareSupportedArchive(file.fullPath)) continue;
+    if (!file?.fullPath || !isPrepareSupportedPackage(file.fullPath)) continue;
     allowlist.set(path.resolve(file.fullPath), file);
   }
   return allowlist;
@@ -259,14 +261,13 @@ function getLaunchHistoryPath() {
 }
 
 async function makeUniqueOutputDirectory(parentDirectory, packageName) {
-  const safeBase = stripArchiveExt(stripUnsafePathChars(packageName || "GalAid-package")) || "GalAid-package";
+  const safeBase = stripPackageExt(stripUnsafePathChars(packageName || "GalAid-package")) || "GalAid-package";
   let candidate = path.join(parentDirectory, `${safeBase}-prepared`);
   for (let index = 2; index < 200; index += 1) {
     if (await pathExists(candidate)) {
       candidate = path.join(parentDirectory, `${safeBase}-prepared-${index}`);
       continue;
     }
-    await fs.mkdir(candidate, { recursive: true });
     return candidate;
   }
   throw new Error("Could not create a unique output folder.");
@@ -285,11 +286,12 @@ function stripUnsafePathChars(value) {
   return path.basename(String(value || "")).replace(/[<>:"/\\|?*\x00-\x1F]/g, "_").slice(0, 120);
 }
 
-function stripArchiveExt(filename) {
+function stripPackageExt(filename) {
   return String(filename || "")
     .replace(/\.(zip|rar|7z)$/i, "")
     .replace(/\.(zip|7z)\.001$/i, "")
-    .replace(/\.part0*1\.rar$/i, "");
+    .replace(/\.part0*1\.rar$/i, "")
+    .replace(/\.(iso|cue|bin|mdf|mds|ccd|img|nrg|isz|cdi)$/i, "");
 }
 
 function stripShortcutExt(filename) {

@@ -8,6 +8,8 @@ The profile tab can create a `.lnk` shortcut for the same allowlisted entry. Gal
 
 The package tab can prepare ZIP/RAR/7z archives after the user clicks `Extract and rescan`. GalAid asks for an output parent folder, creates a fresh prepared subfolder, passes a user-provided password only to the local extraction attempt, then scans the extracted folder and refreshes launch recommendations.
 
+Disc-image rows can use `Mount/extract and rescan`. On Windows, `.iso` files are mounted with the built-in `Mount-DiskImage` command when available. Other supported image files are handled as a best-effort local extraction through the bundled 7z-compatible helper before GalAid rescans the prepared output folder.
+
 ## Run Locally
 
 ```bash
@@ -33,6 +35,7 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 - Shortcut creation uses the same latest-scan allowlist and writes a normal Windows `.lnk` only after the user chooses the save location.
 - Recent-launch history is local app data and is not included in exported reports or support ZIPs.
 - Archive extraction requires an explicit user click and a chosen output folder.
+- Disc-image mounting or extraction requires an explicit user click.
 - Package passwords are not saved to reports, support bundles, or launch history.
 - GalAid does not add hidden arguments, bypass checks, patch files, or run installers automatically.
 - Web mode cannot launch local programs because browsers intentionally block that ability.
@@ -44,4 +47,4 @@ npm run check
 npm run audit:release -- --strict
 ```
 
-The desktop package includes the app UI, generated rule files, JSON rule sources, desktop bridge files, README, and license. It must not include game files, extracted assets, private paths, tokens, or unofficial bypass instructions.
+The desktop package includes the app UI, generated rule files, JSON rule sources, desktop bridge files, the bundled `7zip-bin` package, README, and license. It must not include game files, extracted assets, private paths, tokens, or unofficial bypass instructions.

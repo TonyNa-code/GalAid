@@ -344,7 +344,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       zipPreview: "ZIP 目录预检",
       packagePreview: "包/镜像预检",
       preparePackage: "解压并重扫",
+      prepareImage: "挂载/解包并重扫",
       preparingPackage: "解压中...",
+      preparingImage: "镜像处理中...",
       preparePasswordPrompt: "这个包可能需要解压密码。请输入你已经知道的密码；留空会取消。",
       preparePasswordRetryPrompt: "密码不正确或缺少密码。请重新输入解压密码；留空会取消。",
       metadataOnly: "仅元数据",
@@ -414,8 +416,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastShortcutFailed: "快捷方式创建失败",
       toastPackagePrepared: "已解压并重新扫描：{name}",
       toastPrepareFailed: "解压准备失败",
-      toastPrepareToolMissing: "需要本机可用的 7z/7zz 才能解压这个包",
+      toastPrepareToolMissing: "内置或本机 7z 工具暂时不可用，无法处理这个包",
       toastPrepareUnsupported: "这个类型暂时不能自动解压",
+      toastPrepareImageFailed: "镜像暂时无法自动挂载或解包",
       toastPrepareMissingVolume: "分卷不完整，请补齐后从第一分卷开始",
       toastPrepareDamaged: "压缩包可能损坏或不完整",
       toastRoadmapCopied: "路线清单已复制",
@@ -470,7 +473,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noBlockers: "暂无明显阻断项。",
       privacyMetadata: "求助包只包含诊断元数据，不包含游戏文件或文件内容。",
       privacyPaths: "文件路径为相对路径，桌面绝对路径已省略。",
-      privacyZip: "包/镜像预检只读取本地目录或介质元数据，不解压、不挂载文件。",
+      privacyZip: "包/镜像预检只读取本地目录或介质元数据；解压或挂载需要你明确点击准备动作。",
     },
   },
   en: {
@@ -608,7 +611,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       zipPreview: "ZIP directory preflight",
       packagePreview: "Package/image preflight",
       preparePackage: "Extract and rescan",
+      prepareImage: "Mount/extract and rescan",
       preparingPackage: "Extracting...",
+      preparingImage: "Preparing image...",
       preparePasswordPrompt: "This package may need an extraction password. Enter the password you already have; leave blank to cancel.",
       preparePasswordRetryPrompt: "The password is missing or incorrect. Enter the extraction password again; leave blank to cancel.",
       metadataOnly: "metadata only",
@@ -678,8 +683,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastShortcutFailed: "Shortcut creation failed",
       toastPackagePrepared: "Extracted and rescanned: {name}",
       toastPrepareFailed: "Package preparation failed",
-      toastPrepareToolMissing: "A local 7z/7zz command is needed to extract this package",
+      toastPrepareToolMissing: "A bundled or local 7z-compatible extractor is needed to prepare this package",
       toastPrepareUnsupported: "This package type cannot be extracted automatically yet",
+      toastPrepareImageFailed: "This image could not be mounted or extracted automatically",
       toastPrepareMissingVolume: "A split volume is missing; start from the first volume after collecting all parts",
       toastPrepareDamaged: "The package may be damaged or incomplete",
       toastRoadmapCopied: "Roadmap checklist copied",
@@ -734,7 +740,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noBlockers: "No obvious blockers.",
       privacyMetadata: "The support bundle contains diagnosis metadata only, not game files or file contents.",
       privacyPaths: "Paths are relative; desktop absolute paths are omitted.",
-      privacyZip: "Package/image preflight reads local directory or media metadata only and does not extract or mount files.",
+      privacyZip: "Package/image preflight reads local directory or media metadata only; extraction or mounting requires an explicit prepare action.",
     },
   },
   ja: {
@@ -872,7 +878,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       zipPreview: "ZIP ディレクトリ事前チェック",
       packagePreview: "パッケージ/イメージ事前チェック",
       preparePackage: "展開して再スキャン",
+      prepareImage: "マウント/展開して再スキャン",
       preparingPackage: "展開中...",
+      preparingImage: "イメージ処理中...",
       preparePasswordPrompt: "このパッケージは展開パスワードが必要な可能性があります。既に知っているパスワードを入力してください。空欄ならキャンセルします。",
       preparePasswordRetryPrompt: "パスワードが不足しているか正しくありません。展開パスワードをもう一度入力してください。空欄ならキャンセルします。",
       metadataOnly: "メタデータのみ",
@@ -942,8 +950,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastShortcutFailed: "ショートカット作成に失敗しました",
       toastPackagePrepared: "展開して再スキャンしました: {name}",
       toastPrepareFailed: "パッケージ準備に失敗しました",
-      toastPrepareToolMissing: "このパッケージの展開にはローカルの 7z/7zz が必要です",
+      toastPrepareToolMissing: "このパッケージの準備には同梱またはローカルの 7z 互換ツールが必要です",
       toastPrepareUnsupported: "この種類はまだ自動展開できません",
+      toastPrepareImageFailed: "このイメージはまだ自動マウント/展開できません",
       toastPrepareMissingVolume: "分割ボリュームが不足しています。すべて揃えて最初のボリュームから開始してください",
       toastPrepareDamaged: "パッケージが破損または不完全な可能性があります",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
@@ -998,7 +1007,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noBlockers: "明確な阻害要因はありません。",
       privacyMetadata: "サポートバンドルには診断メタデータのみが含まれ、ゲームファイルや内容は含まれません。",
       privacyPaths: "パスは相対パスで保存され、デスクトップの絶対パスは省略されます。",
-      privacyZip: "パッケージ/イメージ事前チェックはローカルのディレクトリまたは媒体メタデータのみを読み取り、展開やマウントは行いません。",
+      privacyZip: "パッケージ/イメージ事前チェックはローカルのディレクトリまたは媒体メタデータのみを読み取ります。展開やマウントには明示的な準備操作が必要です。",
     },
   },
 };
@@ -1143,7 +1152,7 @@ const PACKAGE_SAMPLE_FILES = [
         directoryCount: 0,
         encryptedEntries: 0,
         truncated: false,
-        warnings: ["Disc image metadata only; GalAid does not mount, extract, or inspect disc contents."],
+        warnings: ["Disc image metadata only; use the desktop prepare action to mount or extract and rescan when available."],
         sampleFiles: [{ path: "MoonlightCafe_Bonus.iso", name: "MoonlightCafe_Bonus.iso", ext: "iso", size: 4810000000, compressedSize: 4810000000, depth: 0 }],
         signals: {
           launchCandidateCount: 0,
@@ -1813,7 +1822,7 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
     const engineNames = (preview.signals.engineHints || []).slice(0, 2).map((hint) => hint.name).join(" / ");
     steps.push({
       title: "包里看到启动线索",
-      body: `桌面预检只读取本地目录/介质元数据，不解压也不挂载；已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。先完整解压或挂载后，再扫描处理后的文件夹。`,
+      body: `桌面预检只读取本地目录/介质元数据；已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。需要时点击准备动作完整解压、挂载或解包，再扫描处理后的文件夹。`,
     });
   } else if (previewWithInstaller) {
     const sample = previewWithInstaller.archivePreview.signals.installerSamples[0];
@@ -4073,14 +4082,30 @@ function renderPackageSet(set) {
 }
 
 function renderPreparePackageAction(set) {
-  if (!desktopApi?.preparePackage || set.type !== "archive" || !set.firstFile?.fullPath || set.missing?.length) return "";
+  const prepareFile = getPackagePrepareFile(set);
+  if (!desktopApi?.preparePackage || !prepareFile?.fullPath || set.missing?.length || set.level === "warning") return "";
+  const label = set.type === "disc" ? getUiText("prepareImage") : getUiText("preparePackage");
   return `
     <div class="package-actions">
-      <button type="button" data-package-action="prepare" data-package-path="${escapeHtml(set.firstFile.fullPath)}">
-        ${escapeHtml(getUiText("preparePackage"))}
+      <button type="button" data-package-action="prepare" data-package-path="${escapeHtml(prepareFile.fullPath)}">
+        ${escapeHtml(label)}
       </button>
     </div>
   `;
+}
+
+function getPackagePrepareFile(set) {
+  if (!set?.files?.length) return null;
+  if (set.type === "archive") return set.firstFile || set.files[0]?.file || null;
+  if (set.type === "disc") {
+    const preferredExts = ["iso", "cue", "mds", "ccd", "nrg", "isz", "cdi", "img", "bin", "mdf"];
+    for (const ext of preferredExts) {
+      const match = set.files.find((item) => item.file.ext === ext);
+      if (match) return match.file;
+    }
+    return null;
+  }
+  return null;
 }
 
 function renderArchivePreview(preview) {
@@ -4984,17 +5009,18 @@ async function prepareDesktopPackage(packageFile, packageSet, button) {
   }
 
   const originalLabel = button?.textContent || "";
+  const preparingLabel = packageSet?.type === "disc" ? getUiText("preparingImage") : getUiText("preparingPackage");
   const runId = ++scanRunId;
   setControlsBusy(true);
   if (button) {
     button.disabled = true;
-    button.textContent = getUiText("preparingPackage");
+    button.textContent = preparingLabel;
   }
 
   try {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       updateScanState({
-        title: getUiText("preparingPackage"),
+        title: preparingLabel,
         detail: packageFile.name,
         progress: 22,
         phase: "scanning",
@@ -5039,13 +5065,15 @@ function getPrepareFailureMessage(result) {
   const code = result?.errorCode;
   if (code === "tool-missing") return getUiText("toastPrepareToolMissing");
   if (code === "unsupported-package" || code === "follow-up-volume") return getUiText("toastPrepareUnsupported");
+  if (code === "unsupported-image" || code === "image-prepare-failed" || code === "mount-failed") return getUiText("toastPrepareImageFailed");
   if (code === "missing-volume") return getUiText("toastPrepareMissingVolume");
   if (code === "damaged-package") return getUiText("toastPrepareDamaged");
   return result?.message || getUiText("toastPrepareFailed");
 }
 
 function findPackageSetByFullPath(fullPath) {
-  return currentAnalysis?.packages?.archiveSets?.find((set) =>
+  const sets = [...(currentAnalysis?.packages?.archiveSets || []), ...(currentAnalysis?.packages?.discSets || [])];
+  return sets.find((set) =>
     set.files.some((item) => item.file.fullPath === fullPath),
   );
 }

@@ -8,6 +8,15 @@ const RAR_PART_RE = /\.part0*(\d+)\.rar$/i;
 const OLD_RAR_VOLUME_RE = /\.r\d{2}$/i;
 const MAX_OUTPUT_BYTES = 512 * 1024;
 const EXTRACTION_TIMEOUT_MS = 30 * 60 * 1000;
+const ISO_MOUNT_TIMEOUT_MS = 90 * 1000;
+const DISC_IMAGE_EXTS = new Set(["iso", "cue", "bin", "mdf", "mds", "ccd", "img", "nrg", "isz", "cdi"]);
+
+async function prepareLocalPackage(options = {}) {
+  const support = getPackagePrepareSupport(options.packagePath);
+  if (!support.supported) return { ok: false, errorCode: support.errorCode, message: support.message };
+  if (support.kind === "disc-image") return prepareDiscImagePackage(options);
+  return prepareArchivePackage(options);
+}
 
 async function prepareArchivePackage({
   packagePath,
@@ -88,8 +97,98 @@ function getArchivePrepareSupport(filePath) {
   };
 }
 
+function getDiscImagePrepareSupport(filePath) {
+  const ext = getExt(path.basename(filePath || "").toLowerCase());
+  if (DISC_IMAGE_EXTS.has(ext)) return { supported: true, kind: "disc-image" };
+  return {
+    supported: false,
+    errorCode: "unsupported-image",
+    message: "This disc image type is not supported by the preparation assistant yet.",
+  };
+}
+
+function getPackagePrepareSupport(filePath) {
+  const archiveSupport = getArchivePrepareSupport(filePath);
+  if (archiveSupport.supported) return { ...archiveSupport, kind: "archive" };
+  const discSupport = getDiscImagePrepareSupport(filePath);
+  if (discSupport.supported) return discSupport;
+  return archiveSupport.errorCode === "follow-up-volume" ? archiveSupport : discSupport;
+}
+
 function isPrepareSupportedArchive(filePath) {
   return getArchivePrepareSupport(filePath).supported;
+}
+
+function isPrepareSupportedPackage(filePath) {
+  return getPackagePrepareSupport(filePath).supported;
+}
+
+async function prepareDiscImagePackage({
+  packagePath,
+  outputDirectory,
+  onProgress = () => {},
+  spawnImpl = spawn,
+  statImpl = fs.stat,
+  mkdirImpl = fs.mkdir,
+  platform = process.platform,
+  mountIsoImpl = mountIsoImage,
+} = {}) {
+  const normalizedPackagePath = path.resolve(packagePath || "");
+  const normalizedOutputDirectory = path.resolve(outputDirectory || "");
+  const support = getDiscImagePrepareSupport(normalizedPackagePath);
+
+  if (!support.supported) {
+    return { ok: false, errorCode: support.errorCode, message: support.message };
+  }
+
+  try {
+    const stat = await statImpl(normalizedPackagePath);
+    if (!stat.isFile()) return { ok: false, errorCode: "not-file", message: "Disc image path is not a file." };
+  } catch {
+    return { ok: false, errorCode: "not-found", message: "Disc image file was not found." };
+  }
+
+  const ext = getExt(path.basename(normalizedPackagePath));
+  onProgress({ phase: "preparing-image", packageName: path.basename(normalizedPackagePath), scanned: 0 });
+
+  if (platform === "win32" && ext === "iso") {
+    const mounted = await mountIsoImpl(normalizedPackagePath, spawnImpl);
+    if (mounted.ok) {
+      return {
+        ok: true,
+        packagePath: normalizedPackagePath,
+        scanPath: mounted.mountPath,
+        mounted: true,
+        tool: mounted.tool,
+      };
+    }
+  }
+
+  await mkdirImpl(normalizedOutputDirectory, { recursive: true });
+  const extracted = await runSevenZipExtract({
+    packagePath: normalizedPackagePath,
+    outputDirectory: normalizedOutputDirectory,
+    password: "",
+    spawnImpl,
+  });
+
+  if (extracted.ok) {
+    return {
+      ok: true,
+      packagePath: normalizedPackagePath,
+      outputDirectory: normalizedOutputDirectory,
+      scanPath: normalizedOutputDirectory,
+      imageExtracted: true,
+      tool: extracted.tool,
+    };
+  }
+
+  if (extracted.errorCode === "tool-missing") return extracted;
+  return {
+    ok: false,
+    errorCode: "image-prepare-failed",
+    message: "This disc image could not be mounted or extracted automatically.",
+  };
 }
 
 async function runSevenZipExtract({ packagePath, outputDirectory, password, spawnImpl }) {
@@ -109,7 +208,7 @@ async function runSevenZipExtract({ packagePath, outputDirectory, password, spaw
   return {
     ok: false,
     errorCode: "tool-missing",
-    message: "A local 7z/7zz command is required to extract this package.",
+    message: "A bundled or local 7z-compatible command is required to prepare this package.",
   };
 }
 
@@ -215,7 +314,73 @@ function isPasswordProblem(value) {
 }
 
 function getSevenZipCandidates() {
-  return [...new Set([process.env.GALAID_7Z_PATH, "7zz", "7z", "7za"].filter(Boolean))];
+  return [...new Set([process.env.GALAID_7Z_PATH, getBundledSevenZipPath(), "7zz", "7z", "7za"].filter(Boolean))];
+}
+
+function getBundledSevenZipPath() {
+  try {
+    const { path7za } = require("7zip-bin");
+    return unpackAsarPath(path7za);
+  } catch {
+    return "";
+  }
+}
+
+function unpackAsarPath(value) {
+  return String(value || "").replace(`${path.sep}app.asar${path.sep}`, `${path.sep}app.asar.unpacked${path.sep}`);
+}
+
+function mountIsoImage(isoPath, spawnImpl = spawn) {
+  return new Promise((resolve) => {
+    const command = [
+      "$ErrorActionPreference='Stop';",
+      `$image=Mount-DiskImage -ImagePath '${escapePowerShellSingleQuoted(isoPath)}' -PassThru;`,
+      "Start-Sleep -Milliseconds 500;",
+      "$volume=$image | Get-Volume | Select-Object -First 1;",
+      "if ($volume -and $volume.DriveLetter) { Write-Output ($volume.DriveLetter + ':\\') } else { exit 3 }",
+    ].join(" ");
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    let timer;
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve(result);
+    };
+
+    const child = spawnImpl("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    timer = setTimeout(() => {
+      child.kill?.();
+      finish({ ok: false, errorCode: "mount-timeout" });
+    }, ISO_MOUNT_TIMEOUT_MS);
+
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString("utf8");
+    });
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString("utf8");
+    });
+    child.on("error", (error) => finish({ ok: false, errorCode: error.code === "ENOENT" ? "mount-unavailable" : "mount-failed", message: error.message }));
+    child.on("close", (code) => {
+      const match = stdout.match(/[A-Z]:\\/i);
+      if (code === 0 && match) {
+        finish({ ok: true, mountPath: match[0], tool: "Windows Mount-DiskImage" });
+      } else {
+        finish({ ok: false, errorCode: "mount-failed", message: stderr.trim() || "Could not mount the ISO image." });
+      }
+    });
+  });
+}
+
+function escapePowerShellSingleQuoted(value) {
+  return String(value || "").replaceAll("'", "''");
 }
 
 function getExt(name) {
@@ -224,7 +389,14 @@ function getExt(name) {
 }
 
 module.exports = {
+  getBundledSevenZipPath,
   getArchivePrepareSupport,
+  getDiscImagePrepareSupport,
+  getPackagePrepareSupport,
   isPrepareSupportedArchive,
+  isPrepareSupportedPackage,
+  mountIsoImage,
   prepareArchivePackage,
+  prepareDiscImagePackage,
+  prepareLocalPackage,
 };

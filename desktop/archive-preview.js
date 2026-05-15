@@ -2,6 +2,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 const { TextDecoder } = require("node:util");
+const { getBundledSevenZipPath } = require("./package-prep");
 const ENGINE_RULES = require("../data/engine-rules.json");
 
 const EOCD_SIGNATURE = 0x06054b50;
@@ -77,7 +78,7 @@ async function previewExternalArchiveFile(filePath, format) {
     return makeUnavailablePreview(
       "tool-missing",
       format,
-      `${format} metadata preview needs a local 7z/7zz command. GalAid will not extract or upload this archive.`,
+      `${format} metadata preview needs a bundled or local 7z-compatible command. GalAid will not extract or upload this archive.`,
     );
   }
 
@@ -485,7 +486,7 @@ function getDiscImageWarnings(ext) {
   if (["bin", "mdf", "img", "sub"].includes(normalizedExt)) {
     return ["Image data file metadata only; keep the matching descriptor files together."];
   }
-  return ["Disc image metadata only; GalAid does not mount, extract, or inspect disc contents."];
+  return ["Disc image metadata only; use the desktop prepare action to mount or extract and rescan when available."];
 }
 
 async function runExternalList(filePath) {
@@ -499,7 +500,7 @@ async function runExternalList(filePath) {
 }
 
 function getExternalListCandidates() {
-  return [...new Set([process.env.GALAID_7Z_PATH, "7zz", "7z", "7za"].filter(Boolean))];
+  return [...new Set([process.env.GALAID_7Z_PATH, getBundledSevenZipPath(), "7zz", "7z", "7za"].filter(Boolean))];
 }
 
 function runExternalListCommand(command, filePath) {

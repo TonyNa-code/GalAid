@@ -69,7 +69,7 @@ async function main() {
   assert.equal(isoPreview.status, "ok");
   assert.equal(isoPreview.packageKind, "disc-image");
   assert.equal(isoPreview.fileCount, 1);
-  assert.match(isoPreview.warnings[0], /does not mount/);
+  assert.match(isoPreview.warnings[0], /metadata only/);
 
   await fs.rm(tempDir, { recursive: true, force: true });
   console.log("Archive preview smoke passed.");

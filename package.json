@@ -1,6 +1,6 @@
 {
   "name": "galaid",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Local-first launch doctor for visual novel and galgame folders.",
   "main": "desktop/main.js",
   "private": true,
@@ -37,9 +37,13 @@
       "src/**/*",
       "desktop/**/*",
       "data/**/*",
+      "node_modules/7zip-bin/**/*",
       "package.json",
       "LICENSE",
       "README.md"
+    ],
+    "asarUnpack": [
+      "node_modules/7zip-bin/**/*"
     ],
     "asar": true,
     "npmRebuild": false,
@@ -60,5 +64,8 @@
     "@playwright/test": "^1.60.0",
     "electron": "^42.0.1",
     "electron-builder": "^26.8.1"
+  },
+  "dependencies": {
+    "7zip-bin": "^5.2.0"
   }
 }
