@@ -21,6 +21,11 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-privacy-list")).toContainText("不包含游戏文件");
+
+  const supportPreview = page.locator(".support-preview");
+  await expect(supportPreview).toContainText("## GalAid 求助摘要");
+  await expect(supportPreview).toContainText("SakuraTrial");
+  await expect(supportPreview).toContainText("DirectX 旧组件");
 });
 
 test("package sample shows zip directory preview without treating it as runnable", async ({ page }) => {
