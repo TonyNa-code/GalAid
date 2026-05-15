@@ -13,11 +13,14 @@ window.GALAID_ERROR_RECIPES = [
       "xinput1_4\\.dll",
       "d3dcompiler_43\\.dll",
       "xaudio2_7\\.dll",
+      "xapofx1_\\d\\.dll",
+      "x3daudio1_\\d\\.dll",
+      "xactengine\\d_\\d\\.dll",
       "dsound\\.dll",
       "dinput8?\\.dll",
       "directx"
     ],
-    "cause": "老游戏可能依赖 DirectX 9 时代的 D3DX、D3DCompiler、XInput、XAudio、DirectSound 或 DirectInput 组件，新系统自带 DirectX 12 不代表包含这些旧 DLL。",
+    "cause": "老游戏可能依赖 DirectX 9 时代的 D3DX、D3DCompiler、XInput、XAudio、XACT、X3DAudio、DirectSound 或 DirectInput 组件，新系统自带 DirectX 12 不代表包含这些旧 DLL。",
     "action": "安装 DirectX End-User Runtime，并确认游戏文件没有被杀软隔离。",
     "checklist": [
       "安装 DirectX End-User Runtime",
