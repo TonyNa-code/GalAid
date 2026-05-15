@@ -32,6 +32,25 @@ Each recipe is advisory. It should help the user understand the likely cause and
 - `action`: the safest next step.
 - `checklist`: short local steps the user can try.
 
+## False-Positive Example (What Good Evidence Looks Like)
+
+A broad pattern can create an overconfident diagnosis when the pasted text is incomplete.
+
+### Example report (redacted)
+
+- **Pasted error text:** `Failed to initialize renderer: d3d11.dll`
+- **Matched recipe:** `directx-legacy`
+- **Current diagnosis risk:** could be a false positive because `d3d11.dll` alone does not prove missing legacy DirectX 9 components.
+
+### What evidence would make diagnosis stronger
+
+- A specific missing-file message such as `d3dx9_43.dll was not found`.
+- Additional DirectX-related context from the same launch attempt (same timestamp/session).
+- Confirmation that the error appears before engine-specific script/loading failures.
+- A short list of already-installed runtimes (to avoid repeating irrelevant steps).
+
+When evidence is partial, phrase the diagnosis as a likely cause and suggest one safe verification step first.
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.
