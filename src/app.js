@@ -70,10 +70,18 @@ const SAMPLE_FILES = [
 
 const COMMERCIAL_SAMPLE_FILES = [
   ["AsterCompanyGame/AsterTrial.exe", 1820000],
+  ["AsterCompanyGame/MovieRuntime.dll", 520000],
+  ["AsterCompanyGame/AudioDevice.dll", 430000],
   ["AsterCompanyGame/data00.arc", 1380000000],
   ["AsterCompanyGame/data01.arc", 824000000],
+  ["AsterCompanyGame/data02.pak", 712000000],
+  ["AsterCompanyGame/voice.pck", 356000000],
+  ["AsterCompanyGame/movie.cpk", 604000000],
+  ["AsterCompanyGame/patch.pac", 99000000],
+  ["AsterCompanyGame/archive.vol", 154000000],
   ["AsterCompanyGame/system.dat", 4800000],
   ["AsterCompanyGame/boot.ini", 3400],
+  ["AsterCompanyGame/config.cfg", 1800],
   ["AsterCompanyGame/plugin/movie.dll", 520000],
   ["AsterCompanyGame/plugin/audio.dll", 430000],
   ["AsterCompanyGame/save/readme.txt", 1400],
@@ -848,12 +856,11 @@ function detectCommercialEngineStructure(files, knownEngines) {
   const evidence = compactEvidence(
     [
       ...executableSamples,
-      ...largeResources.slice(0, 4).map((file) => file.path),
-      ...genericResources.slice(0, 4).map((file) => file.path),
+      ...sampleDiverseCommercialResources(largeResources.length ? largeResources : genericResources, 5),
       ...rootDllSamples,
       ...configSamples,
     ],
-    6,
+    9,
   );
 
   return {
@@ -864,6 +871,26 @@ function detectCommercialEngineStructure(files, knownEngines) {
     evidence,
     advice: "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。",
   };
+}
+
+function sampleDiverseCommercialResources(files, limit = 5) {
+  const selected = [];
+  const seenExts = new Set();
+
+  for (const file of files) {
+    if (seenExts.has(file.ext)) continue;
+    selected.push(file.path);
+    seenExts.add(file.ext);
+    if (selected.length >= limit) return selected;
+  }
+
+  for (const file of files) {
+    if (selected.includes(file.path)) continue;
+    selected.push(file.path);
+    if (selected.length >= limit) break;
+  }
+
+  return selected;
 }
 
 function scoreEvidence(file) {

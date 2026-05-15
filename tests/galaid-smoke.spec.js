@@ -54,6 +54,9 @@ test("commercial sample promotes proprietary engine startup route", async ({ pag
   await page.locator('[data-tab="engine"]').click();
   await expect(page.locator("#enginePanel")).toContainText("引擎/文件结构线索");
   await expect(page.locator("#enginePanel")).toContainText("商业/自研引擎（文件结构）");
+  await expect(page.locator("#enginePanel")).toContainText("data02.pak");
+  await expect(page.locator("#enginePanel")).toContainText("movie.cpk");
+  await expect(page.locator("#enginePanel")).toContainText("MovieRuntime.dll");
 
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).toContainText("商业/自研引擎启动链");
