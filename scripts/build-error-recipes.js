@@ -78,13 +78,17 @@ function buildJavaScript(recipes) {
   ].join("\n");
 }
 
+function normalizeLineEndings(text) {
+  return text.replace(/\r\n/g, "\n");
+}
+
 function main() {
   const recipes = readRecipes();
   const output = buildJavaScript(recipes);
 
   if (process.argv.includes("--check")) {
     const current = fs.existsSync(OUTPUT_PATH) ? fs.readFileSync(OUTPUT_PATH, "utf8") : "";
-    if (current !== output) {
+    if (normalizeLineEndings(current) !== output) {
       console.error("src/error-recipes.js is out of date. Run `npm run build:recipes`.");
       process.exit(1);
     }

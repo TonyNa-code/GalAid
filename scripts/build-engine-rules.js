@@ -108,13 +108,17 @@ function buildJavaScript(rules) {
   ].join("\n");
 }
 
+function normalizeLineEndings(text) {
+  return text.replace(/\r\n/g, "\n");
+}
+
 function main() {
   const rules = readRules();
   const output = buildJavaScript(rules);
 
   if (process.argv.includes("--check")) {
     const current = fs.existsSync(OUTPUT_PATH) ? fs.readFileSync(OUTPUT_PATH, "utf8") : "";
-    if (current !== output) {
+    if (normalizeLineEndings(current) !== output) {
       console.error("src/engine-rules.js is out of date. Run `npm run build:engines`.");
       process.exit(1);
     }
