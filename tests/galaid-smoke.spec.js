@@ -37,3 +37,24 @@ test("package sample shows zip directory preview without treating it as runnable
   await page.locator('[data-tab="launch"]').click();
   await expect(page.getByRole("heading", { name: "没有候选入口" })).toBeVisible();
 });
+
+test("commercial sample promotes proprietary engine startup route", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "自研样例" }).click();
+
+  await expect(page.locator("#projectTitle")).toHaveText("AsterCompanyGame");
+  await expect(page.locator("#launchPanel")).toContainText("AsterTrial.exe");
+  await expect(page.locator("#launchPanel")).toContainText("主推商业/自研引擎路线");
+
+  await page.locator('[data-tab="environment"]').click();
+  await expect(page.locator("#environmentPanel")).toContainText("商业/自研引擎启动链");
+  await expect(page.locator("#environmentPanel")).toContainText("不要单独复制 exe");
+
+  await page.locator('[data-tab="engine"]').click();
+  await expect(page.locator("#enginePanel")).toContainText("引擎/文件结构线索");
+  await expect(page.locator("#enginePanel")).toContainText("商业/自研引擎（文件结构）");
+
+  await page.locator('[data-tab="roadmap"]').click();
+  await expect(page.locator(".roadmap-list")).toContainText("商业/自研引擎启动链");
+});

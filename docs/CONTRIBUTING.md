@@ -9,6 +9,7 @@ GalAid is local-first and safety-focused. Contributions should help users diagno
 - Add or improve an error recipe in `data/error-recipes.json`
 - Add clearer wording to beginner-facing diagnosis text
 - Improve engine fingerprints using filenames and folder structure only
+- Improve commercial/self-developed engine startup-route heuristics using metadata only
 - Improve documentation for archives, disc images, locale, or runtime setup
 - Improve ZIP directory preflight while keeping it metadata-only
 - Report false positives with a redacted GalAid support summary
@@ -33,6 +34,7 @@ Prefer:
 - safe local next steps such as "extract all parts first" or "install the official runtime"
 - metadata-only examples
 - ZIP central-directory examples that do not extract or include game files
+- commercial VN structure examples that avoid naming or bundling copyrighted game contents
 
 ## Add an Error Recipe
 

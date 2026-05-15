@@ -3,6 +3,7 @@ const fileInput = document.querySelector("#fileInput");
 const chooseFolderButton = document.querySelector("#chooseFolderButton");
 const chooseFilesButton = document.querySelector("#chooseFilesButton");
 const sampleButton = document.querySelector("#sampleButton");
+const commercialSampleButton = document.querySelector("#commercialSampleButton");
 const packageSampleButton = document.querySelector("#packageSampleButton");
 const clearButton = document.querySelector("#clearButton");
 const copyReportButton = document.querySelector("#copyReportButton");
@@ -39,7 +40,8 @@ const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "txt", "json", "csv", "xml", "
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
-const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf"]);
+const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
+const COMMERCIAL_RESOURCE_ARCHIVES = new Set(["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]);
 const SCAN_BATCH_SIZE = 1000;
 const LARGE_FOLDER_THRESHOLD = 20000;
 const HUGE_FOLDER_THRESHOLD = 50000;
@@ -64,6 +66,19 @@ const SAMPLE_FILES = [
   ["SakuraTrial/scenario/route_a.ks", 61000],
   ["SakuraTrial/Setup.exe", 2610000],
   ["SakuraTrial/vcredist_x86.exe", 6500000],
+];
+
+const COMMERCIAL_SAMPLE_FILES = [
+  ["AsterCompanyGame/AsterTrial.exe", 1820000],
+  ["AsterCompanyGame/data00.arc", 1380000000],
+  ["AsterCompanyGame/data01.arc", 824000000],
+  ["AsterCompanyGame/system.dat", 4800000],
+  ["AsterCompanyGame/boot.ini", 3400],
+  ["AsterCompanyGame/plugin/movie.dll", 520000],
+  ["AsterCompanyGame/plugin/audio.dll", 430000],
+  ["AsterCompanyGame/save/readme.txt", 1400],
+  ["AsterCompanyGame/bgm/theme01.ogg", 7100000],
+  ["AsterCompanyGame/manual/startup.txt", 2400],
 ];
 
 const PACKAGE_SAMPLE_FILES = [
@@ -778,7 +793,7 @@ function detectEngines(files) {
     }
   }
 
-  return detectors
+  const matched = detectors
     .filter((detector) => detector.score > 0)
     .map((detector) => ({
       id: detector.id,
@@ -788,8 +803,67 @@ function detectEngines(files) {
       score: detector.score,
       evidence: detector.evidence,
       advice: detector.advice,
-    }))
-    .sort((a, b) => b.score - a.score);
+    }));
+  const commercialStructure = detectCommercialEngineStructure(files, matched);
+  if (commercialStructure) matched.push(commercialStructure);
+
+  return matched.sort((a, b) => b.score - a.score);
+}
+
+function detectCommercialEngineStructure(files, knownEngines) {
+  const executableSamples = samplePaths(
+    files,
+    (file) => EXE_EXTS.has(file.ext) && file.depth <= 2 && !isSetupLike(file.lowerPath),
+    4,
+  );
+  if (!executableSamples.length) return null;
+
+  const genericResources = files.filter((file) => COMMERCIAL_RESOURCE_ARCHIVES.has(file.ext));
+  const largeResources = genericResources.filter((file) => file.size >= 20 * 1024 * 1024);
+  const rootDllSamples = samplePaths(
+    files,
+    (file) => file.ext === "dll" && file.depth <= 2 && !/^(unityplayer|gameassembly|rgss)/i.test(file.name),
+    4,
+  );
+  const configSamples = samplePaths(
+    files,
+    (file) => ["ini", "cfg", "dat"].includes(file.ext) && /(boot|config|env|game|setting|startup|system)/i.test(file.name),
+    4,
+  );
+  const structuredFolders = samplePaths(files, (file) => /(^|\/)(plugin|system|script|scenario|data|movie|bgm)\//i.test(file.path), 4);
+  const specificHighConfidence = knownEngines.some((engine) => engine.confidence === "high");
+
+  let score = 0;
+  score += Math.min(12, executableSamples.length * 4);
+  score += Math.min(14, genericResources.length * 3);
+  score += Math.min(12, largeResources.length * 4);
+  score += Math.min(8, rootDllSamples.length * 2);
+  score += Math.min(6, configSamples.length * 2);
+  score += Math.min(4, structuredFolders.length);
+
+  if (genericResources.length < 2 && !rootDllSamples.length) return null;
+  if (specificHighConfidence && score < 22) return null;
+  if (!specificHighConfidence && score < 11) return null;
+
+  const evidence = compactEvidence(
+    [
+      ...executableSamples,
+      ...largeResources.slice(0, 4).map((file) => file.path),
+      ...genericResources.slice(0, 4).map((file) => file.path),
+      ...rootDllSamples,
+      ...configSamples,
+    ],
+    6,
+  );
+
+  return {
+    id: "commercial-proprietary",
+    name: "商业/自研引擎（文件结构）",
+    confidence: score >= 22 ? "high" : score >= 15 ? "medium" : "low",
+    score,
+    evidence,
+    advice: "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。",
+  };
 }
 
 function scoreEvidence(file) {
@@ -882,6 +956,7 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
   if (!launchCandidates.length) return [];
   const topEngines = engines.slice(0, 2).map((engine) => engine.name);
   const localeSensitive = engines.some((engine) => ["kirikiri", "nscript", "siglus"].includes(engine.id));
+  const commercialStructure = engines.some((engine) => engine.id === "commercial-proprietary");
   const packageBlocked = packages.hasPackages && !launchCandidates.length;
 
   return launchCandidates.slice(0, 4).map((candidate, index) => {
@@ -895,7 +970,8 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
       "如果闪退或乱码，优先尝试英文短路径和日区环境。",
     ];
 
-    if (topEngines.length) notes.push(`Engine clues: ${topEngines.join(", ")}`);
+    if (topEngines.length) notes.push(`Engine/structure clues: ${topEngines.join(", ")}`);
+    if (commercialStructure) notes.push("Commercial/proprietary structure: keep the exe, DLLs, archives, and config files together.");
     if (localeSensitive) notes.push("Likely needs Japanese locale or Locale Emulator.");
     if (/[^\x00-\x7F]/.test(file.path)) notes.push("Path contains non-ASCII characters; old games may fail.");
     if (packageBlocked) notes.push("Archive/image handling should happen before launching.");
@@ -954,8 +1030,9 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const topLaunch = launchCandidates[0]?.file;
+  const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
   const localeEngineNames = engines
-    .filter((engine) => ["kirikiri", "nscript", "siglus"].includes(engine.id))
+    .filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))
     .map((engine) => engine.name);
   const localeError =
     hasErrorRecipe(errorDiagnostics, "locale-encoding") ||
@@ -1036,6 +1113,19 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       evidence: topLaunch ? [topLaunch.path] : [],
     }),
   );
+
+  if (commercialEngine) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "commercial-engine",
+        title: "商业/自研引擎启动链",
+        status: "warning",
+        detail: "检测到商业或自研 galgame 常见结构：根目录启动器、资源封包、DLL 插件和配置文件共同工作。",
+        action: "保持原目录结构，从根目录主程序启动；不要单独复制 exe。失败后优先结合报错截图检查日区、运行库和缺失封包。",
+        evidence: commercialEngine.evidence,
+      }),
+    );
+  }
 
   if (localeEngineNames.length || localeError) {
     checks.push(
@@ -1259,6 +1349,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const setupFiles = samplePaths(files, (file) => isSetupLike(file.lowerPath), 3);
+  const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
 
   if (mode.id !== "normal") {
     findings.push({
@@ -1285,6 +1376,14 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "warning",
       title: "启动入口不明确",
       body: "发现了可执行文件，但它们更像安装器、配置工具或运行库。请优先选择完整解压后的游戏根目录。",
+    });
+  }
+
+  if (commercialEngine) {
+    findings.push({
+      level: "warning",
+      title: "主推商业/自研引擎路线",
+      body: "这个目录更像商业 galgame 常见的私有启动链。诊断重点不是识别某个公开引擎，而是确认主程序、同级 DLL、资源封包、配置文件和工作目录保持完整。",
     });
   }
 
@@ -1350,11 +1449,11 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     });
   }
 
-  if (engines.some((engine) => ["kirikiri", "nscript", "siglus"].includes(engine.id))) {
+  if (engines.some((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))) {
     findings.push({
       level: "warning",
       title: "日区/编码风险较高",
-      body: "吉里吉里、NScripter、Siglus/RealLive 系老游戏常见乱码或闪退。优先尝试日区环境、Locale Emulator、英文路径和管理员权限。",
+      body: "吉里吉里、NScripter、Siglus/RealLive 或商业私有引擎老游戏常见乱码或闪退。优先尝试日区环境、Locale Emulator、英文路径和管理员权限。",
     });
   }
 
@@ -1565,7 +1664,7 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
     });
   }
 
-  for (const checkId of ["path", "locale", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
+  for (const checkId of ["commercial-engine", "path", "locale", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
     const check = envChecks.get(checkId);
     if (!check || check.status !== "warning") continue;
     const recipeId = getEnvironmentRecipeId(check.id);
@@ -1612,11 +1711,11 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
   if (engines.length) {
     addStep({
       id: "engine-notes",
-      title: "按引擎线索复查",
+      title: "按引擎/结构线索复查",
       state: "info",
       priority: 700,
       detail: `识别到 ${engines.slice(0, 3).map((engine) => engine.name).join(", ")}。`,
-      action: "如果常规步骤仍失败，到引擎页查看证据路径和对应建议。",
+      action: "如果常规步骤仍失败，到引擎/结构页查看证据路径和对应建议。",
       evidence: engines.flatMap((engine) => engine.evidence.slice(0, 1)),
       source: "engine",
     });
@@ -1705,6 +1804,7 @@ function getRoadmapStateLabel(state) {
 
 function getEnvironmentRoadmapPriority(id) {
   const priorities = {
+    "commercial-engine": 35,
     path: 40,
     locale: 50,
     directx: 60,
@@ -1786,6 +1886,7 @@ function setControlsBusy(isBusy) {
     chooseFolderButton,
     chooseFilesButton,
     sampleButton,
+    commercialSampleButton,
     packageSampleButton,
     copyReportButton,
     downloadReportButton,
@@ -2266,14 +2367,14 @@ function renderRecipeLibrary() {
 function renderEngines(analysis) {
   if (!analysis.engines.length) {
     return `
-      <div class="section-title"><h3>引擎线索</h3><span>0 matches</span></div>
-      <article class="finding warning"><div><h4>没有明显引擎标记</h4><p>可以继续用启动候选排查；也可能是私有引擎或文件还没完整解压。</p></div></article>
+      <div class="section-title"><h3>引擎/文件结构线索</h3><span>0 matches</span></div>
+      <article class="finding warning"><div><h4>没有明显结构线索</h4><p>可以继续用启动候选排查；也可能只选中了补丁、压缩包，或需要换成完整游戏根目录。</p></div></article>
     `;
   }
 
   return `
     <div class="section-title">
-      <h3>引擎线索</h3>
+      <h3>引擎/文件结构线索</h3>
       <span>${analysis.engines.length} matches</span>
     </div>
     <div class="grid-two">
@@ -2286,6 +2387,7 @@ function renderEngines(analysis) {
               <div class="meta-row">
                 <span class="chip ${engine.confidence === "high" ? "good" : "warn"}">${engine.confidence}</span>
                 <span class="chip">score ${engine.score}</span>
+                ${engine.id === "commercial-proprietary" ? `<span class="chip warn">启动结构</span>` : ""}
               </div>
               <div class="sample-list">
                 ${engine.evidence.map((path) => `<code>${escapeHtml(path)}</code>`).join("")}
@@ -2583,7 +2685,7 @@ function buildMarkdownReport(analysis, errorText) {
     lines.push("- No error text provided.");
   }
   lines.push("");
-  lines.push("## Engine clues");
+  lines.push("## Engine and structure clues");
   if (analysis.engines.length) {
     for (const engine of analysis.engines) {
       lines.push(`- ${engine.name}: ${engine.confidence}, score ${engine.score}`);
@@ -2745,6 +2847,7 @@ function buildSupportManifest(analysis, title, generatedAt) {
       launchCandidates: analysis.launchCandidates.length,
       launchProfiles: analysis.profiles.length,
       engineClues: analysis.engines.length,
+      engineStructureClues: analysis.engines.length,
       errorRecipeMatches: analysis.errorDiagnostics.matches.length,
       environmentChecks: analysis.environment.checks.length,
       roadmapSteps: analysis.roadmap.steps.length,
@@ -2804,7 +2907,7 @@ function buildSupportSummaryText(analysis, manifest, filename) {
   lines.push(`- 文件：${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
   lines.push(`- 模式：${analysis.mode.label}`);
   lines.push(`- 推荐入口：${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : "未找到"}`);
-  lines.push(`- 引擎线索：${engineNames.length ? engineNames.join(", ") : "未识别"}`);
+  lines.push(`- 引擎/结构线索：${engineNames.length ? engineNames.join(", ") : "未识别"}`);
   lines.push(`- 环境结论：${analysis.environment.summary.label}`);
   lines.push(`- 下一步：${analysis.roadmap.summary.label}`);
   lines.push(`- 报错配方：${analysis.errorDiagnostics.summary.label}`);
@@ -3145,6 +3248,9 @@ chooseFilesButton.addEventListener("click", () => {
 });
 sampleButton.addEventListener("click", () => {
   void setFiles(SAMPLE_FILES.map(fileFromSample));
+});
+commercialSampleButton.addEventListener("click", () => {
+  void setFiles(COMMERCIAL_SAMPLE_FILES.map(fileFromSample));
 });
 packageSampleButton.addEventListener("click", () => {
   void setFiles(PACKAGE_SAMPLE_FILES.map(fileFromSample));

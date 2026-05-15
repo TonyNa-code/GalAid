@@ -42,7 +42,27 @@ Acceptance checklist:
 - Confirm the roadmap still suggests locale checks for KiriKiri folders.
 - Run `npm run check`.
 
-## 3. Improve archive and disc-image copy
+## 3. Add commercial engine structure examples
+
+Labels: `good first issue`, `engine`
+
+Goal: improve the commercial/self-developed engine route using metadata-only folder structures.
+
+Useful metadata-only clues:
+
+- root-level `.exe`
+- large `.arc`, `.dat`, `.pak`, `.pck`, `.cpk`, `.pac`, or `.vol` archives
+- same-folder DLL plugins
+- small `.ini` or `.cfg` boot/config files
+
+Acceptance checklist:
+
+- Do not claim a specific private engine name unless there is strong filename evidence.
+- Keep the advice focused on startup diagnosis: working directory, complete archives, locale, and runtime checks.
+- Add or update a small metadata-only sample if needed.
+- Run `npm run check`.
+
+## 4. Improve archive and disc-image copy
 
 Labels: `good first issue`, `documentation`
 
@@ -56,7 +76,7 @@ Acceptance checklist:
 - Do not mention bypassing disc checks or downloading missing game files.
 - Run `npm run check`.
 
-## 4. Extend the browser smoke test
+## 5. Extend the browser smoke test
 
 Labels: `good first issue`, `testing`
 
@@ -75,7 +95,7 @@ Acceptance checklist:
 - Run `npm run test:smoke`.
 - Run `npm run check`.
 
-## 5. Add one false-positive report to the recipe guide
+## 6. Add one false-positive report to the recipe guide
 
 Labels: `good first issue`, `docs`
 

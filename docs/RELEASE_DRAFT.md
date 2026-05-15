@@ -9,6 +9,7 @@ GalAid v0.1.0 is a local-first launch doctor for visual novel and galgame folder
 - Static web app that runs locally or on GitHub Pages
 - Desktop beta with native folder and file selection
 - Launch candidate scoring for `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html`
+- Commercial/self-developed engine route based on root executables, same-folder DLLs, resource archives, config files, and working directory
 - Ordered next-step roadmap for beginners
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages

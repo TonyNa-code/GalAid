@@ -4,7 +4,7 @@
 
 - Local folder/file diagnosis
 - Launch candidate scoring
-- Engine clue detection
+- Engine and commercial/private file-structure clue detection
 - Archive and disc image warnings
 - Error text analyzer
 - Markdown report export
@@ -12,6 +12,7 @@
 ## 0.2 Better Diagnosis Recipes
 
 - Expand engine fingerprints
+- Improve commercial/self-developed engine startup-route diagnostics
 - Add common error dictionary
 - Add community-editable YAML/JSON rules
 - Add confidence explanations for each rule

@@ -18,7 +18,8 @@ const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "bmp", "webp", "tga", "dds", "
 const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "mid", "midi"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
-const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf"]);
+const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
+const COMMERCIAL_RESOURCE_ARCHIVES = new Set(["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]);
 
 async function previewArchiveFile(filePath, ext) {
   if (ext !== "zip") return null;
@@ -137,6 +138,7 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
         video: 0,
         scripts: 0,
         resourceArchives: 0,
+        commercialArchives: 0,
       },
     },
   };
@@ -182,6 +184,9 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
 
   if (preview.scannedEntries < totalEntries) preview.truncated = true;
   if (preview.encryptedEntries) preview.warnings.push(`${preview.encryptedEntries} encrypted entries were detected.`);
+  if (preview.signals.launchCandidateCount && preview.signals.assetCounts.commercialArchives >= 2) {
+    addEngineHint(engineHints, "commercial-proprietary", "商业/自研引擎（文件结构）", preview.signals.launchSamples[0]);
+  }
   preview.signals.engineHints = [...engineHints.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   return preview;
 }
@@ -210,6 +215,7 @@ function collectSignals(signals, engineHints, entry) {
   if (VIDEO_EXTS.has(entry.ext)) signals.assetCounts.video += 1;
   if (SCRIPT_EXTS.has(entry.ext)) signals.assetCounts.scripts += 1;
   if (RESOURCE_ARCHIVES.has(entry.ext)) signals.assetCounts.resourceArchives += 1;
+  if (COMMERCIAL_RESOURCE_ARCHIVES.has(entry.ext)) signals.assetCounts.commercialArchives += 1;
 
   if (entry.ext === "xp3" || lower.includes("kirikiri") || lower.includes("krkr") || lower.endsWith(".ks")) {
     addEngineHint(engineHints, "kirikiri", "KiriKiri / 吉里吉里", entry.path);
@@ -330,6 +336,7 @@ function makeUnavailablePreview(status, message) {
         video: 0,
         scripts: 0,
         resourceArchives: 0,
+        commercialArchives: 0,
       },
     },
   };

@@ -39,9 +39,10 @@ GalAid turns that mess into a small diagnosis report.
 - Generate safe launch profiles with command hints and portable JSON config
 - Flag installer/support tools that should not be used as the main launcher
 - Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
-- Detect engine clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, and TyranoScript
+- Detect engine and file-structure clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/proprietary VN engines
 - Warn about archive-only imports, disc images, non-English paths, long paths, and locale-sensitive engines
 - Run a runtime/environment checklist for extraction state, launch entry, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
+- Treat commercial/self-developed engine layouts as a first-class startup route: root executable, same-folder DLLs, resource archives, config files, and working directory
 - Match pasted error text against a community-editable JSON recipe library for common VN startup failures
 - Map common asset categories: images, audio, video, scripts, resource archives, launchers
 - Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
@@ -72,7 +73,9 @@ The `路线` tab combines archive/image state, launch candidates, runtime checks
 
 The environment page turns common "why won't this start?" issues into a checklist before the user starts changing system settings.
 
-It checks whether the folder appears fully extracted, whether a launch entry exists, and whether the metadata or pasted error text points to Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
+It checks whether the folder appears fully extracted, whether a launch entry exists, and whether the metadata or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
+
+For many commercial Japanese VNs, GalAid does not need to name the exact private engine to be useful. A root `.exe` plus large `.arc/.dat/.pak/.pck` resource archives, nearby DLL plugins, and config files is enough to trigger the commercial/self-developed engine route. That route focuses on preserving the original folder structure, keeping the working directory correct, and checking locale/runtime problems before assuming the game itself is broken.
 
 GalAid only explains likely prerequisites. It does not install runtimes, change system locale, mount images, or execute games automatically.
 
