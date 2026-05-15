@@ -47,6 +47,7 @@ GalAid turns that mess into a small diagnosis report.
 - Analyze pasted error text for DirectX, VC++ runtime, RPG Maker RTP, locale, missing-file, and permission clues
 - Large folder mode for 20,000+ file folders, with capped UI samples and full metadata-based reporting
 - Desktop beta with native folder/file picker and recursive local scanning
+- Desktop ZIP directory preflight that reads archive file lists without extracting game files
 - Copy or download a Markdown diagnosis report
 - Preview and download a local support ZIP with report, safe launch profiles, matched error recipes, environment checks, and sanitized file metadata
 - Copy an issue-ready support summary without exposing game files
@@ -134,7 +135,7 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app, but their internal file trees are not scanned yet. Deep archive and image inspection belongs in the future desktop app.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app. The desktop beta can additionally preflight `.zip` directory metadata, so it can spot likely launchers and engine clues inside ZIP files without extracting or reading file contents. RAR/7z and disc-image internal inspection still belongs to future desktop work.
 
 ## Archive and Disc Image Guidance
 
@@ -146,6 +147,8 @@ The web MVP can recognize common package stages and tell the user what to do nex
 - CUE/BIN, MDS/MDF, CCD/IMG/SUB sets: keep paired files together before mounting
 
 The web app still does not inspect the contents of these files. It only checks metadata and naming patterns.
+
+The desktop ZIP preflight also stays metadata-only: it reads the ZIP central directory, reports internal filenames/sizes, and never extracts bundled files.
 
 ## Run
 
@@ -202,11 +205,11 @@ The app is intended for:
 - organizing personal archives
 - assisting creators and translators with their own project folders
 
-The static web MVP only reads browser-exposed file metadata. The desktop beta can see absolute paths while scanning, but reports and UI use relative paths by default. GalAid does not upload, execute, modify, decrypt, or extract game files.
+The static web MVP only reads browser-exposed file metadata. The desktop beta can see absolute paths while scanning, but reports and UI use relative paths by default. ZIP preflight reads archive directory metadata only. GalAid does not upload, execute, modify, decrypt, or extract game files.
 
 ## Roadmap
 
-- Desktop version for Windows with real shortcut creation and optional launch profiles
+- Desktop version for Windows with real shortcut creation, ZIP preflight, and optional launch profiles
 - Locale Emulator / Wine / Proton hint integration
 - Screenshot OCR for error dialogs
 - Better engine fingerprints

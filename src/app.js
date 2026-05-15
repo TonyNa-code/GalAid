@@ -67,6 +67,42 @@ const SAMPLE_FILES = [
 ];
 
 const PACKAGE_SAMPLE_FILES = [
+  [
+    "SnowTrial.zip",
+    3870000000,
+    {
+      archivePreview: {
+        schema: "galaid.archivePreview.v1",
+        format: "ZIP",
+        status: "ok",
+        totalEntries: 128,
+        scannedEntries: 128,
+        fileCount: 114,
+        directoryCount: 14,
+        encryptedEntries: 0,
+        truncated: false,
+        warnings: [],
+        sampleFiles: [
+          { path: "SnowTrial/Game.exe", name: "Game.exe", ext: "exe", size: 1422000, compressedSize: 980000, depth: 1 },
+          { path: "SnowTrial/data.xp3", name: "data.xp3", ext: "xp3", size: 423000000, compressedSize: 386000000, depth: 1 },
+          { path: "SnowTrial/scenario/common.ks", name: "common.ks", ext: "ks", size: 33000, compressedSize: 12000, depth: 2 },
+          { path: "SnowTrial/BGM/theme01.ogg", name: "theme01.ogg", ext: "ogg", size: 6920000, compressedSize: 6510000, depth: 2 },
+        ],
+        signals: {
+          launchCandidateCount: 1,
+          launchSamples: ["SnowTrial/Game.exe"],
+          engineHints: [{ id: "kirikiri", name: "KiriKiri / 吉里吉里", count: 2, samples: ["SnowTrial/data.xp3", "SnowTrial/scenario/common.ks"] }],
+          assetCounts: {
+            images: 18,
+            audio: 12,
+            video: 0,
+            scripts: 24,
+            resourceArchives: 2,
+          },
+        },
+      },
+    },
+  ],
   ["MoonlightCafe.part1.rar", 2147483648],
   ["MoonlightCafe.part2.rar", 2147483648],
   ["MoonlightCafe.part3.rar", 913000000],
@@ -141,10 +177,11 @@ function fileFromNative(file) {
   };
 }
 
-function fileFromSample([path, size]) {
+function fileFromSample([path, size, extra = {}]) {
   const normalized = normalizePath(path);
   const name = getBaseName(normalized);
   return {
+    ...extra,
     name,
     path: normalized,
     lowerPath: normalized.toLowerCase(),
@@ -458,12 +495,19 @@ function buildArchiveSets(archives) {
       }
       const first = sorted.find((item) => item.volumeIndex === 1) || sorted[0];
       const isSplit = sorted.length > 1 || sorted.some((item) => item.volumeIndex);
-      const level = missing.length ? "warning" : isSplit ? "good" : "info";
-      const summary = missing.length
+      const archivePreview = getBestArchivePreview(sorted);
+      const previewLaunchSample = archivePreview?.signals?.launchSamples?.[0];
+      const level = missing.length ? "warning" : archivePreview?.status === "ok" || isSplit ? "good" : "info";
+      const summary = archivePreview
+        ? summarizeArchivePreview(archivePreview)
+        : missing.length
         ? `可能缺少分卷：${missing.join(", ")}`
         : isSplit
           ? "分卷看起来放在一起了"
           : "单个压缩包，网页版不会读取内部目录";
+      const nextStep = archivePreview?.status === "ok" && previewLaunchSample
+        ? `先完整解压，再优先检查 ${previewLaunchSample}`
+        : first.action;
 
       return {
         family,
@@ -474,10 +518,27 @@ function buildArchiveSets(archives) {
         missing,
         level,
         summary,
-        nextStep: first.action,
+        nextStep,
+        archivePreview,
       };
     })
     .sort((a, b) => b.files.length - a.files.length || a.family.localeCompare(b.family));
+}
+
+function getBestArchivePreview(items) {
+  return items.find((item) => item.file.archivePreview?.status === "ok")?.file.archivePreview || items.find((item) => item.file.archivePreview)?.file.archivePreview || null;
+}
+
+function summarizeArchivePreview(preview) {
+  if (!preview) return "";
+  if (preview.status !== "ok") return `ZIP 目录预检不可用：${preview.warnings?.[0] || "无法读取目录"}`;
+  const pieces = [`ZIP 目录已预检：${formatNumber(preview.fileCount || 0)} files`];
+  const launchCount = preview.signals?.launchCandidateCount || 0;
+  if (launchCount) pieces.push(`${formatNumber(launchCount)} 个解压后启动线索`);
+  const engineNames = (preview.signals?.engineHints || []).slice(0, 2).map((hint) => hint.name);
+  if (engineNames.length) pieces.push(engineNames.join(" / "));
+  if (preview.truncated) pieces.push("结果已截断");
+  return pieces.join("，");
 }
 
 function buildDiscSets(discs) {
@@ -536,6 +597,8 @@ function buildDiscSets(discs) {
 function buildPackageRecommendations(archiveSets, discSets, archives, discs, files) {
   const steps = [];
   const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext));
+  const previewedArchiveSet = archiveSets.find((set) => set.archivePreview?.status === "ok");
+  const previewWithLaunch = archiveSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.launchCandidateCount);
 
   if (archives.length && !executableCount) {
     steps.push({
@@ -548,6 +611,28 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
     steps.push({
       title: "分卷可能不完整",
       body: "缺少任意一个分卷都会导致解压失败或游戏缺文件。先补齐缺失分卷，不要只解压其中一个文件。",
+    });
+  }
+
+  if (previewWithLaunch) {
+    const preview = previewWithLaunch.archivePreview;
+    const sample = preview.signals.launchSamples[0];
+    const engineNames = (preview.signals.engineHints || []).slice(0, 2).map((hint) => hint.name).join(" / ");
+    steps.push({
+      title: "压缩包里看到启动线索",
+      body: `桌面预检只读取 ZIP 目录，已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。先完整解压后，再扫描解压出的文件夹。`,
+    });
+  } else if (previewedArchiveSet) {
+    steps.push({
+      title: "压缩包目录已预检",
+      body: "桌面版已读取 ZIP 目录元数据，但还没有发现明确启动入口。先完整解压，再用解压后的目录重新诊断。",
+    });
+  }
+
+  if (archiveSets.some((set) => set.archivePreview?.encryptedEntries)) {
+    steps.push({
+      title: "压缩包可能包含加密条目",
+      body: "GalAid 只做目录预检，不破解密码也不绕过保护。请只处理你合法拥有且有权限解压的文件。",
     });
   }
 
@@ -2266,7 +2351,36 @@ function renderPackageSet(set) {
       <p>${escapeHtml(set.nextStep)}</p>
       <div class="meta-row">${chips}</div>
       <div class="sample-list package-files">${samples}</div>
+      ${renderArchivePreview(set.archivePreview)}
     </article>
+  `;
+}
+
+function renderArchivePreview(preview) {
+  if (!preview) return "";
+  const statusClass = preview.status === "ok" ? "good" : "warn";
+  const engineNames = (preview.signals?.engineHints || []).slice(0, 2).map((hint) => hint.name);
+  const sampleFiles = (preview.sampleFiles || [])
+    .slice(0, 5)
+    .map((file) => `<code>${escapeHtml(file.path)} <span>${formatBytes(file.size || 0)}</span></code>`)
+    .join("");
+  const warnings = (preview.warnings || []).slice(0, 2).map((warning) => `<span class="chip warn">${escapeHtml(warning)}</span>`).join("");
+
+  return `
+    <div class="archive-preview">
+      <div class="archive-preview-header">
+        <strong>ZIP 目录预检</strong>
+        <span class="chip ${statusClass}">${preview.status === "ok" ? "metadata only" : "unavailable"}</span>
+      </div>
+      <div class="meta-row">
+        <span class="chip">${formatNumber(preview.fileCount || 0)} internal files</span>
+        <span class="chip">${formatNumber(preview.signals?.launchCandidateCount || 0)} launch clues</span>
+        ${engineNames.map((name) => `<span class="chip good">${escapeHtml(name)}</span>`).join("")}
+        ${preview.truncated ? `<span class="chip warn">truncated</span>` : ""}
+        ${warnings}
+      </div>
+      ${sampleFiles ? `<div class="sample-list package-files">${sampleFiles}</div>` : ""}
+    </div>
   `;
 }
 
@@ -2345,6 +2459,7 @@ function renderSupport(analysis) {
         <div class="support-privacy-list">
           <span>不包含游戏文件</span>
           <span>不读取文件内容</span>
+          <span>ZIP 只预检目录</span>
           <span>只保留相对路径</span>
           <span>不上传任何内容</span>
         </div>
@@ -2488,6 +2603,10 @@ function buildMarkdownReport(analysis, errorText) {
     for (const set of [...analysis.packages.archiveSets, ...analysis.packages.discSets]) {
       lines.push(`- ${set.format}: ${set.summary}`);
       lines.push(`  - Next step: ${set.nextStep}`);
+      if (set.archivePreview) {
+        lines.push(`  - ZIP preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} internal files, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues`);
+        for (const sample of set.archivePreview.signals?.launchSamples || []) lines.push(`  - Preview launch clue: ${sample}`);
+      }
       for (const item of set.files.slice(0, 8)) {
         lines.push(`  - ${item.file.path} (${item.role})`);
       }
@@ -2629,6 +2748,7 @@ function buildSupportManifest(analysis, title, generatedAt) {
       errorRecipeMatches: analysis.errorDiagnostics.matches.length,
       environmentChecks: analysis.environment.checks.length,
       roadmapSteps: analysis.roadmap.steps.length,
+      archivePreviews: analysis.packages.archiveSets.filter((set) => set.archivePreview).length,
     },
     roots: analysis.roots,
     desktopMeta: analysis.desktopMeta
@@ -2654,6 +2774,7 @@ function buildSupportReadme(analysis, title, generatedAt) {
     "Privacy:",
     "- This ZIP contains diagnosis metadata only.",
     "- It does not contain game files or file contents.",
+    "- Archive previews read ZIP directory metadata only and do not extract files.",
     "- Paths are relative paths from the selected folder/file list.",
     "- Desktop absolute paths are intentionally omitted.",
     "",
@@ -2734,6 +2855,31 @@ function buildFileManifest(analysis) {
       sizeLabel: formatBytes(category.size),
       samples: category.samples,
     })),
+    archivePreviews: analysis.packages.archiveSets
+      .filter((set) => set.archivePreview)
+      .map((set) => ({
+        archivePath: set.firstFile?.path || "",
+        format: set.archivePreview.format,
+        status: set.archivePreview.status,
+        fileCount: set.archivePreview.fileCount || 0,
+        directoryCount: set.archivePreview.directoryCount || 0,
+        launchCandidateCount: set.archivePreview.signals?.launchCandidateCount || 0,
+        launchSamples: set.archivePreview.signals?.launchSamples || [],
+        engineHints: (set.archivePreview.signals?.engineHints || []).map((hint) => ({
+          id: hint.id,
+          name: hint.name,
+          count: hint.count,
+          samples: hint.samples,
+        })),
+        truncated: Boolean(set.archivePreview.truncated),
+        warnings: set.archivePreview.warnings || [],
+        sampleFiles: (set.archivePreview.sampleFiles || []).slice(0, 20).map((file) => ({
+          path: file.path,
+          ext: file.ext,
+          size: file.size,
+          sizeLabel: formatBytes(file.size || 0),
+        })),
+      })),
     files,
   };
 }

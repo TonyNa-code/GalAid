@@ -1123,6 +1123,23 @@ textarea {
   color: var(--muted);
 }
 
+.archive-preview {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.archive-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.archive-preview-header strong {
+  font-size: 13px;
+}
+
 .asset-bars {
   display: grid;
   gap: 10px;

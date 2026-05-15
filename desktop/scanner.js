@@ -1,5 +1,6 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { previewArchiveFile } = require("./archive-preview");
 
 const SCAN_PROGRESS_BATCH = 1000;
 
@@ -43,19 +44,24 @@ async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
             skipped += 1;
             continue;
           }
-          files.push(toFileRecord(absolutePath, path.relative(rootParent, absolutePath), fileStat.size));
+          files.push(await withArchivePreview(toFileRecord(absolutePath, path.relative(rootParent, absolutePath), fileStat.size)));
           scanned += 1;
           if (scanned % SCAN_PROGRESS_BATCH === 0) onProgress({ scanned, skipped });
         }
       }
     } else if (stat.isFile()) {
-      files.push(toFileRecord(selectedPath, path.basename(selectedPath), stat.size));
+      files.push(await withArchivePreview(toFileRecord(selectedPath, path.basename(selectedPath), stat.size)));
       scanned += 1;
     }
   }
 
   onProgress({ scanned, skipped, done: true });
   return { files, skipped, scanned };
+}
+
+async function withArchivePreview(file) {
+  const archivePreview = await previewArchiveFile(file.fullPath, file.ext);
+  return archivePreview ? { ...file, archivePreview } : file;
 }
 
 async function safeStat(filePath) {

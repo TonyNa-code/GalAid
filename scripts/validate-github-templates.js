@@ -32,7 +32,9 @@ const REQUIRED_FILES = [
   "docs/GOOD_FIRST_ISSUES.md",
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
+  "desktop/archive-preview.js",
   "playwright.config.js",
+  "scripts/test-archive-preview.js",
   "scripts/release-audit.js",
   "tests/galaid-smoke.spec.js",
 ];
@@ -283,7 +285,31 @@ function checkBrowserSmoke(errors) {
     assert(configText.includes(phrase), `${configFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["游戏样例", "DirectX 旧组件", "VC++ 运行库", "roadmap.json", "不包含游戏文件"]) {
+  for (const phrase of ["游戏样例", "DirectX 旧组件", "VC++ 运行库", "roadmap.json", "不包含游戏文件", "ZIP 目录预检"]) {
+    assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkArchivePreview(errors) {
+  const previewFile = "desktop/archive-preview.js";
+  const testFile = "scripts/test-archive-preview.js";
+  const previewText = readRelative(previewFile);
+  const testText = readRelative(testFile);
+
+  checkNoTrailingWhitespace(previewFile, previewText, errors);
+  checkNoTrailingWhitespace(testFile, testText, errors);
+
+  for (const phrase of [
+    "galaid.archivePreview.v1",
+    "CENTRAL_DIRECTORY_SIGNATURE",
+    "previewZipFile",
+    "metadata preview",
+    "encryptedEntries",
+  ]) {
+    assert(previewText.includes(phrase), `${previewFile} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of ["makeZip", "SnowTrial/Game.exe", "Archive preview smoke passed"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }
@@ -308,6 +334,7 @@ function main() {
   checkContributing(errors);
   checkGoodFirstIssues(errors);
   checkBrowserSmoke(errors);
+  checkArchivePreview(errors);
   checkSecurityPolicy(errors);
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);

@@ -22,3 +22,18 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-privacy-list")).toContainText("不包含游戏文件");
 });
+
+test("package sample shows zip directory preview without treating it as runnable", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "包/镜像样例" }).click();
+  await page.locator('[data-tab="packages"]').click();
+
+  await expect(page.locator(".archive-preview")).toContainText("ZIP 目录预检");
+  await expect(page.locator(".archive-preview")).toContainText("SnowTrial/Game.exe");
+  await expect(page.locator(".archive-preview")).toContainText("KiriKiri / 吉里吉里");
+  await expect(page.locator(".package-roadmap")).toContainText("压缩包里看到启动线索");
+
+  await page.locator('[data-tab="launch"]').click();
+  await expect(page.getByRole("heading", { name: "没有候选入口" })).toBeVisible();
+});

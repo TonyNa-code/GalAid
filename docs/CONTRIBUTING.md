@@ -10,6 +10,7 @@ GalAid is local-first and safety-focused. Contributions should help users diagno
 - Add clearer wording to beginner-facing diagnosis text
 - Improve engine fingerprints using filenames and folder structure only
 - Improve documentation for archives, disc images, locale, or runtime setup
+- Improve ZIP directory preflight while keeping it metadata-only
 - Report false positives with a redacted GalAid support summary
 
 See `docs/GOOD_FIRST_ISSUES.md` for starter tasks that are intentionally small and metadata-only.
@@ -31,6 +32,7 @@ Prefer:
 - relative paths from GalAid reports
 - safe local next steps such as "extract all parts first" or "install the official runtime"
 - metadata-only examples
+- ZIP central-directory examples that do not extract or include game files
 
 ## Add an Error Recipe
 

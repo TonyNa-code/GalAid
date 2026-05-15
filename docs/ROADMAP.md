@@ -26,6 +26,7 @@
 ## 0.4 Windows Desktop
 
 - Real folder picker with full paths
+- ZIP directory preflight without extraction
 - Create launch profiles
 - Create shortcuts
 - Optional Locale Emulator command template

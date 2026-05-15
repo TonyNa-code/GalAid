@@ -12,6 +12,7 @@ GalAid v0.1.0 is a local-first launch doctor for visual novel and galgame folder
 - Ordered next-step roadmap for beginners
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages
+- Desktop ZIP directory preflight that spots internal launch and engine clues without extracting files
 - Community-editable startup error recipes in `data/error-recipes.json`
 - Metadata-only support bundle with reports, launch profiles, roadmap, recipe matches, and sanitized file manifest
 - GitHub issue templates, PR template, CI checks, and GitHub Pages deployment workflow
@@ -20,7 +21,7 @@ GalAid v0.1.0 is a local-first launch doctor for visual novel and galgame folder
 
 GalAid does not provide games, cracks, DRM bypasses, serials, decryption keys, or unauthorized asset extraction.
 
-The app reads metadata such as filenames, relative paths, sizes, and extensions. It does not upload game files or file contents.
+The app reads metadata such as filenames, relative paths, sizes, extensions, and ZIP directory entries. It does not upload game files or file contents.
 
 ## Try It
 
@@ -59,6 +60,7 @@ npm start
 ## Known Limits
 
 - Web mode does not inspect inside large archives or disc images yet.
+- Desktop ZIP preflight reads directory metadata only; RAR/7z and disc-image internals are not inspected yet.
 - Desktop beta is for local recursive scanning, not automatic launching.
 - Launch profiles are hints only; GalAid does not run games automatically.
 - Error recipes are advisory and should be improved through safe community reports.
