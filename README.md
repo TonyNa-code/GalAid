@@ -90,11 +90,19 @@ See [docs/ERROR_RECIPES.md](docs/ERROR_RECIPES.md) for the recipe format and con
 
 CI runs the same check on pull requests and pushes to `main`.
 
+Browser smoke tests run in GitHub Actions after installing Chromium. Run them locally with:
+
+```bash
+npm run test:smoke
+```
+
 ## Contributing
 
 Recipe improvements, engine fingerprints, docs, and redacted false-positive reports are welcome. Start with [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 For new startup-error rules, open a "New error recipe" issue or edit `data/error-recipes.json` directly in a pull request.
+
+Starter tasks live in [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md).
 
 Please also read [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Release notes and repository topic suggestions live in [docs/RELEASE_DRAFT.md](docs/RELEASE_DRAFT.md) and [docs/REPO_TOPICS.md](docs/REPO_TOPICS.md).
 

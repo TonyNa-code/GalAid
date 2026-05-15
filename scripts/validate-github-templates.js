@@ -29,9 +29,12 @@ const REQUIRED_FILES = [
   ".github/workflows/ci.yml",
   ".github/workflows/pages.yml",
   "docs/CONTRIBUTING.md",
+  "docs/GOOD_FIRST_ISSUES.md",
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
+  "playwright.config.js",
   "scripts/release-audit.js",
+  "tests/galaid-smoke.spec.js",
 ];
 
 function readRelative(relativePath) {
@@ -216,8 +219,11 @@ function checkCiWorkflow(errors) {
     "actions/checkout@v4",
     "actions/setup-node@v4",
     "node-version: 24",
+    "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24",
     "npm ci --ignore-scripts",
     "npm run check",
+    "npx playwright install --with-deps chromium",
+    "npm run test:smoke",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -235,11 +241,50 @@ function checkPagesWorkflow(errors) {
     "actions/configure-pages@v5",
     "actions/upload-pages-artifact@v3",
     "actions/deploy-pages@v4",
+    "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24",
     "npm run check",
+    "npx playwright install --with-deps chromium",
+    "npm run test:smoke",
     "npm run build:pages",
     "path: dist",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkGoodFirstIssues(errors) {
+  const file = "docs/GOOD_FIRST_ISSUES.md";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "Good First Issues",
+    "good first issue",
+    "Acceptance checklist",
+    "data/error-recipes.json",
+    "KiriKiri",
+    "browser smoke",
+    "metadata-only",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkBrowserSmoke(errors) {
+  const configFile = "playwright.config.js";
+  const testFile = "tests/galaid-smoke.spec.js";
+  const configText = readRelative(configFile);
+  const testText = readRelative(testFile);
+
+  checkNoTrailingWhitespace(configFile, configText, errors);
+  checkNoTrailingWhitespace(testFile, testText, errors);
+
+  for (const phrase of ["defineConfig", "webServer", "python3 -m http.server", "chromium"]) {
+    assert(configText.includes(phrase), `${configFile} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of ["游戏样例", "DirectX 旧组件", "VC++ 运行库", "roadmap.json", "不包含游戏文件"]) {
+    assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -261,6 +306,8 @@ function main() {
   checkPagesWorkflow(errors);
   checkPrTemplate(errors);
   checkContributing(errors);
+  checkGoodFirstIssues(errors);
+  checkBrowserSmoke(errors);
   checkSecurityPolicy(errors);
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);

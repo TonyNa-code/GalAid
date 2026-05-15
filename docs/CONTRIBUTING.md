@@ -12,6 +12,8 @@ GalAid is local-first and safety-focused. Contributions should help users diagno
 - Improve documentation for archives, disc images, locale, or runtime setup
 - Report false positives with a redacted GalAid support summary
 
+See `docs/GOOD_FIRST_ISSUES.md` for starter tasks that are intentionally small and metadata-only.
+
 ## Safety Rules
 
 Read `SECURITY.md` and `CODE_OF_CONDUCT.md` before opening issues or pull requests.
@@ -51,10 +53,11 @@ npm run check
 
 - The change stays metadata-only and local-first.
 - `npm run check` passes.
+- `npm run test:smoke` passes when the change touches browser behavior.
 - New recipe patterns compile and avoid broad words that would match too often.
 - Any pasted logs are redacted.
 - Docs mention safe official prerequisites, not unofficial downloads or bypasses.
 
-GitHub Actions runs `npm run check` on pull requests and pushes to `main`. That covers generated recipe freshness, GitHub template sanity checks, Pages source checks, and JavaScript syntax checks. The Pages workflow also runs `npm run build:pages` before publishing the static demo.
+GitHub Actions runs `npm run check` and `npm run test:smoke` on pull requests and pushes to `main`. That covers generated recipe freshness, GitHub template sanity checks, Pages source checks, JavaScript syntax checks, and the built-in browser sample flow. The Pages workflow also runs `npm run build:pages` before publishing the static demo.
 
 Before a public release, run `npm run audit:release -- --strict` after replacing placeholder URLs. The audit checks for private absolute paths, likely secret assignments, internal AI wording, and unsafe crack or bypass advice.

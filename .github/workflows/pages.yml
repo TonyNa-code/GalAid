@@ -11,6 +11,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -35,6 +38,12 @@ jobs:
 
       - name: Run checks
         run: npm run check
+
+      - name: Install smoke browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser smoke test
+        run: npm run test:smoke
 
       - name: Build Pages artifact
         run: npm run build:pages
