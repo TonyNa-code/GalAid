@@ -8,9 +8,10 @@
     "start": "electron .",
     "build:recipes": "node scripts/build-error-recipes.js",
     "build:pages": "node scripts/build-pages.js",
+    "audit:release": "node scripts/release-audit.js",
     "check:pages": "node scripts/build-pages.js --check",
     "check:templates": "node scripts/validate-github-templates.js",
-    "check": "node --check scripts/build-error-recipes.js && node --check scripts/build-pages.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && npm run check:pages && npm run check:templates && node --check src/error-recipes.js && node --check src/app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
+    "check": "node --check scripts/build-error-recipes.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && npm run check:pages && npm run check:templates && npm run audit:release && node --check src/error-recipes.js && node --check src/app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
   },
   "devDependencies": {
     "electron": "^42.0.1"

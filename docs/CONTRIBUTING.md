@@ -56,3 +56,5 @@ npm run check
 - Docs mention safe official prerequisites, not unofficial downloads or bypasses.
 
 GitHub Actions runs `npm run check` on pull requests and pushes to `main`. That covers generated recipe freshness, GitHub template sanity checks, Pages source checks, and JavaScript syntax checks. The Pages workflow also runs `npm run build:pages` before publishing the static demo.
+
+Before a public release, run `npm run audit:release -- --strict` after replacing placeholder URLs. The audit checks for private absolute paths, likely secret assignments, internal AI wording, and unsafe crack or bypass advice.

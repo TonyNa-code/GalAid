@@ -31,6 +31,7 @@ const REQUIRED_FILES = [
   "docs/CONTRIBUTING.md",
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
+  "scripts/release-audit.js",
 ];
 
 function readRelative(relativePath) {
@@ -159,6 +160,7 @@ function checkReleaseDocs(errors) {
     "Highlights",
     "Safety Boundary",
     "Pre-Release Checklist",
+    "npm run audit:release -- --strict",
     "GitHub Pages",
     "Known Limits",
   ]) {
@@ -174,6 +176,23 @@ function checkReleaseDocs(errors) {
     "github-pages",
   ]) {
     assert(topicsText.includes(phrase), `${topicsFile} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkReleaseAuditScript(errors) {
+  const file = "scripts/release-audit.js";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "PRIVATE_PATHS",
+    "SECRET_ASSIGNMENT",
+    "AI_MARKERS",
+    "PLACEHOLDER_MARKERS",
+    "auditGitMetadata",
+    "Release audit passed",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -245,6 +264,7 @@ function main() {
   checkSecurityPolicy(errors);
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);
+  checkReleaseAuditScript(errors);
 
   if (errors.length) {
     throw new Error(`Invalid GitHub templates:\n- ${errors.join("\n- ")}`);

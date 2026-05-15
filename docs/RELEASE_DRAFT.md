@@ -48,6 +48,7 @@ npm start
 - [ ] Replace README demo placeholder with the real GitHub Pages URL.
 - [ ] Enable GitHub Pages with GitHub Actions as the source.
 - [ ] Confirm `npm run check` passes locally.
+- [ ] Confirm `npm run audit:release -- --strict` has no warnings.
 - [ ] Confirm the `Deploy Pages` workflow publishes the static demo.
 - [ ] Open the Pages demo and run the built-in game sample.
 - [ ] Review `SECURITY.md`, `CODE_OF_CONDUCT.md`, and `docs/CONTRIBUTING.md`.
