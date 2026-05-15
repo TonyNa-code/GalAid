@@ -27,7 +27,7 @@ The app reads metadata such as filenames, relative paths, sizes, and extensions.
 After publishing the repository and enabling GitHub Pages with GitHub Actions as the source:
 
 ```text
-https://<owner>.github.io/GalAid/
+https://TonyNa-code.github.io/GalAid/
 ```
 
 Local web app:

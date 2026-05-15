@@ -14,7 +14,7 @@ It helps players answer the first painful question: "Which file do I run, and wh
 - Export a metadata-only support bundle without uploading game files
 - Run it as a static web app, GitHub Pages demo, or local desktop beta
 
-Live demo after publishing: `https://YOUR_GITHUB_NAME.github.io/GalAid/`
+Live demo after publishing: `https://TonyNa-code.github.io/GalAid/`
 
 ![GalAid roadmap demo](docs/assets/galaid-roadmap-demo.png)
 
@@ -164,7 +164,7 @@ http://localhost:4173
 
 ### GitHub Pages Demo
 
-For a public repository, enable GitHub Pages with GitHub Actions as the source. The `Deploy Pages` workflow builds the static demo from `index.html`, `src/`, `data/error-recipes.json`, and `LICENSE`, then publishes the `dist/` artifact. The demo URL is usually `https://<owner>.github.io/GalAid/`.
+For a public repository, enable GitHub Pages with GitHub Actions as the source. The `Deploy Pages` workflow builds the static demo from `index.html`, `src/`, `data/error-recipes.json`, and `LICENSE`, then publishes the `dist/` artifact. The demo URL is usually `https://TonyNa-code.github.io/GalAid/`.
 
 Build the same artifact locally:
 
