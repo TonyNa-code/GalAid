@@ -21,8 +21,9 @@
     "check:pages": "node scripts/build-pages.js --check",
     "check:templates": "node scripts/validate-github-templates.js",
     "test:archive": "node scripts/test-archive-preview.js",
+    "test:launcher": "node scripts/test-desktop-launcher.js",
     "test:smoke": "playwright test",
-    "check": "node --check playwright.config.js && node --check tests/galaid-smoke.spec.js && node --check scripts/build-error-recipes.js && node --check scripts/build-engine-rules.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/test-archive-preview.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && node scripts/build-engine-rules.js --check && npm run check:pages && npm run check:templates && npm run test:archive && npm run audit:release && node --check src/error-recipes.js && node --check src/engine-rules.js && node --check src/app.js && node --check desktop/archive-preview.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
+    "check": "node --check playwright.config.js && node --check tests/galaid-smoke.spec.js && node --check scripts/build-error-recipes.js && node --check scripts/build-engine-rules.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/test-archive-preview.js && node --check scripts/test-desktop-launcher.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && node scripts/build-engine-rules.js --check && npm run check:pages && npm run check:templates && npm run test:archive && npm run test:launcher && npm run audit:release && node --check src/error-recipes.js && node --check src/engine-rules.js && node --check src/app.js && node --check desktop/archive-preview.js && node --check desktop/launcher.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
   },
   "build": {
     "appId": "io.github.tonyna.galaid",

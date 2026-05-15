@@ -2,6 +2,8 @@
 
 GalAid can run as a static web app or as an Electron desktop beta. The desktop build keeps the same local-first safety boundary, but it can use native folder/file pickers and recursive local scanning.
 
+The Windows desktop beta can also launch trusted local `.exe/.com` entries that GalAid just scanned. Launching is always user-initiated: the user clicks `Launch`, GalAid verifies the path is in the latest scan allowlist, then starts it with the entry folder as the working directory.
+
 ## Run Locally
 
 ```bash
@@ -19,6 +21,13 @@ The release workflow builds a portable Windows `.exe` on GitHub Actions:
 - output: `dist/desktop/*.exe`
 
 The package uses `electron-builder` with a portable x64 Windows target. It does not ask for administrator privileges.
+
+## One-Click Launch Boundary
+
+- Only Windows `.exe/.com` entries are launchable in V1.
+- The path must come from the latest desktop scan result.
+- GalAid does not add hidden arguments, bypass checks, patch files, or run installers automatically.
+- Web mode cannot launch local programs because browsers intentionally block that ability.
 
 ## Release Checklist
 

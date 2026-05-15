@@ -122,11 +122,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noProfilesTitle: "还不能生成启动配置",
       noProfilesBody: "当前没有可信启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。",
       safeModeTitle: "安全模式",
-      safeModeBody: "GalAid 只生成配置和命令，不会自动运行游戏。桌面版复制命令时可使用本机真实路径，报告和页面默认保留相对路径。",
+      safeModeBody: "GalAid 默认只生成配置和命令；桌面版可以在你点击后用正确工作目录启动本地 .exe/.com。报告和页面默认保留相对路径。",
       entryLabel: "entry",
       workdirLabel: "workdir",
       desktopPathReady: "desktop path ready",
       relativePathOnly: "relative path only",
+      launchNow: "启动",
+      launching: "启动中...",
+      launchUnavailable: "仅桌面版可启动",
+      launchUnsupported: "仅支持 Windows .exe/.com",
       copyCommand: "复制命令",
       copyJson: "复制 JSON",
       downloadConfig: "下载配置",
@@ -214,6 +218,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastDesktopCommandCopied: "已复制桌面命令",
       toastRelativeCommandCopied: "已复制相对命令",
       toastProfileJsonCopied: "配置 JSON 已复制",
+      toastLaunchStarted: "已启动 {name}",
+      toastLaunchUnavailable: "当前环境不能直接启动",
+      toastLaunchFailed: "启动失败",
       toastRoadmapCopied: "路线清单已复制",
       toastSummaryCopied: "求助摘要已复制",
       toastManifestCopied: "求助包清单已复制",
@@ -336,11 +343,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noProfilesTitle: "No launch profile yet",
       noProfilesBody: "There is no trusted launcher yet. Handle archives/images first, or retry with the fully extracted game folder.",
       safeModeTitle: "Safe mode",
-      safeModeBody: "GalAid only generates profiles and commands; it never launches the game automatically. The desktop app can copy real local paths, while reports and the page keep relative paths by default.",
+      safeModeBody: "GalAid generates profiles and commands by default. In the desktop app, a deliberate click can launch local .exe/.com entries with the correct working directory. Reports and the page keep relative paths by default.",
       entryLabel: "entry",
       workdirLabel: "workdir",
       desktopPathReady: "desktop path ready",
       relativePathOnly: "relative path only",
+      launchNow: "Launch",
+      launching: "Launching...",
+      launchUnavailable: "Desktop only",
+      launchUnsupported: "Windows .exe/.com only",
       copyCommand: "Copy command",
       copyJson: "Copy JSON",
       downloadConfig: "Download config",
@@ -428,6 +439,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastDesktopCommandCopied: "Desktop command copied",
       toastRelativeCommandCopied: "Relative command copied",
       toastProfileJsonCopied: "Profile JSON copied",
+      toastLaunchStarted: "Launched {name}",
+      toastLaunchUnavailable: "Direct launch is unavailable here",
+      toastLaunchFailed: "Launch failed",
       toastRoadmapCopied: "Roadmap checklist copied",
       toastSummaryCopied: "Support summary copied",
       toastManifestCopied: "Support manifest copied",
@@ -550,11 +564,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noProfilesTitle: "起動設定はまだ生成できません",
       noProfilesBody: "信頼できる起動ファイルがありません。先にアーカイブ/イメージを処理するか、展開済みゲームフォルダで再試行してください。",
       safeModeTitle: "安全モード",
-      safeModeBody: "GalAid は設定とコマンドだけを生成し、ゲームを自動起動しません。デスクトップ版では実パスのコピーが可能ですが、レポートと画面は既定で相対パスを保持します。",
+      safeModeBody: "GalAid は既定では設定とコマンドを生成します。デスクトップ版では、明示的にクリックした場合だけ、正しい作業フォルダでローカルの .exe/.com を起動できます。レポートと画面は既定で相対パスを保持します。",
       entryLabel: "入口",
       workdirLabel: "作業フォルダ",
       desktopPathReady: "デスクトップパスあり",
       relativePathOnly: "相対パスのみ",
+      launchNow: "起動",
+      launching: "起動中...",
+      launchUnavailable: "デスクトップ版のみ",
+      launchUnsupported: "Windows .exe/.com のみ",
       copyCommand: "コマンドをコピー",
       copyJson: "JSON をコピー",
       downloadConfig: "設定を保存",
@@ -642,6 +660,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastDesktopCommandCopied: "デスクトップ用コマンドをコピーしました",
       toastRelativeCommandCopied: "相対パスコマンドをコピーしました",
       toastProfileJsonCopied: "設定 JSON をコピーしました",
+      toastLaunchStarted: "{name} を起動しました",
+      toastLaunchUnavailable: "ここでは直接起動できません",
+      toastLaunchFailed: "起動に失敗しました",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
       toastSummaryCopied: "サポート概要をコピーしました",
       toastManifestCopied: "サポートマニフェストをコピーしました",
@@ -2811,7 +2832,7 @@ function renderLaunch(analysis) {
   const candidates = analysis.launchCandidates.length
     ? analysis.launchCandidates
         .map(
-          (candidate) => `
+          (candidate, index) => `
             <article class="candidate">
               <div>
                 <h4>${escapeHtml(candidate.file.name)}</h4>
@@ -2821,7 +2842,10 @@ function renderLaunch(analysis) {
                   ${candidate.reasons.map((reason) => `<span class="chip">${escapeHtml(reason)}</span>`).join("")}
                 </div>
               </div>
-              <div class="candidate-score">${candidate.score}</div>
+              <div class="candidate-side">
+                <div class="candidate-score">${candidate.score}</div>
+                ${renderCandidateLaunchAction(candidate, index)}
+              </div>
             </article>
           `,
         )
@@ -2841,6 +2865,32 @@ function renderLaunch(analysis) {
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
   `;
+}
+
+function renderCandidateLaunchAction(candidate, index) {
+  if (!desktopApi) return "";
+  const canLaunch = canDesktopLaunchFile(candidate.file);
+  return `
+    <button
+      class="launch-entry-button"
+      type="button"
+      data-launch-action="candidate"
+      data-candidate-index="${index}"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}
+    </button>
+  `;
+}
+
+function canDesktopLaunchFile(file) {
+  return Boolean(
+    desktopApi?.launchEntry &&
+      desktopApi.platform === "win32" &&
+      file?.fullPath &&
+      ["exe", "com"].includes(file.ext),
+  );
 }
 
 function renderModeCard(analysis) {
@@ -2978,11 +3028,29 @@ function renderProfileCard(profile) {
         ${profile.notes.map((note) => `<span>${escapeHtml(note)}</span>`).join("")}
       </div>
       <div class="profile-actions">
+        ${renderProfileLaunchButton(profile)}
         <button type="button" data-profile-action="copy-command" data-profile-id="${profile.id}">${escapeHtml(getUiText("copyCommand"))}</button>
         <button type="button" data-profile-action="copy-json" data-profile-id="${profile.id}">${escapeHtml(getUiText("copyJson"))}</button>
         <button type="button" data-profile-action="download-json" data-profile-id="${profile.id}">${escapeHtml(getUiText("downloadConfig"))}</button>
       </div>
     </article>
+  `;
+}
+
+function renderProfileLaunchButton(profile) {
+  if (!desktopApi) return "";
+  const canLaunch = canDesktopLaunchFile({ ext: getExt(profile.entryName), fullPath: profile.entryFullPath });
+  return `
+    <button
+      class="launch-entry-button"
+      type="button"
+      data-profile-action="launch"
+      data-profile-id="${profile.id}"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}
+    </button>
   `;
 }
 
@@ -3952,6 +4020,49 @@ function downloadBlob(filename, blob) {
   URL.revokeObjectURL(url);
 }
 
+async function launchDesktopFile(file, button) {
+  if (!desktopApi?.launchEntry) {
+    showToast(getUiText("toastLaunchUnavailable"));
+    return;
+  }
+  if (!canDesktopLaunchFile(file)) {
+    showToast(getUiText(desktopApi.platform === "win32" ? "launchUnsupported" : "toastLaunchUnavailable"));
+    return;
+  }
+
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = getUiText("launching");
+  }
+
+  try {
+    const result = await desktopApi.launchEntry({ entryFullPath: file.fullPath });
+    if (result?.ok) {
+      showToast(getUiText("toastLaunchStarted", { name: result.entryName || file.name }));
+    } else {
+      showToast(result?.message || getUiText("toastLaunchFailed"));
+    }
+  } catch {
+    showToast(getUiText("toastLaunchFailed"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+}
+
+launchPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-launch-action]");
+  if (!button || !currentAnalysis) return;
+
+  if (button.dataset.launchAction === "candidate") {
+    const candidate = currentAnalysis.launchCandidates[Number(button.dataset.candidateIndex)];
+    if (candidate?.file) void launchDesktopFile(candidate.file, button);
+  }
+});
+
 profilesPanel.addEventListener("click", (event) => {
   const button = event.target.closest("[data-profile-action]");
   if (!button || !currentAnalysis) return;
@@ -3961,7 +4072,16 @@ profilesPanel.addEventListener("click", (event) => {
 
   const action = button.dataset.profileAction;
   const profileJson = JSON.stringify(getPublicProfile(profile), null, 2);
-  if (action === "copy-command") {
+  if (action === "launch") {
+    void launchDesktopFile(
+      {
+        name: profile.entryName,
+        ext: getExt(profile.entryName),
+        fullPath: profile.entryFullPath,
+      },
+      button,
+    );
+  } else if (action === "copy-command") {
     const command = profile.hasDesktopPath ? profile.commandAbsolute : profile.commandPreview;
     void copyText(command, profile.hasDesktopPath ? getUiText("toastDesktopCommandCopied") : getUiText("toastRelativeCommandCopied"));
   } else if (action === "copy-json") {

@@ -28,6 +28,7 @@
 
 - Real folder picker with full paths
 - ZIP directory preflight without extraction
+- One-click launch for trusted scanned `.exe/.com` entries
 - Portable Windows release workflow
 - Create launch profiles
 - Create shortcuts

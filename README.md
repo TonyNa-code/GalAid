@@ -1,22 +1,35 @@
-# GalAid
+<div align="center">
+  <h1>GalAid</h1>
+  <p><strong>A local-first launch doctor for visual novel and galgame folders.</strong></p>
+  <p>From archive chaos to a launch-ready route, without uploading game files.</p>
 
-![Local-first](https://img.shields.io/badge/local--first-no_upload-36a779)
-![Static web app](https://img.shields.io/badge/web-static_app-20252b)
-![GitHub Pages ready](https://img.shields.io/badge/demo-GitHub_Pages-2088ff)
-![License: MIT](https://img.shields.io/badge/license-MIT-d95a48)
+  <p>
+    <a href="https://TonyNa-code.github.io/GalAid/">Live Demo</a>
+    ·
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.0-beta">Windows Beta</a>
+    ·
+    <a href="docs/CONTRIBUTING.md">Contribute</a>
+  </p>
 
-GalAid is a local-first launch doctor for visual novel and galgame folders.
+  <p>
+    <img alt="Local-first" src="https://img.shields.io/badge/local--first-no_upload-36a779">
+    <img alt="Static web app" src="https://img.shields.io/badge/web-static_app-20252b">
+    <img alt="Desktop beta" src="https://img.shields.io/badge/desktop-Windows_beta-407da3">
+    <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-d95a48">
+  </p>
+</div>
 
 Languages: English / [简体中文](README.zh-CN.md) / [日本語](README.ja.md)
 
-It helps players answer the first painful question: "Which file do I run, and why is this game not starting?"
+GalAid is a local-first launch doctor for visual novel and galgame folders. It helps players answer the first painful question: "Which file do I run, and why is this game not starting?"
 
-- Drop in a VN folder, archive, or disc-image file list
-- Get launch candidates, engine clues, runtime checks, and an ordered next-step route
-- Export a metadata-only support bundle without uploading game files
-- Run it as a static web app, GitHub Pages demo, or local desktop beta
-
-Live demo after publishing: `https://TonyNa-code.github.io/GalAid/`
+<table>
+  <tr>
+    <td><strong>Diagnose</strong><br>Drop in a folder, archive, or disc-image file list and get launch candidates, engine clues, runtime checks, and an ordered route.</td>
+    <td><strong>Launch</strong><br>The desktop beta can start trusted local Windows <code>.exe/.com</code> entries with the correct working directory after an explicit click.</td>
+    <td><strong>Ask safely</strong><br>Export a metadata-only support bundle for GitHub issues, forums, or chat without shipping game files.</td>
+  </tr>
+</table>
 
 ![GalAid roadmap demo](docs/assets/galaid-roadmap-demo.png)
 
@@ -39,6 +52,7 @@ GalAid turns that mess into a small diagnosis report.
 - Detect likely launch entries: `.exe`, `.bat`, `.cmd`, `.lnk`, `index.html`
 - Build an ordered next-step roadmap that tells beginners what to try first
 - Generate safe launch profiles with command hints and portable JSON config
+- Launch trusted local Windows `.exe/.com` entries from the desktop beta with the correct working directory
 - Flag installer/support tools that should not be used as the main launcher
 - Identify archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, `.mds/.mdf`
 - Detect engine and file-structure clues for Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/proprietary VN engines
@@ -66,7 +80,7 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - engine and locale notes
 - a portable `.galaid-profile.json` file
 
-Profiles do not auto-run games. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker.
+Profiles do not auto-run games by themselves. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker, and a deliberate click can launch a trusted scanned Windows `.exe/.com` entry with the correct working directory.
 
 ## Next-Step Roadmap
 
@@ -210,14 +224,14 @@ npm run build:pages
 
 ### Desktop Beta
 
-Install dependencies and start the Electron shell:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.0-beta), or run the Electron shell locally:
 
 ```bash
 npm install
 npm start
 ```
 
-The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations.
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations. It can also launch trusted scanned Windows `.exe/.com` entries after the user clicks `Launch`; GalAid sets the working directory to the entry's folder and does not add hidden arguments.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
 
@@ -242,7 +256,7 @@ The static web MVP only reads browser-exposed file metadata. The desktop beta ca
 
 ## Roadmap
 
-- Desktop version for Windows with real shortcut creation, ZIP preflight, and optional launch profiles
+- Desktop launch assistant: shortcut creation, launch history, and richer failure follow-up
 - Locale Emulator / Wine / Proton hint integration
 - Screenshot OCR for error dialogs
 - Better engine fingerprints

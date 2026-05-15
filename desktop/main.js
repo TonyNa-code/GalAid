@@ -1,6 +1,10 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require("node:path");
 const { scanSelectedPaths } = require("./scanner");
+const { buildLaunchAllowlist, launchAllowedEntry } = require("./launcher");
+
+const launchAllowlists = new Map();
+const cleanupRegisteredWebContents = new Set();
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -56,10 +60,27 @@ ipcMain.handle("desktop:select-files", async (event) => {
   return scanForRenderer(result.filePaths, event.sender);
 });
 
+ipcMain.handle("desktop:launch-entry", async (event, payload = {}) => {
+  try {
+    const result = await launchAllowedEntry({
+      allowlist: launchAllowlists.get(event.sender.id),
+      entryFullPath: payload.entryFullPath,
+    });
+    return result;
+  } catch (error) {
+    return {
+      ok: false,
+      errorCode: "launch-failed",
+      message: error?.message || "Launch failed.",
+    };
+  }
+});
+
 async function scanForRenderer(selectedPaths, webContents) {
   const result = await scanSelectedPaths(selectedPaths, (progress) => {
     webContents.send("desktop:scan-progress", progress);
   });
+  rememberLaunchAllowlist(webContents, result.files);
   return {
     canceled: false,
     files: result.files,
@@ -69,4 +90,15 @@ async function scanForRenderer(selectedPaths, webContents) {
       platform: process.platform,
     },
   };
+}
+
+function rememberLaunchAllowlist(webContents, files) {
+  launchAllowlists.set(webContents.id, buildLaunchAllowlist(files));
+  if (cleanupRegisteredWebContents.has(webContents.id)) return;
+
+  cleanupRegisteredWebContents.add(webContents.id);
+  webContents.once("destroyed", () => {
+    launchAllowlists.delete(webContents.id);
+    cleanupRegisteredWebContents.delete(webContents.id);
+  });
 }

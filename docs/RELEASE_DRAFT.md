@@ -8,6 +8,7 @@ GalAid v0.1.0 is a local-first launch doctor for visual novel and galgame folder
 
 - Static web app that runs locally or on GitHub Pages
 - Desktop beta with native folder and file selection
+- Desktop one-click launch for trusted scanned Windows `.exe/.com` entries
 - Launch candidate scoring for `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html`
 - Commercial/self-developed engine route based on root executables, same-folder DLLs, resource archives, config files, and working directory
 - Ordered next-step roadmap for beginners
@@ -64,5 +65,6 @@ npm start
 - Web mode does not inspect inside large archives or disc images yet.
 - Desktop ZIP preflight reads directory metadata only; RAR/7z and disc-image internals are not inspected yet.
 - Desktop beta is for local recursive scanning, not automatic launching.
+- Desktop one-click launch only starts trusted scanned `.exe/.com` entries after the user clicks.
 - Launch profiles are hints only; GalAid does not run games automatically.
 - Error recipes are advisory and should be improved through safe community reports.

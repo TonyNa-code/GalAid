@@ -591,6 +591,29 @@ textarea {
   gap: 14px;
 }
 
+.candidate-side {
+  display: grid;
+  align-content: start;
+  justify-items: end;
+  gap: 10px;
+}
+
+.launch-entry-button {
+  min-height: 34px;
+  border-color: rgba(22, 116, 87, 0.5);
+  padding: 0 12px;
+  color: #fff;
+  background: var(--mint-dark);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.launch-entry-button:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  background: #eef3ee;
+}
+
 .profile-list {
   margin-top: 10px;
 }

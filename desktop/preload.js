@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("galaidDesktop", {
   platform: process.platform,
   selectFolder: () => ipcRenderer.invoke("desktop:select-folder"),
   selectFiles: () => ipcRenderer.invoke("desktop:select-files"),
+  launchEntry: (payload) => ipcRenderer.invoke("desktop:launch-entry", payload),
   onScanProgress(listener) {
     progressListeners.add(listener);
     return () => progressListeners.delete(listener);

@@ -40,8 +40,10 @@ const REQUIRED_FILES = [
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
   "desktop/archive-preview.js",
+  "desktop/launcher.js",
   "playwright.config.js",
   "scripts/build-engine-rules.js",
+  "scripts/test-desktop-launcher.js",
   "scripts/test-archive-preview.js",
   "scripts/release-audit.js",
   "src/engine-rules.js",
@@ -421,6 +423,38 @@ function checkDesktopRelease(errors) {
   }
 }
 
+function checkDesktopLauncher(errors) {
+  const launcherFile = "desktop/launcher.js";
+  const testFile = "scripts/test-desktop-launcher.js";
+  const preloadFile = "desktop/preload.js";
+  const mainFile = "desktop/main.js";
+  const launcherText = readRelative(launcherFile);
+  const testText = readRelative(testFile);
+  const preloadText = readRelative(preloadFile);
+  const mainText = readRelative(mainFile);
+
+  checkNoTrailingWhitespace(launcherFile, launcherText, errors);
+  checkNoTrailingWhitespace(testFile, testText, errors);
+
+  for (const phrase of [
+    "buildLaunchAllowlist",
+    "launchAllowedEntry",
+    "unsupported-platform",
+    "not-allowed",
+    "detached: true",
+  ]) {
+    assert(launcherText.includes(phrase), `${launcherFile} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of ["desktop:launch-entry", "launchEntry"]) {
+    assert(preloadText.includes(phrase) || mainText.includes(phrase), `desktop launch bridge is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of ["Desktop launcher smoke passed", "platform: \"win32\"", "not-allowed"]) {
+    assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
+  }
+}
+
 function checkArchivePreview(errors) {
   const previewFile = "desktop/archive-preview.js";
   const testFile = "scripts/test-archive-preview.js";
@@ -469,6 +503,7 @@ function main() {
   checkArchivePreview(errors);
   checkEngineRules(errors);
   checkDesktopRelease(errors);
+  checkDesktopLauncher(errors);
   checkSecurityPolicy(errors);
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);
