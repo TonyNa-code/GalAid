@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("galaidDesktop", {
   launchEntry: (payload) => ipcRenderer.invoke("desktop:launch-entry", payload),
   createShortcut: (payload) => ipcRenderer.invoke("desktop:create-shortcut", payload),
   preparePackage: (payload) => ipcRenderer.invoke("desktop:prepare-package", payload),
+  unmountImage: (payload) => ipcRenderer.invoke("desktop:unmount-image", payload),
   getLaunchHistory: () => ipcRenderer.invoke("desktop:get-launch-history"),
   onScanProgress(listener) {
     progressListeners.add(listener);

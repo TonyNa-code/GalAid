@@ -74,7 +74,8 @@ test("prepared desktop handoff highlights the next launch entry", async ({ page 
       skipped: 0,
       preparedFrom: "SakuraTrial.zip",
       preparedOutputName: "SakuraTrial-prepared",
-      preparedKind: "extracted-archive",
+      preparedKind: "mounted-image",
+      mountedImageDrive: "R:\\",
     };
     return renderLaunch(analysis);
   });
@@ -83,7 +84,33 @@ test("prepared desktop handoff highlights the next launch entry", async ({ page 
   expect(handoffHtml).toContain("SakuraTrial.zip");
   expect(handoffHtml).toContain("SakuraTrial-prepared");
   expect(handoffHtml).toContain("SakuraTrial/game.exe");
+  expect(handoffHtml).toContain("当前来自已挂载镜像");
   expect(handoffHtml).toContain('data-candidate-index="0"');
+});
+
+test("launch attempt follow-up can mark a failure symptom", async ({ page }) => {
+  await page.goto("/");
+
+  const followupHtml = await page.evaluate(() => {
+    pendingLaunchFollowup = {
+      entryName: "game.exe",
+      relativePath: "SakuraTrial/game.exe",
+      launchedAt: new Date().toISOString(),
+    };
+    return renderLaunch(analyze(SAMPLE_FILES.map(fileFromSample)));
+  });
+  expect(followupHtml).toContain("刚才启动了吗？");
+  expect(followupHtml).toContain("点了没反应");
+
+  const symptomState = await page.evaluate(() => {
+    markLaunchAttemptSymptom("nothing");
+    return {
+      pending: Boolean(pendingLaunchFollowup),
+      symptoms: launchFailureState.symptoms,
+    };
+  });
+  expect(symptomState.pending).toBe(false);
+  expect(symptomState.symptoms).toContain("nothing");
 });
 
 test("launch failure follow-up updates roadmap and support bundle", async ({ page }) => {

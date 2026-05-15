@@ -501,6 +501,7 @@ textarea {
 .asset-card,
 .profile-card,
 .prepared-handoff,
+.launch-attempt-card,
 .roadmap-summary,
 .roadmap-step,
 .environment-summary,
@@ -551,6 +552,7 @@ textarea {
 .asset-card h4,
 .profile-card h4,
 .prepared-handoff h4,
+.launch-attempt-card h4,
 .roadmap-summary h4,
 .roadmap-step h4,
 .environment-summary h4,
@@ -572,6 +574,7 @@ textarea {
 .asset-card p,
 .profile-card p,
 .prepared-handoff p,
+.launch-attempt-card p,
 .roadmap-summary p,
 .roadmap-step p,
 .environment-summary p,
@@ -614,7 +617,39 @@ textarea {
 
 .handoff-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 8px;
+}
+
+.handoff-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.launch-attempt-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, auto);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  border-color: rgba(64, 125, 163, 0.32);
+  background: rgba(64, 125, 163, 0.06);
+}
+
+.launch-attempt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.launch-attempt-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 .candidate-side {
@@ -1555,6 +1590,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .launch-attempt-card {
+    grid-template-columns: 1fr;
+  }
+
   .environment-summary {
     grid-template-columns: 1fr;
   }
@@ -1576,6 +1615,8 @@ textarea {
   .roadmap-actions,
   .handoff-actions,
   .handoff-actions button,
+  .launch-attempt-actions,
+  .launch-attempt-actions button,
   .roadmap-actions button {
     width: 100%;
   }

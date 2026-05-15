@@ -379,6 +379,48 @@ function mountIsoImage(isoPath, spawnImpl = spawn) {
   });
 }
 
+function unmountIsoImage(isoPath, spawnImpl = spawn) {
+  return new Promise((resolve) => {
+    const command = [
+      "$ErrorActionPreference='Stop';",
+      `Dismount-DiskImage -ImagePath '${escapePowerShellSingleQuoted(isoPath)}';`,
+      "Write-Output 'OK';",
+    ].join(" ");
+    let stderr = "";
+    let settled = false;
+    let timer;
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve(result);
+    };
+
+    const child = spawnImpl("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    timer = setTimeout(() => {
+      child.kill?.();
+      finish({ ok: false, errorCode: "unmount-timeout" });
+    }, ISO_MOUNT_TIMEOUT_MS);
+
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString("utf8");
+    });
+    child.on("error", (error) => finish({ ok: false, errorCode: error.code === "ENOENT" ? "unmount-unavailable" : "unmount-failed", message: error.message }));
+    child.on("close", (code) => {
+      if (code === 0) {
+        finish({ ok: true, tool: "Windows Dismount-DiskImage" });
+      } else {
+        finish({ ok: false, errorCode: "unmount-failed", message: stderr.trim() || "Could not unmount the ISO image." });
+      }
+    });
+  });
+}
+
 function escapePowerShellSingleQuoted(value) {
   return String(value || "").replaceAll("'", "''");
 }
@@ -399,4 +441,5 @@ module.exports = {
   prepareArchivePackage,
   prepareDiscImagePackage,
   prepareLocalPackage,
+  unmountIsoImage,
 };

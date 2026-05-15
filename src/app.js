@@ -278,6 +278,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchFailureEvidenceReady: "已记录 {count} 条现象",
       applyFailureFollowup: "更新路线",
       clearFailureFollowup: "清空跟进",
+      launchAttemptTitle: "刚才启动了吗？",
+      launchAttemptBody: "GalAid 已记录这次启动尝试。如果游戏没正常打开，点下面的现象会立刻更新路线和求助包。",
+      launchAttemptOk: "正常打开了",
+      launchAttemptDismissed: "已记录为正常打开",
+      launchAttemptMarked: "已记录启动现象",
+      unmountImage: "卸载镜像",
+      unmountingImage: "卸载中...",
+      mountedImageReady: "当前来自已挂载镜像：{drive}",
+      mountedImageUnmounted: "镜像已卸载",
       preparedHandoffTitle: "准备完成",
       preparedHandoffReadyBody: "已从 {source} 准备并重扫 {target}。下一步优先尝试 {entry}。",
       preparedHandoffNoLaunchBody: "已从 {source} 准备并重扫 {target}，但还没有找到可信启动入口。请查看下面的诊断结论，或把安装后的完整游戏目录拖回来。",
@@ -416,6 +425,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "已启动 {name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
       toastLaunchFailed: "启动失败",
+      toastImageUnmounted: "已卸载镜像：{name}",
+      toastImageUnmountFailed: "镜像卸载失败",
       toastShortcutCreated: "快捷方式已创建：{name}",
       toastShortcutFailed: "快捷方式创建失败",
       toastPackagePrepared: "已准备并重新扫描：{name}",
@@ -549,6 +560,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchFailureEvidenceReady: "{count} symptoms recorded",
       applyFailureFollowup: "Update roadmap",
       clearFailureFollowup: "Clear follow-up",
+      launchAttemptTitle: "Did it launch?",
+      launchAttemptBody: "GalAid recorded this launch attempt. If the game did not open normally, choose a symptom below to update the roadmap and support bundle.",
+      launchAttemptOk: "It opened normally",
+      launchAttemptDismissed: "Marked as opened normally",
+      launchAttemptMarked: "Launch symptom recorded",
+      unmountImage: "Unmount image",
+      unmountingImage: "Unmounting...",
+      mountedImageReady: "Current scan came from a mounted image: {drive}",
+      mountedImageUnmounted: "Image unmounted",
       preparedHandoffTitle: "Prepared and rescanned",
       preparedHandoffReadyBody: "GalAid prepared {target} from {source}. Try {entry} first.",
       preparedHandoffNoLaunchBody: "GalAid prepared {target} from {source}, but no trusted launch entry was found yet. Review the findings below or drop the installed game folder back into GalAid.",
@@ -687,6 +707,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "Launched {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
       toastLaunchFailed: "Launch failed",
+      toastImageUnmounted: "Unmounted image: {name}",
+      toastImageUnmountFailed: "Image unmount failed",
       toastShortcutCreated: "Shortcut created: {name}",
       toastShortcutFailed: "Shortcut creation failed",
       toastPackagePrepared: "Prepared and rescanned: {name}",
@@ -820,6 +842,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchFailureEvidenceReady: "{count} 件の症状を記録済み",
       applyFailureFollowup: "手順を更新",
       clearFailureFollowup: "フォローを消去",
+      launchAttemptTitle: "起動しましたか？",
+      launchAttemptBody: "GalAid はこの起動操作を記録しました。正常に開かなかった場合は、下の症状を選ぶと手順とサポートバンドルを更新します。",
+      launchAttemptOk: "正常に開いた",
+      launchAttemptDismissed: "正常起動として記録しました",
+      launchAttemptMarked: "起動症状を記録しました",
+      unmountImage: "イメージをアンマウント",
+      unmountingImage: "アンマウント中...",
+      mountedImageReady: "現在のスキャン元はマウント済みイメージです: {drive}",
+      mountedImageUnmounted: "イメージをアンマウントしました",
       preparedHandoffTitle: "準備と再スキャンが完了",
       preparedHandoffReadyBody: "{source} から {target} を準備して再スキャンしました。まず {entry} を試してください。",
       preparedHandoffNoLaunchBody: "{source} から {target} を準備して再スキャンしましたが、信頼できる起動入口はまだ見つかっていません。下の診断結果を確認するか、インストール後の完全なゲームフォルダをもう一度投入してください。",
@@ -958,6 +989,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "{name} を起動しました",
       toastLaunchUnavailable: "ここでは直接起動できません",
       toastLaunchFailed: "起動に失敗しました",
+      toastImageUnmounted: "イメージをアンマウントしました: {name}",
+      toastImageUnmountFailed: "イメージのアンマウントに失敗しました",
       toastShortcutCreated: "ショートカットを作成しました: {name}",
       toastShortcutFailed: "ショートカット作成に失敗しました",
       toastPackagePrepared: "準備して再スキャンしました: {name}",
@@ -1193,6 +1226,7 @@ let currentAnalysis = null;
 let scanRunId = 0;
 let desktopLaunchHistory = [];
 let launchFailureState = getEmptyLaunchFailureState();
+let pendingLaunchFollowup = null;
 const desktopApi = window.galaidDesktop || null;
 
 assistantLanguageSelect.value = getStoredAssistantLanguage();
@@ -3386,6 +3420,7 @@ async function setFiles(files, options = {}) {
 
     currentFiles = uniqueFiles(files);
     launchFailureState = getEmptyLaunchFailureState();
+    pendingLaunchFollowup = null;
     currentAnalysis = analyze(currentFiles, errorInput.value, launchFailureState);
     if (options.desktopMeta) currentAnalysis.desktopMeta = options.desktopMeta;
     refreshCurrentReport();
@@ -3492,6 +3527,7 @@ function renderLaunch(analysis) {
   return `
     ${renderModeCard(analysis)}
     ${renderPreparedHandoff(analysis)}
+    ${renderLaunchAttemptFollowup()}
     <div class="section-title">
       <h3>${escapeHtml(getUiText("launchCandidates"))}</h3>
       <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
@@ -3517,6 +3553,7 @@ function renderPreparedHandoff(analysis) {
     ? getUiText("preparedHandoffReadyBody", { source, target, entry: topCandidate.file.path })
     : getUiText("preparedHandoffNoLaunchBody", { source, target });
   const canLaunchTopCandidate = topCandidate ? canDesktopLaunchFile(topCandidate.file) : false;
+  const mountedImageAction = renderMountedImageAction(meta);
   const action = topCandidate
     ? `
       <button
@@ -3537,9 +3574,44 @@ function renderPreparedHandoff(analysis) {
       <div>
         <h4>${escapeHtml(getUiText("preparedHandoffTitle"))}</h4>
         <p>${escapeHtml(body)}</p>
+        ${meta.preparedKind === "mounted-image" ? `<p>${escapeHtml(meta.mountedImageUnmounted ? getUiText("mountedImageUnmounted") : getUiText("mountedImageReady", { drive: meta.mountedImageDrive || target }))}</p>` : ""}
         ${topCandidate ? `<div class="meta-row"><span class="chip good">${escapeHtml(getUiText("preparedRecommendedEntry"))}: ${escapeHtml(topCandidate.file.name)}</span><span class="chip">${escapeHtml(topCandidate.file.path)}</span></div>` : ""}
       </div>
-      <div class="handoff-actions">${action}</div>
+      <div class="handoff-actions">${action}${mountedImageAction}</div>
+    </article>
+  `;
+}
+
+function renderMountedImageAction(meta) {
+  if (!desktopApi?.unmountImage || desktopApi.platform !== "win32" || meta?.preparedKind !== "mounted-image" || meta?.mountedImageUnmounted) return "";
+  return `
+    <button
+      type="button"
+      data-launch-action="unmount-image"
+      data-mounted-image-drive="${escapeHtml(meta.mountedImageDrive || "")}"
+    >
+      ${escapeHtml(getUiText("unmountImage"))}
+    </button>
+  `;
+}
+
+function renderLaunchAttemptFollowup() {
+  if (!pendingLaunchFollowup) return "";
+  const symptomIds = ["nothing", "crash", "missing-dll", "mojibake", "black-screen"];
+  return `
+    <article class="launch-attempt-card">
+      <div>
+        <h4>${escapeHtml(getUiText("launchAttemptTitle"))}</h4>
+        <p>${escapeHtml(getUiText("launchAttemptBody"))}</p>
+        <div class="meta-row">
+          <span class="chip good">${escapeHtml(pendingLaunchFollowup.entryName || getUiText("launchNow"))}</span>
+          <span class="chip">${escapeHtml(pendingLaunchFollowup.relativePath || "")}</span>
+        </div>
+      </div>
+      <div class="launch-attempt-actions">
+        <button type="button" data-launch-action="mark-launch-ok">${escapeHtml(getUiText("launchAttemptOk"))}</button>
+        ${symptomIds.map((id) => `<button type="button" data-launch-action="mark-launch-symptom" data-symptom-id="${id}">${escapeHtml(getLaunchFailureSymptomText(id, "label"))}</button>`).join("")}
+      </div>
     </article>
   `;
 }
@@ -4346,6 +4418,8 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
     if (analysis.desktopMeta.preparedFrom) lines.push(`- Prepared from: ${analysis.desktopMeta.preparedFrom}`);
     if (analysis.desktopMeta.preparedOutputName) lines.push(`- Prepared output: ${analysis.desktopMeta.preparedOutputName}`);
     if (analysis.desktopMeta.preparedKind) lines.push(`- Prepared kind: ${analysis.desktopMeta.preparedKind}`);
+    if (analysis.desktopMeta.mountedImageDrive) lines.push(`- Mounted image drive: ${analysis.desktopMeta.mountedImageDrive}`);
+    if (analysis.desktopMeta.mountedImageUnmounted) lines.push("- Mounted image unmounted: yes");
   }
   lines.push("");
   lines.push(`## ${labels.launchCandidates}`);
@@ -4623,6 +4697,9 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
           preparedFrom: analysis.desktopMeta.preparedFrom || "",
           preparedOutputName: analysis.desktopMeta.preparedOutputName || "",
           preparedKind: analysis.desktopMeta.preparedKind || "",
+          mountedImageDrive: analysis.desktopMeta.mountedImageDrive || "",
+          mountedImageTool: analysis.desktopMeta.mountedImageTool || "",
+          mountedImageUnmounted: Boolean(analysis.desktopMeta.mountedImageUnmounted),
         }
       : null,
   };
@@ -5004,6 +5081,11 @@ async function launchDesktopFile(file, button) {
   try {
     const result = await desktopApi.launchEntry({ entryFullPath: file.fullPath });
     if (result?.ok) {
+      pendingLaunchFollowup = {
+        entryName: result.entryName || file.name,
+        relativePath: result.relativePath || file.path || file.name,
+        launchedAt: new Date().toISOString(),
+      };
       showToast(getUiText("toastLaunchStarted", { name: result.entryName || file.name }));
       await refreshDesktopLaunchHistory({ rerender: true });
     } else {
@@ -5011,6 +5093,58 @@ async function launchDesktopFile(file, button) {
     }
   } catch {
     showToast(getUiText("toastLaunchFailed"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+}
+
+function markLaunchAttemptOk() {
+  pendingLaunchFollowup = null;
+  if (currentAnalysis) render();
+  showToast(getUiText("launchAttemptDismissed"));
+}
+
+function markLaunchAttemptSymptom(symptomId) {
+  const knownIds = new Set(LAUNCH_FAILURE_SYMPTOMS.map((symptom) => symptom.id));
+  if (!knownIds.has(symptomId)) return;
+  launchFailureState = normalizeLaunchFailureInput({
+    symptoms: [...new Set([...(launchFailureState.symptoms || []), symptomId])],
+    note: launchFailureState.note || "",
+  });
+  pendingLaunchFollowup = null;
+  rerunCurrentAnalysis();
+  showToast(getUiText("launchAttemptMarked"));
+}
+
+async function unmountPreparedImage(button) {
+  if (!desktopApi?.unmountImage || !currentAnalysis?.desktopMeta?.mountedImageDrive) {
+    showToast(getUiText("toastImageUnmountFailed"));
+    return;
+  }
+
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = getUiText("unmountingImage");
+  }
+
+  try {
+    const result = await desktopApi.unmountImage({
+      mountedImageDrive: currentAnalysis.desktopMeta.mountedImageDrive,
+    });
+    if (result?.ok) {
+      currentAnalysis.desktopMeta.mountedImageUnmounted = true;
+      refreshCurrentReport();
+      render();
+      showToast(getUiText("toastImageUnmounted", { name: result.mountedImageName || currentAnalysis.desktopMeta.preparedFrom || currentAnalysis.desktopMeta.mountedImageDrive }));
+      return;
+    }
+    showToast(result?.message || getUiText("toastImageUnmountFailed"));
+  } catch {
+    showToast(getUiText("toastImageUnmountFailed"));
   } finally {
     if (button) {
       button.disabled = false;
@@ -5168,12 +5302,20 @@ launchPanel.addEventListener("click", (event) => {
   if (button.dataset.launchAction === "candidate") {
     const candidate = currentAnalysis.launchCandidates[Number(button.dataset.candidateIndex)];
     if (candidate?.file) void launchDesktopFile(candidate.file, button);
+  } else if (button.dataset.launchAction === "mark-launch-ok") {
+    markLaunchAttemptOk();
+  } else if (button.dataset.launchAction === "mark-launch-symptom") {
+    markLaunchAttemptSymptom(button.dataset.symptomId);
+  } else if (button.dataset.launchAction === "unmount-image") {
+    void unmountPreparedImage(button);
   } else if (button.dataset.launchAction === "apply-failure") {
     launchFailureState = readLaunchFailureForm();
+    pendingLaunchFollowup = null;
     rerunCurrentAnalysis();
     showToast(getUiText("toastFailureUpdated"));
   } else if (button.dataset.launchAction === "clear-failure") {
     launchFailureState = getEmptyLaunchFailureState();
+    pendingLaunchFollowup = null;
     rerunCurrentAnalysis();
     showToast(getUiText("toastFailureCleared"));
   }
@@ -5287,6 +5429,7 @@ clearButton.addEventListener("click", () => {
   currentFiles = [];
   currentAnalysis = null;
   launchFailureState = getEmptyLaunchFailureState();
+  pendingLaunchFollowup = null;
   folderInput.value = "";
   fileInput.value = "";
   errorInput.value = "";

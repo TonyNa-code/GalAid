@@ -13,6 +13,7 @@ const {
   prepareArchivePackage,
   prepareDiscImagePackage,
   prepareLocalPackage,
+  unmountIsoImage,
 } = require("../desktop/package-prep");
 
 async function main() {
@@ -98,6 +99,14 @@ async function main() {
   assert.equal(mountSpawned[0].command, "powershell.exe");
   assert.match(mountSpawned[0].args.at(-1), /Mount-DiskImage/);
   assert.match(mountSpawned[0].args.at(-1), /VN Disc''s/);
+
+  const unmountSpawned = [];
+  const unmountedViaCommand = await unmountIsoImage("C:\\VN Disc's\\MoonlightCafe.iso", makeSpawn({ spawned: unmountSpawned, stdout: "OK\n", code: 0 }));
+  assert.equal(unmountedViaCommand.ok, true);
+  assert.equal(unmountedViaCommand.tool, "Windows Dismount-DiskImage");
+  assert.equal(unmountSpawned[0].command, "powershell.exe");
+  assert.match(unmountSpawned[0].args.at(-1), /Dismount-DiskImage/);
+  assert.match(unmountSpawned[0].args.at(-1), /VN Disc''s/);
 
   const generic = await prepareLocalPackage({
     packagePath: isoPath,

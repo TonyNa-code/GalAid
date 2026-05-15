@@ -3,10 +3,11 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { scanSelectedPaths } = require("./scanner");
 const { buildLaunchAllowlist, createShortcutForAllowedEntry, launchAllowedEntry } = require("./launcher");
-const { isPrepareSupportedPackage, prepareLocalPackage } = require("./package-prep");
+const { isPrepareSupportedPackage, prepareLocalPackage, unmountIsoImage } = require("./package-prep");
 
 const launchAllowlists = new Map();
 const packageAllowlists = new Map();
+const mountedImageAllowlists = new Map();
 const cleanupRegisteredWebContents = new Set();
 const LAUNCH_HISTORY_LIMIT = 20;
 let launchHistory = [];
@@ -149,11 +150,19 @@ ipcMain.handle("desktop:prepare-package", async (event, payload = {}) => {
 
     if (!prepareResult.ok) return prepareResult;
     const scanPath = prepareResult.scanPath || outputDirectory;
+    if (prepareResult.mounted) {
+      rememberMountedImage(event.sender, {
+        imagePath: prepareResult.packagePath,
+        mountPath: prepareResult.scanPath,
+      });
+    }
     const scanResult = await scanForRenderer([scanPath], event.sender, {
       selectedCount: 1,
       preparedFrom: packageFile.path,
       preparedOutputName: path.basename(scanPath),
       preparedKind: prepareResult.mounted ? "mounted-image" : prepareResult.imageExtracted ? "extracted-image" : "extracted-archive",
+      mountedImageDrive: prepareResult.mounted ? prepareResult.scanPath : "",
+      mountedImageTool: prepareResult.mounted ? prepareResult.tool : "",
       platform: process.platform,
     });
     return {
@@ -166,6 +175,33 @@ ipcMain.handle("desktop:prepare-package", async (event, payload = {}) => {
       ok: false,
       errorCode: "prepare-failed",
       message: error?.message || "Package preparation failed.",
+    };
+  }
+});
+
+ipcMain.handle("desktop:unmount-image", async (event, payload = {}) => {
+  if (process.platform !== "win32") return { ok: false, errorCode: "unsupported-platform" };
+
+  const key = getMountedImageKey(payload.mountedImageDrive || payload.mountPath || payload.scanPath);
+  const mounted = key ? mountedImageAllowlists.get(event.sender.id)?.get(key) : null;
+  if (!mounted) return { ok: false, errorCode: "not-allowed", message: "Mounted image was not part of this GalAid session." };
+
+  try {
+    const result = await unmountIsoImage(mounted.imagePath);
+    if (result.ok) {
+      mountedImageAllowlists.get(event.sender.id)?.delete(key);
+      return {
+        ...result,
+        mountedImageDrive: mounted.mountPath,
+        mountedImageName: path.basename(mounted.imagePath),
+      };
+    }
+    return result;
+  } catch (error) {
+    return {
+      ok: false,
+      errorCode: "unmount-failed",
+      message: error?.message || "Could not unmount the image.",
     };
   }
 });
@@ -198,8 +234,24 @@ function rememberScanAllowlists(webContents, files) {
   webContents.once("destroyed", () => {
     launchAllowlists.delete(webContents.id);
     packageAllowlists.delete(webContents.id);
+    mountedImageAllowlists.delete(webContents.id);
     cleanupRegisteredWebContents.delete(webContents.id);
   });
+}
+
+function rememberMountedImage(webContents, mounted) {
+  const key = getMountedImageKey(mounted?.mountPath);
+  if (!key || !mounted?.imagePath) return;
+  const allowlist = mountedImageAllowlists.get(webContents.id) || new Map();
+  allowlist.set(key, {
+    imagePath: path.resolve(mounted.imagePath),
+    mountPath: mounted.mountPath,
+  });
+  mountedImageAllowlists.set(webContents.id, allowlist);
+}
+
+function getMountedImageKey(value) {
+  return String(value || "").trim().replace(/\//g, "\\").replace(/\\+$/, "\\").toLowerCase();
 }
 
 function buildPackageAllowlist(files) {

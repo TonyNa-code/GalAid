@@ -352,6 +352,8 @@ function checkBrowserSmoke(errors) {
     "商业/自研引擎启动链",
     "prepared desktop handoff",
     "SakuraTrial-prepared",
+    "launch attempt follow-up",
+    "markLaunchAttemptSymptom",
   ]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
@@ -461,7 +463,7 @@ function checkDesktopLauncher(errors) {
     assert(launcherText.includes(phrase), `${launcherFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["desktop:launch-entry", "desktop:create-shortcut", "desktop:prepare-package", "launchEntry", "createShortcut", "preparePackage"]) {
+  for (const phrase of ["desktop:launch-entry", "desktop:create-shortcut", "desktop:prepare-package", "desktop:unmount-image", "launchEntry", "createShortcut", "preparePackage", "unmountImage"]) {
     assert(preloadText.includes(phrase) || mainText.includes(phrase), `desktop launch bridge is missing phrase: ${phrase}`, errors);
   }
 
@@ -505,11 +507,11 @@ function checkPackagePrep(errors) {
   checkNoTrailingWhitespace(prepFile, prepText, errors);
   checkNoTrailingWhitespace(testFile, testText, errors);
 
-  for (const phrase of ["prepareArchivePackage", "prepareDiscImagePackage", "isPrepareSupportedPackage", "7zip-bin", "Mount-DiskImage", "password-failed", "tool-missing"]) {
+  for (const phrase of ["prepareArchivePackage", "prepareDiscImagePackage", "isPrepareSupportedPackage", "7zip-bin", "Mount-DiskImage", "Dismount-DiskImage", "password-failed", "tool-missing"]) {
     assert(prepText.includes(phrase), `${prepFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["Package prep smoke passed", "knownPassword", "Game.part2.rar", "Disc.iso", "Windows Mount-DiskImage", "tool-missing"]) {
+  for (const phrase of ["Package prep smoke passed", "knownPassword", "Game.part2.rar", "Disc.iso", "Windows Mount-DiskImage", "Windows Dismount-DiskImage", "tool-missing"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }

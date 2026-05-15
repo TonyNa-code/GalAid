@@ -17,6 +17,8 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Preflight ZIP/RAR/7z package metadata and disc-image media roles in the desktop beta before any extraction or mounting
 - Extract ZIP/RAR/7z packages locally only after the user explicitly chooses an output folder and supplies any known password
 - Mount Windows `.iso` images or best-effort extract supported disc images only after the user explicitly clicks the desktop prepare action
+- Unmount ISO images that GalAid mounted in the current desktop session after the user explicitly clicks the cleanup action
+- Record user-marked launch outcome symptoms without monitoring the game process
 - Preview or list assets only when the format is open or user-controlled
 
 ## Out of Scope
@@ -27,6 +29,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Decrypting protected archives without permission
 - Uploading user game files to a third-party server
 - Installing system runtimes, changing locale settings, mounting/extracting images without user confirmation, extracting archives without user confirmation, or running executables automatically
+- Monitoring or inspecting a running game process
 
 ## Default Privacy Model
 
@@ -46,6 +49,8 @@ Support bundles follow the same privacy model. They contain reports, matched rul
 Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z can be listed through the bundled or local 7z-compatible command when available, and disc images are treated as media/descriptor files.
 
 Desktop package preparation is separate from preflight. It only starts after a user click, uses a user-selected output folder when extraction is needed, accepts a password the user already knows, and immediately rescans the prepared folder or mounted image. GalAid does not save package passwords, crack passwords, upload package contents, silently mount disc images, or run extracted executables automatically.
+
+Desktop ISO cleanup is also allowlisted. GalAid can only request `Dismount-DiskImage` for an image it mounted during the current app session. Launch follow-up remains manual: the user marks symptoms after trying a launcher, and GalAid uses those choices only to update local diagnosis output.
 
 ## Desktop Beta Guardrails
 
