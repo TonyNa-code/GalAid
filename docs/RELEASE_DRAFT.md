@@ -1,8 +1,8 @@
 # Release Draft
 
-## v0.1.3 beta
+## v0.1.4 beta
 
-GalAid v0.1.3 is a local-first launch doctor for visual novel and galgame folders. It helps players answer: "Which file do I run, and why is this game not starting?"
+GalAid v0.1.4 is a local-first launch doctor for visual novel and galgame folders. It helps players answer: "Which file do I run, and why is this game not starting?"
 
 ## Highlights
 
@@ -13,13 +13,14 @@ GalAid v0.1.3 is a local-first launch doctor for visual novel and galgame folder
 - Commercial/self-developed engine route based on root executables, same-folder DLLs, resource archives, config files, and working directory
 - Evidence explanations, confidence details, and next steps for engine matches
 - Optional Locale Emulator, Wine, and Proton launch templates for locale-sensitive profiles
+- Manual launch-failure follow-up for no response, crash, mojibake, black screen, and missing DLL/runtime symptoms
 - Ordered next-step roadmap for beginners
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages
 - Desktop ZIP directory preflight that spots internal launch and engine clues without extracting files
 - English default README with Chinese/Japanese translations and Chinese/English/Japanese diagnosis output language
 - Community-editable startup error recipes in `data/error-recipes.json`
-- Metadata-only support bundle with reports, launch profiles, roadmap, recipe matches, and sanitized file manifest
+- Metadata-only support bundle with reports, launch profiles, launch-failure notes, roadmap, recipe matches, and sanitized file manifest
 - GitHub issue templates, PR template, CI checks, and GitHub Pages deployment workflow
 
 ## Safety Boundary

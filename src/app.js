@@ -51,6 +51,163 @@ const MAX_SORTED_FILES = 50000;
 const SUPPORT_BUNDLE_FILE_LIMIT = 5000;
 const ERROR_RECIPES = Array.isArray(window.GALAID_ERROR_RECIPES) ? window.GALAID_ERROR_RECIPES : [];
 const ASSISTANT_LANGUAGE_STORAGE_KEY = "GalAid.assistantLanguage.v1";
+const LAUNCH_FAILURE_SYMPTOMS = [
+  {
+    id: "nothing",
+    diagnosticText: "manual follow-up: nothing happened after clicking the launcher; no window and no error",
+    label: {
+      "zh-CN": "点了没反应",
+      en: "Nothing happened",
+      ja: "クリックしても反応なし",
+    },
+    hint: {
+      "zh-CN": "没有窗口、没有报错，或只在后台闪了一下。",
+      en: "No window, no dialog, or only a brief background flash.",
+      ja: "ウィンドウやエラーが出ず、一瞬だけ反応したように見える状態。",
+    },
+    step: {
+      "zh-CN": {
+        title: "启动后没反应",
+        detail: "用户手动标记：点击入口后没有明显窗口或报错。GalAid 没有监控进程，只记录这条现象。",
+        action: "先确认不是点到安装器/配置工具；再按英文短路径、管理员权限、杀软隔离、备用启动入口的顺序排查。",
+      },
+      en: {
+        title: "Nothing happened after launch",
+        detail: "Manually marked: the launcher produced no obvious window or dialog. GalAid is not monitoring the process; it only records this evidence.",
+        action: "Confirm the entry is not an installer/config tool, then check a short ASCII path, permissions, antivirus quarantine, and alternate launch candidates.",
+      },
+      ja: {
+        title: "起動後に反応がない",
+        detail: "手動入力: 起動ファイルを押しても明確なウィンドウやエラーが出ません。GalAid はプロセスを監視せず、この情報だけを記録します。",
+        action: "インストーラや設定ツールを押していないか確認し、短い英数字パス、権限、セキュリティソフト隔離、別候補の順に確認してください。",
+      },
+    },
+  },
+  {
+    id: "crash",
+    diagnosticText: "manual follow-up: game crashes immediately or exits after launch",
+    label: {
+      "zh-CN": "闪退/立即退出",
+      en: "Crashes immediately",
+      ja: "すぐ落ちる",
+    },
+    hint: {
+      "zh-CN": "窗口出现后立刻消失，或启动器马上退出。",
+      en: "The window appears and closes, or the launcher exits right away.",
+      ja: "ウィンドウが出てすぐ消える、またはランチャーが即終了します。",
+    },
+    step: {
+      "zh-CN": {
+        title: "闪退后收集报错",
+        detail: "用户手动标记：启动后立即退出。无弹窗时也应按环境线索继续排查。",
+        action: "先贴弹窗/日志；如果没有文本，优先尝试日区/Locale Emulator、英文短路径、完整解压和 DirectX/VC++ 运行库。",
+      },
+      en: {
+        title: "Collect crash evidence",
+        detail: "Manually marked: the game exits immediately after launch.",
+        action: "Paste any dialog/log text. If there is no text, try Japanese locale / Locale Emulator, a short ASCII path, full extraction, and DirectX/VC++ runtimes.",
+      },
+      ja: {
+        title: "クラッシュ情報を集める",
+        detail: "手動入力: 起動直後に終了します。",
+        action: "ダイアログやログがあれば貼り付けます。本文がない場合は、日本語 locale / Locale Emulator、短い英数字パス、完全展開、DirectX/VC++ ランタイムを確認してください。",
+      },
+    },
+  },
+  {
+    id: "mojibake",
+    diagnosticText: "manual follow-up: mojibake 文字化け 乱码 locale Japanese locale",
+    label: {
+      "zh-CN": "乱码/文字化け",
+      en: "Mojibake",
+      ja: "文字化け",
+    },
+    hint: {
+      "zh-CN": "菜单、报错、路径或脚本文字显示乱码。",
+      en: "Menus, dialogs, paths, or script text show garbled characters.",
+      ja: "メニュー、ダイアログ、パス、スクリプト文字が崩れて表示されます。",
+    },
+    step: {
+      "zh-CN": {
+        title: "优先处理日区/编码",
+        detail: "用户手动标记：出现乱码或日文编码问题。",
+        action: "先尝试日区环境或 Locale Emulator，并把游戏移动到 C:/Games/VNName 这类英文短路径后重试。",
+      },
+      en: {
+        title: "Prioritize locale and encoding",
+        detail: "Manually marked: garbled text or Japanese encoding trouble appeared.",
+        action: "Try Japanese locale or Locale Emulator first, and move the game to a short ASCII path such as C:/Games/VNName.",
+      },
+      ja: {
+        title: "locale と文字コードを優先確認",
+        detail: "手動入力: 文字化けまたは日本語エンコードの問題が出ています。",
+        action: "まず日本語 locale または Locale Emulator を試し、C:/Games/VNName のような短い英数字パスに移動して再試行してください。",
+      },
+    },
+  },
+  {
+    id: "black-screen",
+    diagnosticText: "manual follow-up: black screen after launch graphics or DirectX issue",
+    label: {
+      "zh-CN": "黑屏",
+      en: "Black screen",
+      ja: "黒画面",
+    },
+    hint: {
+      "zh-CN": "有窗口或声音，但画面黑屏、白屏或不刷新。",
+      en: "A window or audio appears, but the image is black, white, or frozen.",
+      ja: "ウィンドウや音は出るが、画面が黒い、白い、または更新されません。",
+    },
+    step: {
+      "zh-CN": {
+        title: "黑屏/画面异常",
+        detail: "用户手动标记：启动后出现黑屏、白屏或画面不刷新。",
+        action: "优先检查 DirectX 旧组件、窗口/全屏兼容模式、显卡切换和游戏目录完整性；如果有报错文字，再贴到错误信息里。",
+      },
+      en: {
+        title: "Black screen or frozen display",
+        detail: "Manually marked: the game shows a black/white/frozen screen after launch.",
+        action: "Check legacy DirectX components, window/fullscreen compatibility, GPU switching, and folder completeness. Paste exact error text if any appears.",
+      },
+      ja: {
+        title: "黒画面/表示異常",
+        detail: "手動入力: 起動後に黒画面、白画面、または表示停止が出ています。",
+        action: "古い DirectX コンポーネント、ウィンドウ/全画面互換設定、GPU 切り替え、フォルダ完全性を確認し、エラー本文があれば貼り付けてください。",
+      },
+    },
+  },
+  {
+    id: "missing-dll",
+    diagnosticText: "manual follow-up: missing dll not found cannot find missing runtime library",
+    label: {
+      "zh-CN": "缺 DLL/运行库",
+      en: "Missing DLL/runtime",
+      ja: "DLL/ランタイム不足",
+    },
+    hint: {
+      "zh-CN": "弹窗提到 dll、runtime、not found、找不到文件。",
+      en: "The dialog mentions dll, runtime, not found, or a missing file.",
+      ja: "dll、runtime、not found、ファイル不足などが表示されます。",
+    },
+    step: {
+      "zh-CN": {
+        title: "缺 DLL/运行库",
+        detail: "用户手动标记：启动失败疑似缺少 DLL 或运行库。",
+        action: "把完整 DLL 名贴到错误信息里；d3dx/xinput 多半看 DirectX，msvcr/msvcp/vcruntime 多半看 VC++，RGSS/RTP 看 RPG Maker RTP。",
+      },
+      en: {
+        title: "Missing DLL or runtime",
+        detail: "Manually marked: launch failure may be caused by a missing DLL or runtime.",
+        action: "Paste the exact DLL name. d3dx/xinput usually points to DirectX, msvcr/msvcp/vcruntime to VC++, and RGSS/RTP to RPG Maker RTP.",
+      },
+      ja: {
+        title: "DLL/ランタイム不足",
+        detail: "手動入力: DLL またはランタイム不足の可能性があります。",
+        action: "正確な DLL 名を貼り付けてください。d3dx/xinput は DirectX、msvcr/msvcp/vcruntime は VC++、RGSS/RTP は RPG Maker RTP が主な確認先です。",
+      },
+    },
+  },
+];
 const ASSISTANT_LANGUAGE_PACKS = {
   "zh-CN": {
     name: "中文",
@@ -112,6 +269,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       localeEmulatorTemplateDescription: "仅在本机已安装可信 Locale Emulator 时使用；如果需要，请把 LEProc.exe 换成你的本机启动器路径。",
       wineJaTemplateDescription: "给已配置 Wine 和日文 locale 的 Linux 高阶用户参考。",
       protonRunTemplateDescription: "给 Proton / Steam Deck 高阶环境参考；请把 compatdata 路径换成你自己的本机 Steam 前缀。",
+      launchFailureTitle: "启动失败了吗？",
+      launchFailureBody: "GalAid 不会监控游戏进程；这里只记录你手动选择或粘贴的现象，用来更新路线图和求助包。",
+      launchFailureSymptomsTitle: "失败现象",
+      launchFailureNoteLabel: "报错或补充说明",
+      launchFailureNotePlaceholder: "粘贴弹窗/日志，或写下“点了没反应”“黑屏但有声音”等现象...",
+      launchFailureEmptyState: "还没有记录启动失败现象。",
+      launchFailureEvidenceReady: "已记录 {count} 条现象",
+      applyFailureFollowup: "更新路线",
+      clearFailureFollowup: "清空跟进",
       noLaunchTitle: "没有候选入口",
       noLaunchBody: "请换成完整解压后的游戏根目录再试。",
       items: "项",
@@ -231,6 +397,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastDesktopCommandCopied: "已复制桌面命令",
       toastRelativeCommandCopied: "已复制相对命令",
       toastTemplateCopied: "启动模板已复制",
+      toastFailureUpdated: "启动失败跟进已更新",
+      toastFailureCleared: "启动失败跟进已清空",
       toastProfileJsonCopied: "配置 JSON 已复制",
       toastLaunchStarted: "已启动 {name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
@@ -254,6 +422,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       assistantLanguage: "Assistant language",
       launchCandidates: "Launch candidates",
       launchProfiles: "Launch profiles",
+      launchFailure: "启动失败跟进",
+      launchFailureSymptoms: "失败现象",
+      launchFailureNote: "补充说明",
       nextRoadmap: "Next-step roadmap",
       environmentChecks: "Environment checks",
       errorRecipes: "Error recipes",
@@ -349,6 +520,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       localeEmulatorTemplateDescription: "Use only with a trusted local Locale Emulator install; replace LEProc.exe with your own launcher path if needed.",
       wineJaTemplateDescription: "For advanced Linux users with Wine and Japanese locale support already installed.",
       protonRunTemplateDescription: "For advanced Proton setups; replace the compatdata path with your own local Steam prefix.",
+      launchFailureTitle: "Did launch fail?",
+      launchFailureBody: "GalAid does not monitor the game process. It only records symptoms you manually choose or paste, then updates the roadmap and support bundle.",
+      launchFailureSymptomsTitle: "Failure symptoms",
+      launchFailureNoteLabel: "Error or extra note",
+      launchFailureNotePlaceholder: "Paste a dialog/log, or write notes like \"nothing happened\" or \"black screen with audio\"...",
+      launchFailureEmptyState: "No launch-failure symptoms recorded yet.",
+      launchFailureEvidenceReady: "{count} symptoms recorded",
+      applyFailureFollowup: "Update roadmap",
+      clearFailureFollowup: "Clear follow-up",
       noLaunchTitle: "No launch candidate",
       noLaunchBody: "Try again with the fully extracted game root folder.",
       items: "items",
@@ -468,6 +648,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastDesktopCommandCopied: "Desktop command copied",
       toastRelativeCommandCopied: "Relative command copied",
       toastTemplateCopied: "Launch template copied",
+      toastFailureUpdated: "Launch follow-up updated",
+      toastFailureCleared: "Launch follow-up cleared",
       toastProfileJsonCopied: "Profile JSON copied",
       toastLaunchStarted: "Launched {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
@@ -491,6 +673,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       assistantLanguage: "Assistant language",
       launchCandidates: "Launch candidates",
       launchProfiles: "Launch profiles",
+      launchFailure: "Launch failure follow-up",
+      launchFailureSymptoms: "Failure symptoms",
+      launchFailureNote: "Extra note",
       nextRoadmap: "Next-step roadmap",
       environmentChecks: "Environment checks",
       errorRecipes: "Error recipes",
@@ -586,6 +771,15 @@ const ASSISTANT_LANGUAGE_PACKS = {
       localeEmulatorTemplateDescription: "信頼できるローカルの Locale Emulator がある場合のみ使用します。必要に応じて LEProc.exe を自分のランチャーパスに置き換えてください。",
       wineJaTemplateDescription: "Wine と日本語 locale を設定済みの Linux 上級者向けの参考テンプレートです。",
       protonRunTemplateDescription: "Proton / Steam Deck の上級設定向けです。compatdata パスは自分の Steam prefix に置き換えてください。",
+      launchFailureTitle: "起動に失敗しましたか？",
+      launchFailureBody: "GalAid はゲームプロセスを監視しません。手動で選択または貼り付けた症状だけを記録し、手順とサポートバンドルに反映します。",
+      launchFailureSymptomsTitle: "失敗症状",
+      launchFailureNoteLabel: "エラーまたは補足",
+      launchFailureNotePlaceholder: "ダイアログ/ログ、または「反応なし」「音は出るが黒画面」などを貼り付けてください...",
+      launchFailureEmptyState: "起動失敗の症状はまだ記録されていません。",
+      launchFailureEvidenceReady: "{count} 件の症状を記録済み",
+      applyFailureFollowup: "手順を更新",
+      clearFailureFollowup: "フォローを消去",
       noLaunchTitle: "起動候補なし",
       noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
       items: "件",
@@ -705,6 +899,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastDesktopCommandCopied: "デスクトップ用コマンドをコピーしました",
       toastRelativeCommandCopied: "相対パスコマンドをコピーしました",
       toastTemplateCopied: "起動テンプレートをコピーしました",
+      toastFailureUpdated: "起動失敗フォローを更新しました",
+      toastFailureCleared: "起動失敗フォローを消去しました",
       toastProfileJsonCopied: "設定 JSON をコピーしました",
       toastLaunchStarted: "{name} を起動しました",
       toastLaunchUnavailable: "ここでは直接起動できません",
@@ -728,6 +924,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       assistantLanguage: "診断言語",
       launchCandidates: "起動候補",
       launchProfiles: "起動プロファイル",
+      launchFailure: "起動失敗フォロー",
+      launchFailureSymptoms: "失敗症状",
+      launchFailureNote: "補足",
       nextRoadmap: "次の手順",
       environmentChecks: "環境チェック",
       errorRecipes: "エラーレシピ",
@@ -857,6 +1056,7 @@ let currentFiles = [];
 let currentAnalysis = null;
 let scanRunId = 0;
 let desktopLaunchHistory = [];
+let launchFailureState = getEmptyLaunchFailureState();
 const desktopApi = window.galaidDesktop || null;
 
 assistantLanguageSelect.value = getStoredAssistantLanguage();
@@ -913,6 +1113,54 @@ function getEmptyStateHtml() {
       <p>${escapeHtml(getUiText("emptyBody"))}</p>
     </div>
   `;
+}
+
+function getEmptyLaunchFailureState() {
+  return { symptoms: [], note: "" };
+}
+
+function normalizeLaunchFailureInput(input = {}) {
+  const knownIds = new Set(LAUNCH_FAILURE_SYMPTOMS.map((symptom) => symptom.id));
+  const symptoms = compactEvidence(
+    Array.isArray(input.symptoms) ? input.symptoms.filter((id) => knownIds.has(id)) : [],
+    LAUNCH_FAILURE_SYMPTOMS.length,
+  );
+  const note = String(input.note || "").trim().slice(0, 4000);
+  return {
+    schema: "galaid.launchFailure.v1",
+    hasEvidence: Boolean(symptoms.length || note),
+    symptoms,
+    note,
+    diagnosticText: buildLaunchFailureDiagnosticText(symptoms, note),
+  };
+}
+
+function buildLaunchFailureDiagnosticText(symptoms, note) {
+  const lines = symptoms
+    .map((id) => getLaunchFailureSymptomDefinition(id)?.diagnosticText)
+    .filter(Boolean);
+  if (note) lines.push(note);
+  return lines.join("\n");
+}
+
+function getLaunchFailureSymptomDefinition(id) {
+  return LAUNCH_FAILURE_SYMPTOMS.find((symptom) => symptom.id === id);
+}
+
+function getLaunchFailureSymptomText(id, field, language = getAssistantLanguage()) {
+  const definition = getLaunchFailureSymptomDefinition(id);
+  return definition?.[field]?.[language] || definition?.[field]?.["zh-CN"] || id;
+}
+
+function getLaunchFailureStep(id, language = getAssistantLanguage()) {
+  const definition = getLaunchFailureSymptomDefinition(id);
+  return definition?.step?.[language] || definition?.step?.["zh-CN"] || null;
+}
+
+function getLaunchFailureEvidence(launchFailure, language = getAssistantLanguage()) {
+  const symptoms = (launchFailure?.symptoms || []).map((id) => getLaunchFailureSymptomText(id, "label", language));
+  const note = launchFailure?.note ? [launchFailure.note] : [];
+  return compactEvidence([...symptoms, ...note], 6);
 }
 
 function refreshCurrentReport() {
@@ -1081,7 +1329,7 @@ async function traverseEntry(entry, prefix, onFile) {
   return nested.flat();
 }
 
-function analyze(files, errorText = "") {
+function analyze(files, errorText = "", launchFailureInput = getEmptyLaunchFailureState()) {
   const roots = getRoots(files);
   const extCounts = countBy(files, (file) => file.ext || "(none)");
   const categories = getCategories(files);
@@ -1091,10 +1339,12 @@ function analyze(files, errorText = "") {
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
   const profiles = buildLaunchProfiles(launchCandidates, engines, packages);
-  const errorDiagnostics = buildErrorDiagnostics(errorText);
-  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics);
-  const findings = buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics);
-  const roadmap = buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode });
+  const launchFailure = normalizeLaunchFailureInput(launchFailureInput);
+  const diagnosticErrorText = combineDiagnosticErrorText(errorText, launchFailure);
+  const errorDiagnostics = buildErrorDiagnostics(diagnosticErrorText);
+  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, diagnosticErrorText, errorDiagnostics, launchFailure);
+  const findings = buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics, launchFailure);
+  const roadmap = buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure });
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
 
@@ -1109,6 +1359,7 @@ function analyze(files, errorText = "") {
     engines,
     launchCandidates,
     profiles,
+    launchFailure,
     errorDiagnostics,
     environment,
     roadmap,
@@ -1117,6 +1368,10 @@ function analyze(files, errorText = "") {
     riskTotal,
     report: "",
   };
+}
+
+function combineDiagnosticErrorText(errorText, launchFailure) {
+  return [String(errorText || "").trim(), launchFailure?.diagnosticText || ""].filter(Boolean).join("\n");
 }
 
 function getAnalysisMode(fileTotal, totalSize) {
@@ -1911,11 +2166,12 @@ function buildOptionalLaunchTemplates({ entryPath, localeSensitive }) {
   ];
 }
 
-function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics) {
+function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
   const checks = [];
   const engineIds = new Set(engines.map((engine) => engine.id));
   const engineNames = engines.map((engine) => engine.name);
   const errorValue = String(errorText || "");
+  const failureSymptoms = new Set(launchFailure.symptoms || []);
   const packageEvidence = compactEvidence(
     [...packages.archiveSets, ...packages.discSets].map((set) => set.firstFile?.path || set.files?.[0]?.file?.path),
     4,
@@ -1929,9 +2185,10 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     .filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))
     .map((engine) => engine.name);
   const localeError =
+    failureSymptoms.has("mojibake") ||
     hasErrorRecipe(errorDiagnostics, "locale-encoding") ||
     /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
-  const directXError = hasErrorRecipe(errorDiagnostics, "directx-legacy");
+  const directXError = failureSymptoms.has("black-screen") || hasErrorRecipe(errorDiagnostics, "directx-legacy");
   const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist");
   const rtpError = hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp");
   const permissionError = hasErrorRecipe(errorDiagnostics, "permission-write");
@@ -2232,7 +2489,7 @@ function isSetupLike(lowerPath) {
   return /(setup|install|installer|autorun|inst|修正|patch)/i.test(lowerPath);
 }
 
-function buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics) {
+function buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
   if (!files.length) return [];
 
   const findings = [];
@@ -2392,6 +2649,15 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     });
   }
 
+  if (launchFailure.hasEvidence) {
+    findings.push({
+      level: "warning",
+      title: "已记录启动失败现象",
+      body: "这些现象来自用户手动选择或粘贴，GalAid 不会监控游戏进程；路线图和求助包会把它作为后续排查依据。",
+      evidence: getLaunchFailureEvidence(launchFailure, "zh-CN"),
+    });
+  }
+
   findings.push(...errorDiagnostics.findings);
   return findings;
 }
@@ -2517,7 +2783,7 @@ function getLevelWeight(level) {
   return weights[level] ?? 4;
 }
 
-function buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode }) {
+function buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure }) {
   const steps = [];
   const envChecks = new Map(environment.checks.map((check) => [check.id, check]));
   const addStep = (step) => {
@@ -2582,6 +2848,35 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
       action: launcher?.action || "选择包含主程序、资源封包和脚本的完整目录后重新扫描。",
       source: "launch",
     });
+  }
+
+  if (launchFailure?.hasEvidence) {
+    for (const [index, symptomId] of launchFailure.symptoms.entries()) {
+      const step = getLaunchFailureStep(symptomId, "zh-CN");
+      if (!step) continue;
+      addStep({
+        id: `failure-${symptomId}`,
+        title: step.title,
+        state: "todo",
+        priority: 32 + index,
+        detail: step.detail,
+        action: step.action,
+        evidence: getLaunchFailureEvidence({ symptoms: [symptomId], note: "" }, "zh-CN"),
+        source: "launch-failure",
+      });
+    }
+    if (launchFailure.note) {
+      addStep({
+        id: "failure-note",
+        title: "按补充报错继续诊断",
+        state: "todo",
+        priority: 38,
+        detail: "用户补充了启动失败后的弹窗、日志或现象描述。",
+        action: "优先按报错诊断页命中的配方处理；如果没有命中，导出求助包时保留这段说明供社区补规则。",
+        evidence: [launchFailure.note],
+        source: "launch-failure",
+      });
+    }
   }
 
   for (const checkId of ["commercial-engine", "path", "locale", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
@@ -2920,7 +3215,8 @@ async function setFiles(files, options = {}) {
     if (runId !== scanRunId) return;
 
     currentFiles = uniqueFiles(files);
-    currentAnalysis = analyze(currentFiles, errorInput.value);
+    launchFailureState = getEmptyLaunchFailureState();
+    currentAnalysis = analyze(currentFiles, errorInput.value, launchFailureState);
     if (options.desktopMeta) currentAnalysis.desktopMeta = options.desktopMeta;
     refreshCurrentReport();
     updateScanState({
@@ -3030,11 +3326,61 @@ function renderLaunch(analysis) {
       <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
     </div>
     <div class="card-list">${candidates}</div>
+    ${renderLaunchFailureFollowUp(analysis)}
     <div class="section-title">
       <h3>${escapeHtml(getUiText("diagnosisFindings"))}</h3>
       <span>${analysis.findings.length} ${escapeHtml(getUiText("findings"))}</span>
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
+  `;
+}
+
+function renderLaunchFailureFollowUp(analysis) {
+  const failure = analysis.launchFailure || normalizeLaunchFailureInput();
+  const selected = new Set(failure.symptoms || []);
+  const symptomCards = LAUNCH_FAILURE_SYMPTOMS.map(
+    (symptom) => `
+      <label class="failure-symptom ${selected.has(symptom.id) ? "selected" : ""}">
+        <input type="checkbox" data-failure-symptom="${symptom.id}" ${selected.has(symptom.id) ? "checked" : ""} />
+        <span>
+          <strong>${escapeHtml(getLaunchFailureSymptomText(symptom.id, "label"))}</strong>
+          <small>${escapeHtml(getLaunchFailureSymptomText(symptom.id, "hint"))}</small>
+        </span>
+      </label>
+    `,
+  ).join("");
+  const evidence = getLaunchFailureEvidence(failure);
+  const summary = failure.hasEvidence
+    ? getUiText("launchFailureEvidenceReady", { count: formatNumber(evidence.length) })
+    : getUiText("launchFailureEmptyState");
+
+  return `
+    <div class="section-title launch-failure-title">
+      <h3>${escapeHtml(getUiText("launchFailureTitle"))}</h3>
+      <span>${escapeHtml(summary)}</span>
+    </div>
+    <article class="launch-failure-card">
+      <div class="launch-failure-copy">
+        <h4>${escapeHtml(getUiText("launchFailureTitle"))}</h4>
+        <p>${escapeHtml(getUiText("launchFailureBody"))}</p>
+      </div>
+      <div class="launch-failure-form">
+        <strong>${escapeHtml(getUiText("launchFailureSymptomsTitle"))}</strong>
+        <div class="failure-symptom-grid">${symptomCards}</div>
+        <label class="field-label" for="launchFailureNote">${escapeHtml(getUiText("launchFailureNoteLabel"))}</label>
+        <textarea
+          id="launchFailureNote"
+          data-failure-note
+          rows="4"
+          placeholder="${escapeHtml(getUiText("launchFailureNotePlaceholder"))}"
+        >${escapeHtml(failure.note || "")}</textarea>
+        <div class="launch-failure-actions">
+          <button type="button" data-launch-action="apply-failure">${escapeHtml(getUiText("applyFailureFollowup"))}</button>
+          <button type="button" data-launch-action="clear-failure">${escapeHtml(getUiText("clearFailureFollowup"))}</button>
+        </div>
+      </div>
+      ${evidence.length ? `<div class="sample-list failure-evidence">${evidence.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</div>` : ""}
+    </article>
   `;
 }
 
@@ -3779,6 +4125,15 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
     lines.push(`- ${labels.noProfiles}`);
   }
   lines.push("");
+  lines.push(`## ${labels.launchFailure}`);
+  if (analysis.launchFailure?.hasEvidence) {
+    const symptoms = (analysis.launchFailure.symptoms || []).map((id) => getLaunchFailureSymptomText(id, "label", language));
+    lines.push(`- ${labels.launchFailureSymptoms}: ${symptoms.join(", ") || "none"}`);
+    if (analysis.launchFailure.note) lines.push(`- ${labels.launchFailureNote}: ${analysis.launchFailure.note}`);
+  } else {
+    lines.push(`- ${getUiText("launchFailureEmptyState", {}, language)}`);
+  }
+  lines.push("");
   lines.push(`## ${labels.nextRoadmap}`);
   lines.push(`- ${labels.summary}: ${analysis.roadmap.summary.label}`);
   lines.push(`- ${labels.detail}: ${analysis.roadmap.summary.detail}`);
@@ -3887,6 +4242,17 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     steps: analysis.roadmap.steps,
     checklist: buildRoadmapChecklistText(analysis, language),
   };
+  const launchFailureReport = {
+    schema: "galaid.launchFailure.v1",
+    hasEvidence: Boolean(analysis.launchFailure?.hasEvidence),
+    symptoms: (analysis.launchFailure?.symptoms || []).map((id) => ({
+      id,
+      label: getLaunchFailureSymptomText(id, "label", language),
+      hint: getLaunchFailureSymptomText(id, "hint", language),
+    })),
+    note: analysis.launchFailure?.note || "",
+    privacy: "Manual user-provided symptom notes only; GalAid does not monitor game processes.",
+  };
   const profiles = analysis.profiles.map((profile) => getPublicProfile(profile, language));
   const entries = [
     {
@@ -3935,6 +4301,14 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
       type: "application/json;charset=utf-8",
     },
   ];
+
+  if (launchFailureReport.hasEvidence) {
+    entries.push({
+      path: "launch-failure.json",
+      content: JSON.stringify(launchFailureReport, null, 2),
+      type: "application/json;charset=utf-8",
+    });
+  }
 
   for (const profile of profiles) {
     entries.push({
@@ -3987,6 +4361,7 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
       engineClues: analysis.engines.length,
       engineStructureClues: analysis.engines.length,
       errorRecipeMatches: analysis.errorDiagnostics.matches.length,
+      launchFailureEvidence: Boolean(analysis.launchFailure?.hasEvidence),
       environmentChecks: analysis.environment.checks.length,
       roadmapSteps: analysis.roadmap.steps.length,
       archivePreviews: analysis.packages.archiveSets.filter((set) => set.archivePreview).length,
@@ -4027,6 +4402,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- environment-checks.json: environment checklist",
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
+    "- launch-failure.json: optional manual launch-failure follow-up notes",
     "- launch-profiles.json and profiles/*.json: safe launch profile hints",
   ].join("\n");
 }
@@ -4050,6 +4426,9 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   lines.push(`- ${labels.mode}: ${analysis.mode.label}`);
   lines.push(`- ${labels.recommendedEntry}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : labels.noLaunch}`);
   lines.push(`- ${labels.engineClues}: ${engineNames.length ? engineNames.join(", ") : labels.noEngine}`);
+  if (analysis.launchFailure?.hasEvidence) {
+    lines.push(`- ${labels.launchFailure}: ${getLaunchFailureEvidence(analysis.launchFailure, language).join(", ")}`);
+  }
   lines.push(`- ${labels.environmentConclusion}: ${analysis.environment.summary.label}`);
   lines.push(`- ${labels.nextStep}: ${analysis.roadmap.summary.label}`);
   lines.push(`- ${labels.recipeResult}: ${analysis.errorDiagnostics.summary.label}`);
@@ -4422,6 +4801,28 @@ async function createDesktopShortcut(file, button) {
   }
 }
 
+function readLaunchFailureForm() {
+  return {
+    symptoms: [...launchPanel.querySelectorAll("[data-failure-symptom]:checked")].map((input) => input.dataset.failureSymptom),
+    note: launchPanel.querySelector("[data-failure-note]")?.value || "",
+  };
+}
+
+function rerunCurrentAnalysis() {
+  if (!currentFiles.length) return;
+  const desktopMeta = currentAnalysis?.desktopMeta;
+  currentAnalysis = analyze(currentFiles, errorInput.value, launchFailureState);
+  if (desktopMeta) currentAnalysis.desktopMeta = desktopMeta;
+  refreshCurrentReport();
+  updateScanState({
+    title: currentAnalysis.mode.label,
+    detail: currentAnalysis.mode.detail,
+    progress: 100,
+    phase: currentAnalysis.mode.id === "normal" ? "ready" : "large",
+  });
+  render();
+}
+
 launchPanel.addEventListener("click", (event) => {
   const button = event.target.closest("[data-launch-action]");
   if (!button || !currentAnalysis) return;
@@ -4429,6 +4830,14 @@ launchPanel.addEventListener("click", (event) => {
   if (button.dataset.launchAction === "candidate") {
     const candidate = currentAnalysis.launchCandidates[Number(button.dataset.candidateIndex)];
     if (candidate?.file) void launchDesktopFile(candidate.file, button);
+  } else if (button.dataset.launchAction === "apply-failure") {
+    launchFailureState = readLaunchFailureForm();
+    rerunCurrentAnalysis();
+    showToast(getUiText("toastFailureUpdated"));
+  } else if (button.dataset.launchAction === "clear-failure") {
+    launchFailureState = getEmptyLaunchFailureState();
+    rerunCurrentAnalysis();
+    showToast(getUiText("toastFailureCleared"));
   }
 });
 
@@ -4527,6 +4936,7 @@ clearButton.addEventListener("click", () => {
   scanRunId += 1;
   currentFiles = [];
   currentAnalysis = null;
+  launchFailureState = getEmptyLaunchFailureState();
   folderInput.value = "";
   fileInput.value = "";
   errorInput.value = "";
@@ -4542,17 +4952,7 @@ fileInput.addEventListener("change", () => {
 });
 errorInput.addEventListener("input", () => {
   if (!currentFiles.length) return;
-  const desktopMeta = currentAnalysis?.desktopMeta;
-  currentAnalysis = analyze(currentFiles, errorInput.value);
-  if (desktopMeta) currentAnalysis.desktopMeta = desktopMeta;
-  refreshCurrentReport();
-  updateScanState({
-    title: currentAnalysis.mode.label,
-    detail: currentAnalysis.mode.detail,
-    progress: 100,
-    phase: currentAnalysis.mode.id === "normal" ? "ready" : "large",
-  });
-  render();
+  rerunCurrentAnalysis();
 });
 
 assistantLanguageSelect.addEventListener("change", () => {

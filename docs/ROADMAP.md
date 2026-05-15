@@ -35,6 +35,7 @@
 - Create launch profiles
 - Optional Locale Emulator command template
 - Optional Wine/Proton notes for advanced users
+- Launch-failure follow-up flow
 
 ## 1.0 Community Release
 
