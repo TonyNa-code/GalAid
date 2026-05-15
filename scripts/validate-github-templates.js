@@ -314,7 +314,22 @@ function checkBrowserSmoke(errors) {
     assert(configText.includes(phrase), `${configFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["游戏样例", "自研样例", "诊断助手语言", "Assistant language", "GalAid サポート概要", "DirectX 旧组件", "VC++ 运行库", "roadmap.json", "不包含游戏文件", "ZIP 目录预检", "商业/自研引擎启动链"]) {
+  for (const phrase of [
+    "游戏样例",
+    "自研样例",
+    "界面/诊断语言",
+    "Interface / diagnosis language",
+    "UI / 診断言語",
+    "Assistant language",
+    "Support bundle",
+    "GalAid サポート概要",
+    "DirectX 旧组件",
+    "VC++ 运行库",
+    "roadmap.json",
+    "不包含游戏文件",
+    "ZIP 目录预检",
+    "商业/自研引擎启动链",
+  ]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }

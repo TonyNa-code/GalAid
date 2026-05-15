@@ -24,7 +24,7 @@
             </div>
             <div>
               <h1>GalAid</h1>
-              <p>VN launch doctor</p>
+              <p data-i18n="brandSubtitle">VN 启动医生</p>
             </div>
           </div>
 
@@ -37,36 +37,37 @@
               <span></span>
             </div>
             <div class="drop-copy">
-              <strong>拖入游戏文件夹</strong>
-              <span>或选择文件夹 / 压缩包 / 镜像文件</span>
+              <strong data-i18n="dropTitle">拖入游戏文件夹</strong>
+              <span data-i18n="dropHint">或选择文件夹 / 压缩包 / 镜像文件</span>
             </div>
           </div>
 
           <div class="button-grid" aria-label="input actions">
-            <button id="chooseFolderButton" class="primary-action" type="button">
+            <button id="chooseFolderButton" class="primary-action" type="button" data-i18n="chooseFolder">
               选择文件夹
             </button>
-            <button id="chooseFilesButton" type="button">选择文件</button>
-            <button id="sampleButton" type="button">游戏样例</button>
-            <button id="commercialSampleButton" type="button">自研样例</button>
-            <button id="packageSampleButton" type="button">包/镜像样例</button>
-            <button id="clearButton" type="button">清空</button>
+            <button id="chooseFilesButton" type="button" data-i18n="chooseFiles">选择文件</button>
+            <button id="sampleButton" type="button" data-i18n="sampleGame">游戏样例</button>
+            <button id="commercialSampleButton" type="button" data-i18n="sampleCommercial">自研样例</button>
+            <button id="packageSampleButton" type="button" data-i18n="samplePackage">包/镜像样例</button>
+            <button id="clearButton" type="button" data-i18n="clear">清空</button>
           </div>
 
-          <label class="field-label" for="errorInput">错误信息</label>
+          <label class="field-label" for="errorInput" data-i18n="errorLabel">错误信息</label>
           <textarea
             id="errorInput"
             rows="7"
+            data-i18n-placeholder="errorPlaceholder"
             placeholder="粘贴报错文本，例如 d3dx9_43.dll、乱码、RTP、VCRUNTIME..."
           ></textarea>
 
           <div class="button-grid compact">
-            <button id="copyReportButton" type="button">复制报告</button>
-            <button id="downloadReportButton" type="button">下载报告</button>
-            <button id="downloadBundleButton" class="support-bundle-button" type="button">下载求助包</button>
+            <button id="copyReportButton" type="button" data-i18n="copyReport">复制报告</button>
+            <button id="downloadReportButton" type="button" data-i18n="downloadReport">下载报告</button>
+            <button id="downloadBundleButton" class="support-bundle-button" type="button" data-i18n="downloadBundle">下载求助包</button>
           </div>
 
-          <label class="field-label" for="assistantLanguageSelect">诊断助手语言</label>
+          <label class="field-label" for="assistantLanguageSelect" data-i18n="languageLabel">界面/诊断语言</label>
           <select id="assistantLanguageSelect" class="language-select">
             <option value="zh-CN">中文</option>
             <option value="en">English</option>
@@ -74,15 +75,15 @@
           </select>
 
           <div class="privacy-note">
-            <strong>Local only.</strong>
-            <span>浏览器只读取文件名、路径和大小，不上传游戏内容。</span>
+            <strong data-i18n="privacyTitle">Local only.</strong>
+            <span data-i18n="privacyBody">浏览器只读取文件名、路径和大小，不上传游戏内容。</span>
           </div>
         </aside>
 
         <section class="result-pane">
           <header class="result-header">
             <div>
-              <p class="eyebrow">Diagnosis</p>
+              <p class="eyebrow" data-i18n="eyebrow">Diagnosis</p>
               <h2 id="projectTitle">等待导入</h2>
             </div>
             <div id="statusPill" class="status-pill neutral">No data</div>
@@ -91,19 +92,19 @@
           <section class="summary-strip" aria-label="summary">
             <div>
               <span id="fileCount">0</span>
-              <small>files</small>
+              <small data-i18n="summaryFiles">files</small>
             </div>
             <div>
               <span id="engineCount">0</span>
-              <small>engine clues</small>
+              <small data-i18n="summaryEngine">engine clues</small>
             </div>
             <div>
               <span id="assetCount">0</span>
-              <small>assets</small>
+              <small data-i18n="summaryAssets">assets</small>
             </div>
             <div>
               <span id="riskCount">0</span>
-              <small>risks</small>
+              <small data-i18n="summaryRisks">risks</small>
             </div>
           </section>
 
@@ -118,16 +119,16 @@
           </section>
 
           <nav class="tabs" aria-label="result views">
-            <button class="tab active" data-tab="launch" type="button">启动</button>
-            <button class="tab" data-tab="roadmap" type="button">路线</button>
-            <button class="tab" data-tab="profiles" type="button">配置</button>
-            <button class="tab" data-tab="environment" type="button">环境</button>
-            <button class="tab" data-tab="errors" type="button">报错</button>
-            <button class="tab" data-tab="packages" type="button">包/镜像</button>
-            <button class="tab" data-tab="engine" type="button">引擎/结构</button>
-            <button class="tab" data-tab="assets" type="button">素材</button>
-            <button class="tab" data-tab="support" type="button">求助</button>
-            <button class="tab" data-tab="report" type="button">报告</button>
+            <button class="tab active" data-tab="launch" type="button" data-i18n="tabLaunch">启动</button>
+            <button class="tab" data-tab="roadmap" type="button" data-i18n="tabRoadmap">路线</button>
+            <button class="tab" data-tab="profiles" type="button" data-i18n="tabProfiles">配置</button>
+            <button class="tab" data-tab="environment" type="button" data-i18n="tabEnvironment">环境</button>
+            <button class="tab" data-tab="errors" type="button" data-i18n="tabErrors">报错</button>
+            <button class="tab" data-tab="packages" type="button" data-i18n="tabPackages">包/镜像</button>
+            <button class="tab" data-tab="engine" type="button" data-i18n="tabEngine">引擎/结构</button>
+            <button class="tab" data-tab="assets" type="button" data-i18n="tabAssets">素材</button>
+            <button class="tab" data-tab="support" type="button" data-i18n="tabSupport">求助</button>
+            <button class="tab" data-tab="report" type="button" data-i18n="tabReport">报告</button>
           </nav>
 
           <section id="launchPanel" class="tab-panel active" aria-live="polite"></section>
@@ -147,8 +148,8 @@
     <template id="emptyStateTemplate">
       <div class="empty-state">
         <div class="empty-glyph" aria-hidden="true"></div>
-        <h3>先丢一个游戏文件夹进来</h3>
-        <p>GalAid 会在本地分析启动文件、引擎/结构线索、镜像/压缩包、路径风险和素材分布。</p>
+        <h3 data-i18n="emptyTitle">先丢一个游戏文件夹进来</h3>
+        <p data-i18n="emptyBody">GalAid 会在本地分析启动文件、引擎/结构线索、镜像/压缩包、路径风险和素材分布。</p>
       </div>
     </template>
 

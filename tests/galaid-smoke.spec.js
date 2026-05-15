@@ -62,21 +62,34 @@ test("commercial sample promotes proprietary engine startup route", async ({ pag
   await expect(page.locator(".roadmap-list")).toContainText("商业/自研引擎启动链");
 });
 
-test("assistant output language can switch to English and Japanese", async ({ page }) => {
+test("interface and assistant output language can switch to English and Japanese", async ({ page }) => {
   await page.goto("/");
 
+  await expect(page.getByText("界面/诊断语言")).toBeVisible();
   await page.getByRole("button", { name: "游戏样例" }).click();
-  await page.getByLabel("诊断助手语言").selectOption("en");
+  await page.locator("#assistantLanguageSelect").selectOption("en");
+
+  await expect(page.getByRole("button", { name: "Choose folder" })).toBeVisible();
+  await expect(page.getByText("Interface / diagnosis language")).toBeVisible();
+  await expect(page.locator('[data-tab="roadmap"]')).toHaveText("Roadmap");
+  await expect(page.locator(".summary-strip small").first()).toHaveText("files");
+
   await page.locator('[data-tab="report"]').click();
 
   await expect(page.locator("#reportPanel")).toContainText("Assistant language: English");
   await expect(page.locator("#reportPanel")).toContainText("## Environment checks");
 
   await page.locator('[data-tab="support"]').click();
+  await expect(page.getByRole("heading", { name: "Support bundle" })).toBeVisible();
   await expect(page.locator(".support-preview")).toContainText("## GalAid support summary");
   await expect(page.locator(".support-preview")).toContainText("Recommended entry");
 
-  await page.getByLabel("诊断助手语言").selectOption("ja");
+  await page.locator("#assistantLanguageSelect").selectOption("ja");
+  await expect(page.getByRole("button", { name: "フォルダを選択" })).toBeVisible();
+  await expect(page.getByText("UI / 診断言語")).toBeVisible();
+  await expect(page.locator('[data-tab="roadmap"]')).toHaveText("手順");
+  await expect(page.locator(".summary-strip small").first()).toHaveText("ファイル");
+  await expect(page.getByRole("heading", { name: "サポートバンドル" })).toBeVisible();
   await expect(page.locator(".support-preview")).toContainText("## GalAid サポート概要");
   await expect(page.locator(".support-preview")).toContainText("診断言語: 日本語");
 });

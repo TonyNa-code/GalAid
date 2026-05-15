@@ -53,10 +53,169 @@ const ASSISTANT_LANGUAGE_STORAGE_KEY = "GalAid.assistantLanguage.v1";
 const ASSISTANT_LANGUAGE_PACKS = {
   "zh-CN": {
     name: "中文",
-    reportTitle: "GalAid diagnosis report",
-    checklistTitle: "GalAid next-step checklist",
+    reportTitle: "GalAid 诊断报告",
+    checklistTitle: "GalAid 下一步路线清单",
     supportTitle: "GalAid 求助摘要",
-    supportBundleTitle: "GalAid support bundle",
+    supportBundleTitle: "GalAid 求助包",
+    ui: {
+      documentTitle: "GalAid - VN 启动医生",
+      brandSubtitle: "VN 启动医生",
+      dropTitle: "拖入游戏文件夹",
+      dropHint: "或选择文件夹 / 压缩包 / 镜像文件",
+      chooseFolder: "选择文件夹",
+      chooseFiles: "选择文件",
+      sampleGame: "游戏样例",
+      sampleCommercial: "自研样例",
+      samplePackage: "包/镜像样例",
+      clear: "清空",
+      errorLabel: "错误信息",
+      errorPlaceholder: "粘贴报错文本，例如 d3dx9_43.dll、乱码、RTP、VCRUNTIME...",
+      copyReport: "复制报告",
+      downloadReport: "下载报告",
+      downloadBundle: "下载求助包",
+      languageLabel: "界面/诊断语言",
+      privacyTitle: "Local only.",
+      privacyBody: "浏览器只读取文件名、路径和大小，不上传游戏内容。",
+      eyebrow: "诊断",
+      waitingTitle: "等待导入",
+      importedFiles: "已导入文件",
+      selectedFiles: "已选择 {count} 个文件",
+      moreRoots: "{name} + 另外 {count} 个根目录",
+      noData: "无数据",
+      scanning: "扫描中",
+      summaryFiles: "文件",
+      summaryEngine: "引擎线索",
+      summaryAssets: "素材",
+      summaryRisks: "风险",
+      ready: "就绪",
+      noFolder: "未选择文件夹。",
+      tabLaunch: "启动",
+      tabRoadmap: "路线",
+      tabProfiles: "配置",
+      tabEnvironment: "环境",
+      tabErrors: "报错",
+      tabPackages: "包/镜像",
+      tabEngine: "引擎/结构",
+      tabAssets: "素材",
+      tabSupport: "求助",
+      tabReport: "报告",
+      emptyTitle: "先丢一个游戏文件夹进来",
+      emptyBody: "GalAid 会在本地分析启动文件、引擎/结构线索、镜像/压缩包、路径风险和素材分布。",
+      launchCandidates: "启动候选",
+      diagnosisFindings: "诊断结论",
+      noLaunchTitle: "没有候选入口",
+      noLaunchBody: "请换成完整解压后的游戏根目录再试。",
+      items: "项",
+      findings: "条结论",
+      largeModeReportNote: "页面只展示关键样例，报告仍基于完整文件清单。",
+      roadmapTitle: "下一步路线",
+      steps: "步",
+      copyRoadmap: "复制路线清单",
+      blockedCount: "先处理",
+      todoCount: "建议",
+      readyCount: "可执行",
+      infoCount: "参考",
+      profilesTitle: "启动配置",
+      profiles: "配置",
+      noProfilesTitle: "还不能生成启动配置",
+      noProfilesBody: "当前没有可信启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。",
+      safeModeTitle: "安全模式",
+      safeModeBody: "GalAid 只生成配置和命令，不会自动运行游戏。桌面版复制命令时可使用本机真实路径，报告和页面默认保留相对路径。",
+      entryLabel: "entry",
+      workdirLabel: "workdir",
+      desktopPathReady: "desktop path ready",
+      relativePathOnly: "relative path only",
+      copyCommand: "复制命令",
+      copyJson: "复制 JSON",
+      downloadConfig: "下载配置",
+      environmentTitle: "环境检查",
+      checks: "检查",
+      environmentCountsLabel: "environment check counts",
+      ok: "OK",
+      suggestions: "建议",
+      blockers: "阻断",
+      observations: "观察",
+      errorsTitle: "报错诊断",
+      recipes: "配方",
+      matches: "命中",
+      noErrorTextTitle: "还没有粘贴报错文本",
+      noErrorTextBody: "当前没有错误文本；如果启动失败，把弹窗或日志文字放到左侧输入框后会重新诊断。",
+      noRecipeTitle: "没有命中已知配方",
+      noRecipeBody: "这段报错已经保留在报告中，可以作为后续新增社区配方的素材。",
+      errorRecipeCountsLabel: "error recipe counts",
+      recipeCoverageTitle: "配方覆盖",
+      rules: "规则",
+      engineTitle: "引擎/文件结构线索",
+      matchesLabel: "命中",
+      noEngineTitle: "没有明显结构线索",
+      noEngineBody: "可以继续用启动候选排查；也可能只选中了补丁、压缩包，或需要换成完整游戏根目录。",
+      scoreLabel: "score",
+      startupStructure: "启动结构",
+      packagesTitle: "包/镜像识别",
+      packageResultsTitle: "识别结果",
+      groups: "组",
+      noPackagesTitle: "没有压缩包或镜像",
+      noPackagesBody: "当前文件更像已经解压后的目录，可以直接看启动页。",
+      zipPreview: "ZIP 目录预检",
+      metadataOnly: "仅元数据",
+      unavailable: "不可用",
+      internalFiles: "内部文件",
+      launchClues: "启动线索",
+      truncated: "已截断",
+      assetsTitle: "素材地图",
+      samplePathsTitle: "样例路径",
+      localManifest: "本地清单",
+      noAssetsTitle: "没有素材线索",
+      noAssetsBody: "可能只导入了启动器或压缩包。",
+      supportBundle: "求助包",
+      supportSummaryBody: "适合发 issue、论坛或聊天求助。只包含诊断元数据，不包含游戏文件。",
+      copySupportSummary: "复制求助摘要",
+      copyManifest: "复制清单 JSON",
+      downloadSupportBundle: "下载求助包",
+      privacyBoundary: "隐私边界",
+      noGameFiles: "不包含游戏文件",
+      noFileContents: "不读取文件内容",
+      zipMetadataOnly: "ZIP 只预检目录",
+      relativePaths: "只保留相对路径",
+      noUpload: "不上传任何内容",
+      diagnosisSummary: "诊断摘要",
+      includedFiles: "会包含的文件",
+      exportLimitNote: "文件清单最多导出 {count} 条相对路径；超出时会在 file-manifest.json 标记 truncated。",
+      copyableSummary: "可复制摘要",
+      issueReady: "issue-ready",
+      noBlockersTitle: "没有明显阻断项",
+      noBlockersBody: "可以先按推荐启动配置尝试；失败后再补充报错文本。",
+      statusStat: "状态",
+      filesStat: "文件",
+      recipesStat: "配方",
+      checksStat: "检查",
+      scanDesktop: "桌面扫描",
+      scanFiles: "扫描文件中",
+      scanDroppedFolder: "扫描拖入文件夹中",
+      scanReadingMetadata: "正在读取{source}元数据...",
+      scanFolderSource: "文件夹",
+      scanFilesSource: "所选文件",
+      scanFilesIndexed: "已索引 {done} / {total} 个文件",
+      scanFilesIndexedSolo: "已索引 {done} 个文件",
+      scanFilesSkipped: "已跳过 {count} 个文件",
+      scanChooseFolder: "选择要扫描的文件夹...",
+      scanChooseFiles: "选择要扫描的文件...",
+      scanNoSelection: "没有选择桌面文件。",
+      scanAnalyzing: "正在分析元数据",
+      scanQueued: "{count} 个文件等待分析",
+      scanWalkingTree: "正在遍历文件夹...",
+      toastDesktopScanFailed: "桌面扫描失败",
+      toastNoReport: "还没有报告",
+      toastReportCopied: "报告已复制",
+      toastNoDiagnosis: "还没有可导出的诊断",
+      toastSupportCreated: "求助包已生成",
+      toastDesktopCommandCopied: "已复制桌面命令",
+      toastRelativeCommandCopied: "已复制相对命令",
+      toastProfileJsonCopied: "配置 JSON 已复制",
+      toastRoadmapCopied: "路线清单已复制",
+      toastSummaryCopied: "求助摘要已复制",
+      toastManifestCopied: "求助包清单已复制",
+    },
     labels: {
       project: "项目",
       generated: "生成时间",
@@ -111,6 +270,165 @@ const ASSISTANT_LANGUAGE_PACKS = {
     checklistTitle: "GalAid next-step checklist",
     supportTitle: "GalAid support summary",
     supportBundleTitle: "GalAid support bundle",
+    ui: {
+      documentTitle: "GalAid - VN launch doctor",
+      brandSubtitle: "VN launch doctor",
+      dropTitle: "Drop a game folder",
+      dropHint: "or choose a folder / archive / disc image",
+      chooseFolder: "Choose folder",
+      chooseFiles: "Choose files",
+      sampleGame: "Game sample",
+      sampleCommercial: "Proprietary sample",
+      samplePackage: "Package sample",
+      clear: "Clear",
+      errorLabel: "Error text",
+      errorPlaceholder: "Paste an error such as d3dx9_43.dll, mojibake, RTP, VCRUNTIME...",
+      copyReport: "Copy report",
+      downloadReport: "Download report",
+      downloadBundle: "Download support bundle",
+      languageLabel: "Interface / diagnosis language",
+      privacyTitle: "Local only.",
+      privacyBody: "The browser reads file names, paths, and sizes only. It never uploads game content.",
+      eyebrow: "Diagnosis",
+      waitingTitle: "Waiting for input",
+      importedFiles: "Imported files",
+      selectedFiles: "{count} selected files",
+      moreRoots: "{name} + {count} more",
+      noData: "No data",
+      scanning: "Scanning",
+      summaryFiles: "files",
+      summaryEngine: "engine clues",
+      summaryAssets: "assets",
+      summaryRisks: "risks",
+      ready: "Ready",
+      noFolder: "No folder selected.",
+      tabLaunch: "Launch",
+      tabRoadmap: "Roadmap",
+      tabProfiles: "Profiles",
+      tabEnvironment: "Environment",
+      tabErrors: "Errors",
+      tabPackages: "Packages",
+      tabEngine: "Engine/structure",
+      tabAssets: "Assets",
+      tabSupport: "Support",
+      tabReport: "Report",
+      emptyTitle: "Drop a game folder first",
+      emptyBody: "GalAid analyzes launch files, engine/structure clues, archives/images, path risks, and asset categories locally.",
+      launchCandidates: "Launch candidates",
+      diagnosisFindings: "Diagnosis findings",
+      noLaunchTitle: "No launch candidate",
+      noLaunchBody: "Try again with the fully extracted game root folder.",
+      items: "items",
+      findings: "findings",
+      largeModeReportNote: "This page shows key samples only; the report still uses the full file list.",
+      roadmapTitle: "Next-step roadmap",
+      steps: "steps",
+      copyRoadmap: "Copy roadmap checklist",
+      blockedCount: "blocked",
+      todoCount: "suggested",
+      readyCount: "ready",
+      infoCount: "reference",
+      profilesTitle: "Launch profiles",
+      profiles: "profiles",
+      noProfilesTitle: "No launch profile yet",
+      noProfilesBody: "There is no trusted launcher yet. Handle archives/images first, or retry with the fully extracted game folder.",
+      safeModeTitle: "Safe mode",
+      safeModeBody: "GalAid only generates profiles and commands; it never launches the game automatically. The desktop app can copy real local paths, while reports and the page keep relative paths by default.",
+      entryLabel: "entry",
+      workdirLabel: "workdir",
+      desktopPathReady: "desktop path ready",
+      relativePathOnly: "relative path only",
+      copyCommand: "Copy command",
+      copyJson: "Copy JSON",
+      downloadConfig: "Download config",
+      environmentTitle: "Environment checks",
+      checks: "checks",
+      environmentCountsLabel: "environment check counts",
+      ok: "OK",
+      suggestions: "suggestions",
+      blockers: "blockers",
+      observations: "observations",
+      errorsTitle: "Error diagnosis",
+      recipes: "recipes",
+      matches: "matches",
+      noErrorTextTitle: "No error text yet",
+      noErrorTextBody: "No error text is available. If launch fails, paste the dialog or log text on the left to diagnose again.",
+      noRecipeTitle: "No known recipe matched",
+      noRecipeBody: "This error text is kept in the report and can become material for a future community recipe.",
+      errorRecipeCountsLabel: "error recipe counts",
+      recipeCoverageTitle: "Recipe coverage",
+      rules: "rules",
+      engineTitle: "Engine/file-structure clues",
+      matchesLabel: "matches",
+      noEngineTitle: "No clear structure clues",
+      noEngineBody: "You can keep checking launch candidates. This may also mean only a patch/archive was selected, or the full game root is needed.",
+      scoreLabel: "score",
+      startupStructure: "startup structure",
+      packagesTitle: "Archive/image detection",
+      packageResultsTitle: "Detected groups",
+      groups: "groups",
+      noPackagesTitle: "No archives or images",
+      noPackagesBody: "These files look like an extracted folder, so the launch page is the next stop.",
+      zipPreview: "ZIP directory preflight",
+      metadataOnly: "metadata only",
+      unavailable: "unavailable",
+      internalFiles: "internal files",
+      launchClues: "launch clues",
+      truncated: "truncated",
+      assetsTitle: "Asset map",
+      samplePathsTitle: "Sample paths",
+      localManifest: "local manifest",
+      noAssetsTitle: "No asset clues",
+      noAssetsBody: "Only a launcher or archive may have been imported.",
+      supportBundle: "Support bundle",
+      supportSummaryBody: "Good for GitHub issues, forums, or chat support. It contains diagnosis metadata only, never game files.",
+      copySupportSummary: "Copy support summary",
+      copyManifest: "Copy manifest JSON",
+      downloadSupportBundle: "Download support bundle",
+      privacyBoundary: "Privacy boundary",
+      noGameFiles: "No game files",
+      noFileContents: "No file contents",
+      zipMetadataOnly: "ZIP metadata only",
+      relativePaths: "Relative paths only",
+      noUpload: "No uploads",
+      diagnosisSummary: "Diagnosis summary",
+      includedFiles: "Included files",
+      exportLimitNote: "The file manifest exports up to {count} relative paths; if exceeded, file-manifest.json is marked truncated.",
+      copyableSummary: "Copyable summary",
+      issueReady: "issue-ready",
+      noBlockersTitle: "No obvious blockers",
+      noBlockersBody: "Try the recommended launch profile first. If it fails, add the error text and diagnose again.",
+      statusStat: "status",
+      filesStat: "files",
+      recipesStat: "recipes",
+      checksStat: "checks",
+      scanDesktop: "Desktop scan",
+      scanFiles: "Scanning files",
+      scanDroppedFolder: "Scanning dropped folder",
+      scanReadingMetadata: "Reading {source} metadata...",
+      scanFolderSource: "folder",
+      scanFilesSource: "selected files",
+      scanFilesIndexed: "{done} / {total} files indexed",
+      scanFilesIndexedSolo: "{done} files indexed",
+      scanFilesSkipped: "{count} skipped",
+      scanChooseFolder: "Choose a folder to scan...",
+      scanChooseFiles: "Choose files to scan...",
+      scanNoSelection: "No desktop selection made.",
+      scanAnalyzing: "Analyzing metadata",
+      scanQueued: "{count} files queued",
+      scanWalkingTree: "Walking folder tree...",
+      toastDesktopScanFailed: "Desktop scan failed",
+      toastNoReport: "No report yet",
+      toastReportCopied: "Report copied",
+      toastNoDiagnosis: "No diagnosis to export yet",
+      toastSupportCreated: "Support bundle created",
+      toastDesktopCommandCopied: "Desktop command copied",
+      toastRelativeCommandCopied: "Relative command copied",
+      toastProfileJsonCopied: "Profile JSON copied",
+      toastRoadmapCopied: "Roadmap checklist copied",
+      toastSummaryCopied: "Support summary copied",
+      toastManifestCopied: "Support manifest copied",
+    },
     labels: {
       project: "Project",
       generated: "Generated",
@@ -165,6 +483,165 @@ const ASSISTANT_LANGUAGE_PACKS = {
     checklistTitle: "GalAid 次の手順チェックリスト",
     supportTitle: "GalAid サポート概要",
     supportBundleTitle: "GalAid サポートバンドル",
+    ui: {
+      documentTitle: "GalAid - VN 起動診断",
+      brandSubtitle: "VN 起動診断",
+      dropTitle: "ゲームフォルダをドロップ",
+      dropHint: "またはフォルダ / アーカイブ / ディスクイメージを選択",
+      chooseFolder: "フォルダを選択",
+      chooseFiles: "ファイルを選択",
+      sampleGame: "ゲーム例",
+      sampleCommercial: "自社エンジン例",
+      samplePackage: "パッケージ例",
+      clear: "クリア",
+      errorLabel: "エラー本文",
+      errorPlaceholder: "d3dx9_43.dll、文字化け、RTP、VCRUNTIME などのエラーを貼り付けます...",
+      copyReport: "レポートをコピー",
+      downloadReport: "レポートを保存",
+      downloadBundle: "サポートバンドルを保存",
+      languageLabel: "UI / 診断言語",
+      privacyTitle: "Local only.",
+      privacyBody: "ブラウザはファイル名、パス、サイズだけを読み取り、ゲーム内容はアップロードしません。",
+      eyebrow: "診断",
+      waitingTitle: "入力待ち",
+      importedFiles: "インポート済みファイル",
+      selectedFiles: "{count} 件のファイル",
+      moreRoots: "{name} + 他 {count} 件",
+      noData: "データなし",
+      scanning: "スキャン中",
+      summaryFiles: "ファイル",
+      summaryEngine: "エンジン手がかり",
+      summaryAssets: "アセット",
+      summaryRisks: "リスク",
+      ready: "準備完了",
+      noFolder: "フォルダ未選択。",
+      tabLaunch: "起動",
+      tabRoadmap: "手順",
+      tabProfiles: "設定",
+      tabEnvironment: "環境",
+      tabErrors: "エラー",
+      tabPackages: "パッケージ",
+      tabEngine: "エンジン/構造",
+      tabAssets: "アセット",
+      tabSupport: "サポート",
+      tabReport: "レポート",
+      emptyTitle: "まずゲームフォルダを入れてください",
+      emptyBody: "GalAid は起動ファイル、エンジン/構造の手がかり、アーカイブ/イメージ、パスのリスク、アセット分類をローカルで分析します。",
+      launchCandidates: "起動候補",
+      diagnosisFindings: "診断結果",
+      noLaunchTitle: "起動候補なし",
+      noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
+      items: "件",
+      findings: "件",
+      largeModeReportNote: "この画面には主要サンプルだけを表示します。レポートは完全なファイル一覧を使用します。",
+      roadmapTitle: "次の手順",
+      steps: "手順",
+      copyRoadmap: "手順チェックリストをコピー",
+      blockedCount: "先に対応",
+      todoCount: "推奨",
+      readyCount: "実行可能",
+      infoCount: "参考",
+      profilesTitle: "起動設定",
+      profiles: "設定",
+      noProfilesTitle: "起動設定はまだ生成できません",
+      noProfilesBody: "信頼できる起動ファイルがありません。先にアーカイブ/イメージを処理するか、展開済みゲームフォルダで再試行してください。",
+      safeModeTitle: "安全モード",
+      safeModeBody: "GalAid は設定とコマンドだけを生成し、ゲームを自動起動しません。デスクトップ版では実パスのコピーが可能ですが、レポートと画面は既定で相対パスを保持します。",
+      entryLabel: "入口",
+      workdirLabel: "作業フォルダ",
+      desktopPathReady: "デスクトップパスあり",
+      relativePathOnly: "相対パスのみ",
+      copyCommand: "コマンドをコピー",
+      copyJson: "JSON をコピー",
+      downloadConfig: "設定を保存",
+      environmentTitle: "環境チェック",
+      checks: "チェック",
+      environmentCountsLabel: "environment check counts",
+      ok: "OK",
+      suggestions: "推奨",
+      blockers: "阻害",
+      observations: "確認",
+      errorsTitle: "エラー診断",
+      recipes: "レシピ",
+      matches: "一致",
+      noErrorTextTitle: "エラー本文はまだありません",
+      noErrorTextBody: "現在エラー本文はありません。起動に失敗したら、左側にダイアログやログを貼り付けると再診断できます。",
+      noRecipeTitle: "既知レシピに一致しません",
+      noRecipeBody: "このエラー本文はレポートに保存され、今後のコミュニティレシピ追加に使えます。",
+      errorRecipeCountsLabel: "error recipe counts",
+      recipeCoverageTitle: "レシピ対応範囲",
+      rules: "ルール",
+      engineTitle: "エンジン/ファイル構造の手がかり",
+      matchesLabel: "一致",
+      noEngineTitle: "明確な構造の手がかりなし",
+      noEngineBody: "起動候補の確認を続けられます。パッチやアーカイブだけを選んだ場合、または完全なゲームルートが必要な場合もあります。",
+      scoreLabel: "score",
+      startupStructure: "起動構造",
+      packagesTitle: "アーカイブ/イメージ判定",
+      packageResultsTitle: "判定結果",
+      groups: "グループ",
+      noPackagesTitle: "アーカイブやイメージなし",
+      noPackagesBody: "展開済みフォルダに見えるため、次は起動画面を確認してください。",
+      zipPreview: "ZIP ディレクトリ事前チェック",
+      metadataOnly: "メタデータのみ",
+      unavailable: "利用不可",
+      internalFiles: "内部ファイル",
+      launchClues: "起動手がかり",
+      truncated: "切り詰め",
+      assetsTitle: "アセットマップ",
+      samplePathsTitle: "サンプルパス",
+      localManifest: "ローカル一覧",
+      noAssetsTitle: "アセットの手がかりなし",
+      noAssetsBody: "起動ファイルまたはアーカイブだけがインポートされた可能性があります。",
+      supportBundle: "サポートバンドル",
+      supportSummaryBody: "issue、フォーラム、チャット相談向けです。診断メタデータだけを含み、ゲームファイルは含みません。",
+      copySupportSummary: "サポート概要をコピー",
+      copyManifest: "マニフェスト JSON をコピー",
+      downloadSupportBundle: "サポートバンドルを保存",
+      privacyBoundary: "プライバシー範囲",
+      noGameFiles: "ゲームファイルなし",
+      noFileContents: "ファイル内容なし",
+      zipMetadataOnly: "ZIP はメタデータのみ",
+      relativePaths: "相対パスのみ",
+      noUpload: "アップロードなし",
+      diagnosisSummary: "診断概要",
+      includedFiles: "含まれるファイル",
+      exportLimitNote: "ファイル一覧は最大 {count} 件の相対パスを出力します。超過時は file-manifest.json に truncated と記録されます。",
+      copyableSummary: "コピー用概要",
+      issueReady: "issue-ready",
+      noBlockersTitle: "明確な阻害要因なし",
+      noBlockersBody: "まず推奨起動設定を試してください。失敗した場合はエラー本文を追加して再診断します。",
+      statusStat: "状態",
+      filesStat: "ファイル",
+      recipesStat: "レシピ",
+      checksStat: "チェック",
+      scanDesktop: "デスクトップスキャン",
+      scanFiles: "ファイルをスキャン中",
+      scanDroppedFolder: "ドロップされたフォルダをスキャン中",
+      scanReadingMetadata: "{source} のメタデータを読み取り中...",
+      scanFolderSource: "フォルダ",
+      scanFilesSource: "選択ファイル",
+      scanFilesIndexed: "{done} / {total} 件を取得",
+      scanFilesIndexedSolo: "{done} 件を取得",
+      scanFilesSkipped: "{count} 件をスキップ",
+      scanChooseFolder: "スキャンするフォルダを選択...",
+      scanChooseFiles: "スキャンするファイルを選択...",
+      scanNoSelection: "デスクトップ選択はありません。",
+      scanAnalyzing: "メタデータを分析中",
+      scanQueued: "{count} 件のファイルを処理待ち",
+      scanWalkingTree: "フォルダツリーを読み取り中...",
+      toastDesktopScanFailed: "デスクトップスキャンに失敗しました",
+      toastNoReport: "レポートはまだありません",
+      toastReportCopied: "レポートをコピーしました",
+      toastNoDiagnosis: "エクスポートできる診断はまだありません",
+      toastSupportCreated: "サポートバンドルを作成しました",
+      toastDesktopCommandCopied: "デスクトップ用コマンドをコピーしました",
+      toastRelativeCommandCopied: "相対パスコマンドをコピーしました",
+      toastProfileJsonCopied: "設定 JSON をコピーしました",
+      toastRoadmapCopied: "手順チェックリストをコピーしました",
+      toastSummaryCopied: "サポート概要をコピーしました",
+      toastManifestCopied: "サポートマニフェストをコピーしました",
+    },
     labels: {
       project: "プロジェクト",
       generated: "生成日時",
@@ -324,6 +801,42 @@ function getStoredAssistantLanguage() {
   } catch {
     return "zh-CN";
   }
+}
+
+function getUiText(key, params = {}, language = getAssistantLanguage()) {
+  const pack = getAssistantPack(language);
+  const fallbackPack = ASSISTANT_LANGUAGE_PACKS["zh-CN"];
+  const template = pack.ui?.[key] ?? fallbackPack.ui?.[key] ?? key;
+  return String(template).replace(/\{(\w+)\}/g, (match, name) => {
+    return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match;
+  });
+}
+
+function applyStaticUiLanguage() {
+  const language = getAssistantLanguage();
+  const pack = getAssistantPack(language);
+  document.documentElement.lang = language;
+  document.title = pack.ui?.documentTitle || "GalAid - VN launch doctor";
+
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = getUiText(element.dataset.i18n, {}, language);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.setAttribute("placeholder", getUiText(element.dataset.i18nPlaceholder, {}, language));
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+    element.setAttribute("aria-label", getUiText(element.dataset.i18nAriaLabel, {}, language));
+  });
+}
+
+function getEmptyStateHtml() {
+  return `
+    <div class="empty-state">
+      <div class="empty-glyph" aria-hidden="true"></div>
+      <h3>${escapeHtml(getUiText("emptyTitle"))}</h3>
+      <p>${escapeHtml(getUiText("emptyBody"))}</p>
+    </div>
+  `;
 }
 
 function refreshCurrentReport() {
@@ -2117,11 +2630,12 @@ function setControlsBusy(isBusy) {
 
 if (desktopApi) {
   desktopApi.onScanProgress((progress) => {
+    const skipped = progress.skipped
+      ? `, ${getUiText("scanFilesSkipped", { count: formatNumber(progress.skipped) })}`
+      : "";
     updateScanState({
-      title: "Desktop scan",
-      detail: `${formatNumber(progress.scanned || 0)} files indexed${
-        progress.skipped ? `, ${formatNumber(progress.skipped)} skipped` : ""
-      }`,
+      title: getUiText("scanDesktop"),
+      detail: `${getUiText("scanFilesIndexedSolo", { done: formatNumber(progress.scanned || 0) })}${skipped}`,
       progress: progress.done ? 82 : 45,
       phase: progress.done ? "analyzing" : "scanning",
     });
@@ -2136,7 +2650,7 @@ function updateScanState({ title, detail, progress = 0, visible = true, phase = 
   scanProgressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
 
   if (phase === "scanning" || phase === "analyzing") {
-    statusPill.textContent = "Scanning";
+    statusPill.textContent = getUiText("scanning");
     statusPill.className = "status-pill scanning";
   }
 }
@@ -2144,9 +2658,10 @@ function updateScanState({ title, detail, progress = 0, visible = true, phase = 
 async function importNativeFiles(fileList, sourceLabel) {
   const runId = ++scanRunId;
   setControlsBusy(true);
+  const sourceName = sourceLabel === "folder" ? getUiText("scanFolderSource") : getUiText("scanFilesSource");
   updateScanState({
-    title: "Scanning files",
-    detail: `Reading ${sourceLabel} metadata...`,
+    title: getUiText("scanFiles"),
+    detail: getUiText("scanReadingMetadata", { source: sourceName }),
     progress: 5,
     phase: "scanning",
   });
@@ -2156,8 +2671,11 @@ async function importNativeFiles(fileList, sourceLabel) {
       if (runId !== scanRunId) return;
       const progress = total ? Math.min(82, Math.round((done / total) * 80)) : 20;
       updateScanState({
-        title: "Scanning files",
-        detail: `${formatNumber(done)} / ${formatNumber(total || done)} files indexed`,
+        title: getUiText("scanFiles"),
+        detail: getUiText("scanFilesIndexed", {
+          done: formatNumber(done),
+          total: formatNumber(total || done),
+        }),
         progress,
         phase: "scanning",
       });
@@ -2173,8 +2691,8 @@ async function importDesktopSelection(kind) {
   const runId = ++scanRunId;
   setControlsBusy(true);
   updateScanState({
-    title: "Desktop scan",
-    detail: kind === "folder" ? "Choose a folder to scan..." : "Choose files to scan...",
+    title: getUiText("scanDesktop"),
+    detail: kind === "folder" ? getUiText("scanChooseFolder") : getUiText("scanChooseFiles"),
     progress: 6,
     phase: "scanning",
   });
@@ -2183,8 +2701,8 @@ async function importDesktopSelection(kind) {
     const result = kind === "folder" ? await desktopApi.selectFolder() : await desktopApi.selectFiles();
     if (runId !== scanRunId || result?.canceled) {
       updateScanState({
-        title: "Ready",
-        detail: "No desktop selection made.",
+        title: getUiText("ready"),
+        detail: getUiText("scanNoSelection"),
         progress: 0,
         visible: false,
       });
@@ -2192,7 +2710,7 @@ async function importDesktopSelection(kind) {
     }
     await setFiles(result.files || [], { runId, desktopMeta: result.meta });
   } catch (error) {
-    showToast(`桌面扫描失败：${error.message || error}`);
+    showToast(`${getUiText("toastDesktopScanFailed")}: ${error.message || error}`);
   } finally {
     if (runId === scanRunId) setControlsBusy(false);
   }
@@ -2203,8 +2721,8 @@ async function setFiles(files, options = {}) {
   setControlsBusy(true);
   try {
     updateScanState({
-      title: "Analyzing metadata",
-      detail: `${formatNumber(files.length)} files queued`,
+      title: getUiText("scanAnalyzing"),
+      detail: getUiText("scanQueued", { count: formatNumber(files.length) }),
       progress: 88,
       phase: "analyzing",
     });
@@ -2259,24 +2777,26 @@ function render() {
 }
 
 function getDisplayTitle(analysis) {
-  if (!analysis.roots.length) return "已导入文件";
+  if (!analysis.roots.length) return getUiText("importedFiles");
   if (analysis.roots.length === 1) return analysis.roots[0].name;
   if (analysis.roots.every((root) => root.count === 1)) {
-    return `${formatNumber(analysis.files.length)} selected files`;
+    return getUiText("selectedFiles", { count: formatNumber(analysis.files.length) });
   }
-  return `${analysis.roots[0].name} + ${analysis.roots.length - 1} more`;
+  return getUiText("moreRoots", { name: analysis.roots[0].name, count: analysis.roots.length - 1 });
 }
 
 function renderEmpty() {
-  projectTitle.textContent = "等待导入";
-  statusPill.textContent = "No data";
+  projectTitle.textContent = getUiText("waitingTitle");
+  statusPill.textContent = getUiText("noData");
   statusPill.className = "status-pill neutral";
   fileCount.textContent = "0";
   engineCount.textContent = "0";
   assetCount.textContent = "0";
   riskCount.textContent = "0";
+  scanTitle.textContent = getUiText("ready");
+  scanDetail.textContent = getUiText("noFolder");
   scanBanner.hidden = true;
-  const empty = emptyStateTemplate.innerHTML;
+  const empty = emptyStateTemplate ? getEmptyStateHtml() : "";
   launchPanel.innerHTML = empty;
   roadmapPanel.innerHTML = empty;
   profilesPanel.innerHTML = empty;
@@ -2308,18 +2828,18 @@ function renderLaunch(analysis) {
           `,
         )
         .join("")
-    : `<article class="finding blocker"><div><h4>没有候选入口</h4><p>请换成完整解压后的游戏根目录再试。</p></div></article>`;
+    : `<article class="finding blocker"><div><h4>${escapeHtml(getUiText("noLaunchTitle"))}</h4><p>${escapeHtml(getUiText("noLaunchBody"))}</p></div></article>`;
 
   return `
     ${renderModeCard(analysis)}
     <div class="section-title">
-      <h3>启动候选</h3>
-      <span>${analysis.launchCandidates.length} items</span>
+      <h3>${escapeHtml(getUiText("launchCandidates"))}</h3>
+      <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
     </div>
     <div class="card-list">${candidates}</div>
     <div class="section-title">
-      <h3>诊断结论</h3>
-      <span>${analysis.findings.length} findings</span>
+      <h3>${escapeHtml(getUiText("diagnosisFindings"))}</h3>
+      <span>${analysis.findings.length} ${escapeHtml(getUiText("findings"))}</span>
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
   `;
@@ -2331,7 +2851,7 @@ function renderModeCard(analysis) {
     <article class="finding ${analysis.mode.findingLevel}">
       <div>
         <h4>${escapeHtml(analysis.mode.label)}</h4>
-        <p>${escapeHtml(analysis.mode.detail)} 页面只展示关键样例，报告仍基于完整文件清单。</p>
+        <p>${escapeHtml(analysis.mode.detail)} ${escapeHtml(getUiText("largeModeReportNote"))}</p>
       </div>
     </article>
   `;
@@ -2352,8 +2872,8 @@ function renderRoadmap(analysis) {
   const counts = analysis.roadmap.summary.counts;
   return `
     <div class="section-title">
-      <h3>下一步路线</h3>
-      <span>${analysis.roadmap.steps.length} steps</span>
+      <h3>${escapeHtml(getUiText("roadmapTitle"))}</h3>
+      <span>${analysis.roadmap.steps.length} ${escapeHtml(getUiText("steps"))}</span>
     </div>
     <article class="roadmap-summary ${analysis.roadmap.summary.state}">
       <div>
@@ -2361,14 +2881,14 @@ function renderRoadmap(analysis) {
         <p>${escapeHtml(analysis.roadmap.summary.detail)}</p>
       </div>
       <div class="roadmap-actions">
-        <button type="button" data-roadmap-action="copy-checklist">复制路线清单</button>
+        <button type="button" data-roadmap-action="copy-checklist">${escapeHtml(getUiText("copyRoadmap"))}</button>
       </div>
     </article>
     <div class="roadmap-counts">
-      <span class="blocked">${counts.blocked} 先处理</span>
-      <span class="todo">${counts.todo} 建议</span>
-      <span class="ready">${counts.ready} 可执行</span>
-      <span>${counts.info} 参考</span>
+      <span class="blocked">${counts.blocked} ${escapeHtml(getUiText("blockedCount"))}</span>
+      <span class="todo">${counts.todo} ${escapeHtml(getUiText("todoCount"))}</span>
+      <span class="ready">${counts.ready} ${escapeHtml(getUiText("readyCount"))}</span>
+      <span>${counts.info} ${escapeHtml(getUiText("infoCount"))}</span>
     </div>
     <div class="roadmap-list">
       ${analysis.roadmap.steps.map((step, index) => renderRoadmapStep(step, index)).join("")}
@@ -2400,11 +2920,11 @@ function renderRoadmapStep(step, index) {
 function renderProfiles(analysis) {
   if (!analysis.profiles.length) {
     return `
-      <div class="section-title"><h3>启动配置</h3><span>0 profiles</span></div>
+      <div class="section-title"><h3>${escapeHtml(getUiText("profilesTitle"))}</h3><span>0 ${escapeHtml(getUiText("profiles"))}</span></div>
       <article class="finding warning">
         <div>
-          <h4>还不能生成启动配置</h4>
-          <p>当前没有可信启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。</p>
+          <h4>${escapeHtml(getUiText("noProfilesTitle"))}</h4>
+          <p>${escapeHtml(getUiText("noProfilesBody"))}</p>
         </div>
       </article>
     `;
@@ -2412,13 +2932,13 @@ function renderProfiles(analysis) {
 
   return `
     <div class="section-title">
-      <h3>启动配置</h3>
-      <span>${analysis.profiles.length} profiles</span>
+      <h3>${escapeHtml(getUiText("profilesTitle"))}</h3>
+      <span>${analysis.profiles.length} ${escapeHtml(getUiText("profiles"))}</span>
     </div>
     <article class="finding info">
       <div>
-        <h4>安全模式</h4>
-        <p>GalAid 只生成配置和命令，不会自动运行游戏。桌面版复制命令时可使用本机真实路径，报告和页面默认保留相对路径。</p>
+        <h4>${escapeHtml(getUiText("safeModeTitle"))}</h4>
+        <p>${escapeHtml(getUiText("safeModeBody"))}</p>
       </div>
     </article>
     <div class="card-list profile-list">
@@ -2438,18 +2958,18 @@ function renderProfileCard(profile) {
         <div class="candidate-score">${profile.confidence}</div>
       </div>
       <div class="meta-row">
-        <span class="chip good">entry: ${escapeHtml(profile.entryName)}</span>
-        <span class="chip">workdir: ${escapeHtml(profile.workingDirectory)}</span>
-        <span class="chip ${profile.hasDesktopPath ? "good" : "warn"}">${profile.hasDesktopPath ? "desktop path ready" : "relative path only"}</span>
+        <span class="chip good">${escapeHtml(getUiText("entryLabel"))}: ${escapeHtml(profile.entryName)}</span>
+        <span class="chip">${escapeHtml(getUiText("workdirLabel"))}: ${escapeHtml(profile.workingDirectory)}</span>
+        <span class="chip ${profile.hasDesktopPath ? "good" : "warn"}">${escapeHtml(profile.hasDesktopPath ? getUiText("desktopPathReady") : getUiText("relativePathOnly"))}</span>
       </div>
       <pre class="command-box"><code>${escapeHtml(profile.commandPreview)}</code></pre>
       <div class="profile-notes">
         ${profile.notes.map((note) => `<span>${escapeHtml(note)}</span>`).join("")}
       </div>
       <div class="profile-actions">
-        <button type="button" data-profile-action="copy-command" data-profile-id="${profile.id}">复制命令</button>
-        <button type="button" data-profile-action="copy-json" data-profile-id="${profile.id}">复制 JSON</button>
-        <button type="button" data-profile-action="download-json" data-profile-id="${profile.id}">下载配置</button>
+        <button type="button" data-profile-action="copy-command" data-profile-id="${profile.id}">${escapeHtml(getUiText("copyCommand"))}</button>
+        <button type="button" data-profile-action="copy-json" data-profile-id="${profile.id}">${escapeHtml(getUiText("copyJson"))}</button>
+        <button type="button" data-profile-action="download-json" data-profile-id="${profile.id}">${escapeHtml(getUiText("downloadConfig"))}</button>
       </div>
     </article>
   `;
@@ -2460,19 +2980,19 @@ function renderEnvironment(analysis) {
   const counts = environment.summary.counts;
   return `
     <div class="section-title">
-      <h3>环境检查</h3>
-      <span>${environment.checks.length} checks</span>
+      <h3>${escapeHtml(getUiText("environmentTitle"))}</h3>
+      <span>${environment.checks.length} ${escapeHtml(getUiText("checks"))}</span>
     </div>
     <article class="environment-summary ${environment.summary.status}">
       <div>
         <h4>${escapeHtml(environment.summary.label)}</h4>
         <p>${escapeHtml(environment.summary.detail)}</p>
       </div>
-      <div class="environment-counts" aria-label="environment check counts">
-        <span class="good">${counts.good} OK</span>
-        <span class="warning">${counts.warning} 建议</span>
-        <span class="blocker">${counts.blocker} 阻断</span>
-        <span>${counts.info} 观察</span>
+      <div class="environment-counts" aria-label="${escapeHtml(getUiText("environmentCountsLabel"))}">
+        <span class="good">${counts.good} ${escapeHtml(getUiText("ok"))}</span>
+        <span class="warning">${counts.warning} ${escapeHtml(getUiText("suggestions"))}</span>
+        <span class="blocker">${counts.blocker} ${escapeHtml(getUiText("blockers"))}</span>
+        <span>${counts.info} ${escapeHtml(getUiText("observations"))}</span>
       </div>
     </article>
     <div class="environment-grid">
@@ -2506,13 +3026,13 @@ function renderErrorDiagnostics(analysis) {
   if (!diagnostics.hasText) {
     return `
       <div class="section-title">
-        <h3>报错诊断</h3>
-        <span>${recipeCount} recipes</span>
+        <h3>${escapeHtml(getUiText("errorsTitle"))}</h3>
+        <span>${recipeCount} ${escapeHtml(getUiText("recipes"))}</span>
       </div>
       <article class="error-summary info">
         <div>
-          <h4>还没有粘贴报错文本</h4>
-          <p>当前没有错误文本；如果启动失败，把弹窗或日志文字放到左侧输入框后会重新诊断。</p>
+          <h4>${escapeHtml(getUiText("noErrorTextTitle"))}</h4>
+          <p>${escapeHtml(getUiText("noErrorTextBody"))}</p>
         </div>
       </article>
       ${renderRecipeLibrary()}
@@ -2521,21 +3041,21 @@ function renderErrorDiagnostics(analysis) {
 
   const matchCards = diagnostics.matches.length
     ? diagnostics.matches.map(renderErrorRecipeMatch).join("")
-    : `<article class="error-recipe info"><h4>没有命中已知配方</h4><p>这段报错已经保留在报告中，可以作为后续新增社区配方的素材。</p></article>`;
+    : `<article class="error-recipe info"><h4>${escapeHtml(getUiText("noRecipeTitle"))}</h4><p>${escapeHtml(getUiText("noRecipeBody"))}</p></article>`;
 
   return `
     <div class="section-title">
-      <h3>报错诊断</h3>
-      <span>${diagnostics.matches.length} matches</span>
+      <h3>${escapeHtml(getUiText("errorsTitle"))}</h3>
+      <span>${diagnostics.matches.length} ${escapeHtml(getUiText("matches"))}</span>
     </div>
     <article class="error-summary ${diagnostics.summary.status}">
       <div>
         <h4>${escapeHtml(diagnostics.summary.label)}</h4>
         <p>${escapeHtml(diagnostics.summary.detail)}</p>
       </div>
-      <div class="environment-counts" aria-label="error recipe counts">
-        <span class="warning">${diagnostics.summary.counts.warning} 建议</span>
-        <span>${diagnostics.summary.counts.info} 观察</span>
+      <div class="environment-counts" aria-label="${escapeHtml(getUiText("errorRecipeCountsLabel"))}">
+        <span class="warning">${diagnostics.summary.counts.warning} ${escapeHtml(getUiText("suggestions"))}</span>
+        <span>${diagnostics.summary.counts.info} ${escapeHtml(getUiText("observations"))}</span>
       </div>
     </article>
     <div class="error-grid">${matchCards}</div>
@@ -2573,8 +3093,8 @@ function renderRecipeLibrary() {
 
   return `
     <div class="section-title">
-      <h3>配方覆盖</h3>
-      <span>${ERROR_RECIPES.length} rules</span>
+      <h3>${escapeHtml(getUiText("recipeCoverageTitle"))}</h3>
+      <span>${ERROR_RECIPES.length} ${escapeHtml(getUiText("rules"))}</span>
     </div>
     <article class="recipe-library-card">
       <div class="meta-row">${chips}</div>
@@ -2585,15 +3105,15 @@ function renderRecipeLibrary() {
 function renderEngines(analysis) {
   if (!analysis.engines.length) {
     return `
-      <div class="section-title"><h3>引擎/文件结构线索</h3><span>0 matches</span></div>
-      <article class="finding warning"><div><h4>没有明显结构线索</h4><p>可以继续用启动候选排查；也可能只选中了补丁、压缩包，或需要换成完整游戏根目录。</p></div></article>
+      <div class="section-title"><h3>${escapeHtml(getUiText("engineTitle"))}</h3><span>0 ${escapeHtml(getUiText("matchesLabel"))}</span></div>
+      <article class="finding warning"><div><h4>${escapeHtml(getUiText("noEngineTitle"))}</h4><p>${escapeHtml(getUiText("noEngineBody"))}</p></div></article>
     `;
   }
 
   return `
     <div class="section-title">
-      <h3>引擎/文件结构线索</h3>
-      <span>${analysis.engines.length} matches</span>
+      <h3>${escapeHtml(getUiText("engineTitle"))}</h3>
+      <span>${analysis.engines.length} ${escapeHtml(getUiText("matchesLabel"))}</span>
     </div>
     <div class="grid-two">
       ${analysis.engines
@@ -2604,8 +3124,8 @@ function renderEngines(analysis) {
               <p>${escapeHtml(engine.advice)}</p>
               <div class="meta-row">
                 <span class="chip ${engine.confidence === "high" ? "good" : "warn"}">${engine.confidence}</span>
-                <span class="chip">score ${engine.score}</span>
-                ${engine.id === "commercial-proprietary" ? `<span class="chip warn">启动结构</span>` : ""}
+                <span class="chip">${escapeHtml(getUiText("scoreLabel"))} ${engine.score}</span>
+                ${engine.id === "commercial-proprietary" ? `<span class="chip warn">${escapeHtml(getUiText("startupStructure"))}</span>` : ""}
               </div>
               <div class="sample-list">
                 ${engine.evidence.map((path) => `<code>${escapeHtml(path)}</code>`).join("")}
@@ -2624,12 +3144,12 @@ function renderPackages(analysis) {
   const sets = [...packages.archiveSets, ...packages.discSets];
   const packageCards = sets.length
     ? sets.map(renderPackageSet).join("")
-    : `<article class="finding good"><div><h4>没有压缩包或镜像</h4><p>当前文件更像已经解压后的目录，可以直接看启动页。</p></div></article>`;
+    : `<article class="finding good"><div><h4>${escapeHtml(getUiText("noPackagesTitle"))}</h4><p>${escapeHtml(getUiText("noPackagesBody"))}</p></div></article>`;
 
   return `
     <div class="section-title">
-      <h3>包/镜像识别</h3>
-      <span>${packageCount} files, ${formatBytes(packages.totalSize)}</span>
+      <h3>${escapeHtml(getUiText("packagesTitle"))}</h3>
+      <span>${packageCount} ${escapeHtml(getUiText("summaryFiles"))}, ${formatBytes(packages.totalSize)}</span>
     </div>
     <div class="package-roadmap">
       ${packages.recommendations
@@ -2647,8 +3167,8 @@ function renderPackages(analysis) {
         .join("")}
     </div>
     <div class="section-title">
-      <h3>识别结果</h3>
-      <span>${sets.length} groups</span>
+      <h3>${escapeHtml(getUiText("packageResultsTitle"))}</h3>
+      <span>${sets.length} ${escapeHtml(getUiText("groups"))}</span>
     </div>
     <div class="grid-two">${packageCards}</div>
   `;
@@ -2657,7 +3177,7 @@ function renderPackages(analysis) {
 function renderPackageSet(set) {
   const chips = [
     `<span class="chip ${set.level === "warning" ? "warn" : "good"}">${escapeHtml(set.summary)}</span>`,
-    `<span class="chip">${set.files.length} files</span>`,
+    `<span class="chip">${set.files.length} ${escapeHtml(getUiText("summaryFiles"))}</span>`,
     `<span class="chip">${formatBytes(set.files.reduce((sum, item) => sum + item.file.size, 0))}</span>`,
   ].join("");
   const samples = set.files
@@ -2689,14 +3209,14 @@ function renderArchivePreview(preview) {
   return `
     <div class="archive-preview">
       <div class="archive-preview-header">
-        <strong>ZIP 目录预检</strong>
-        <span class="chip ${statusClass}">${preview.status === "ok" ? "metadata only" : "unavailable"}</span>
+        <strong>${escapeHtml(getUiText("zipPreview"))}</strong>
+        <span class="chip ${statusClass}">${escapeHtml(preview.status === "ok" ? getUiText("metadataOnly") : getUiText("unavailable"))}</span>
       </div>
       <div class="meta-row">
-        <span class="chip">${formatNumber(preview.fileCount || 0)} internal files</span>
-        <span class="chip">${formatNumber(preview.signals?.launchCandidateCount || 0)} launch clues</span>
+        <span class="chip">${formatNumber(preview.fileCount || 0)} ${escapeHtml(getUiText("internalFiles"))}</span>
+        <span class="chip">${formatNumber(preview.signals?.launchCandidateCount || 0)} ${escapeHtml(getUiText("launchClues"))}</span>
         ${engineNames.map((name) => `<span class="chip good">${escapeHtml(name)}</span>`).join("")}
-        ${preview.truncated ? `<span class="chip warn">truncated</span>` : ""}
+        ${preview.truncated ? `<span class="chip warn">${escapeHtml(getUiText("truncated"))}</span>` : ""}
         ${warnings}
       </div>
       ${sampleFiles ? `<div class="sample-list package-files">${sampleFiles}</div>` : ""}
@@ -2726,7 +3246,7 @@ function renderAssets(analysis) {
       (category) => `
         <article class="asset-card">
           <h4>${escapeHtml(category.name)}</h4>
-          <p>${category.count} files, ${formatBytes(category.size)}</p>
+          <p>${category.count} ${escapeHtml(getUiText("summaryFiles"))}, ${formatBytes(category.size)}</p>
           <div class="sample-list">
             ${category.samples.map((path) => `<code>${escapeHtml(path)}</code>`).join("")}
           </div>
@@ -2737,12 +3257,12 @@ function renderAssets(analysis) {
 
   return `
     <div class="section-title">
-      <h3>素材地图</h3>
+      <h3>${escapeHtml(getUiText("assetsTitle"))}</h3>
       <span>${formatBytes(analysis.files.reduce((sum, file) => sum + file.size, 0))}</span>
     </div>
     <article class="asset-card"><div class="asset-bars">${bars}</div></article>
-    <div class="section-title"><h3>样例路径</h3><span>local manifest</span></div>
-    <div class="grid-two">${cards || `<article class="finding warning"><div><h4>没有素材线索</h4><p>可能只导入了启动器或压缩包。</p></div></article>`}</div>
+    <div class="section-title"><h3>${escapeHtml(getUiText("samplePathsTitle"))}</h3><span>${escapeHtml(getUiText("localManifest"))}</span></div>
+    <div class="grid-two">${cards || `<article class="finding warning"><div><h4>${escapeHtml(getUiText("noAssetsTitle"))}</h4><p>${escapeHtml(getUiText("noAssetsBody"))}</p></div></article>`}</div>
   `;
 }
 
@@ -2756,58 +3276,58 @@ function renderSupport(analysis) {
     .slice(0, 4);
   const issueCards = topIssues.length
     ? topIssues.map((finding) => `<li><strong>${escapeHtml(finding.title)}</strong><span>${escapeHtml(finding.body)}</span></li>`).join("")
-    : `<li><strong>没有明显阻断项</strong><span>可以先按推荐启动配置尝试；失败后再补充报错文本。</span></li>`;
+    : `<li><strong>${escapeHtml(getUiText("noBlockersTitle"))}</strong><span>${escapeHtml(getUiText("noBlockersBody"))}</span></li>`;
 
   return `
     <div class="section-title">
-      <h3>求助包</h3>
-      <span>${entries.length} files</span>
+      <h3>${escapeHtml(getUiText("supportBundle"))}</h3>
+      <span>${entries.length} ${escapeHtml(getUiText("summaryFiles"))}</span>
     </div>
     <article class="support-summary-card">
       <div>
         <h4>${escapeHtml(bundle.filename)}</h4>
-        <p>适合发 issue、论坛或聊天求助。只包含诊断元数据，不包含游戏文件。</p>
+        <p>${escapeHtml(getUiText("supportSummaryBody"))}</p>
       </div>
       <div class="support-actions">
-        <button type="button" data-support-action="copy-summary">复制求助摘要</button>
-        <button type="button" data-support-action="copy-manifest">复制清单 JSON</button>
-        <button type="button" data-support-action="download-bundle">下载求助包</button>
+        <button type="button" data-support-action="copy-summary">${escapeHtml(getUiText("copySupportSummary"))}</button>
+        <button type="button" data-support-action="copy-manifest">${escapeHtml(getUiText("copyManifest"))}</button>
+        <button type="button" data-support-action="download-bundle">${escapeHtml(getUiText("downloadSupportBundle"))}</button>
       </div>
     </article>
     <div class="support-grid">
       <article class="support-card">
-        <h4>隐私边界</h4>
+        <h4>${escapeHtml(getUiText("privacyBoundary"))}</h4>
         <div class="support-privacy-list">
-          <span>不包含游戏文件</span>
-          <span>不读取文件内容</span>
-          <span>ZIP 只预检目录</span>
-          <span>只保留相对路径</span>
-          <span>不上传任何内容</span>
+          <span>${escapeHtml(getUiText("noGameFiles"))}</span>
+          <span>${escapeHtml(getUiText("noFileContents"))}</span>
+          <span>${escapeHtml(getUiText("zipMetadataOnly"))}</span>
+          <span>${escapeHtml(getUiText("relativePaths"))}</span>
+          <span>${escapeHtml(getUiText("noUpload"))}</span>
         </div>
       </article>
       <article class="support-card">
-        <h4>诊断摘要</h4>
+        <h4>${escapeHtml(getUiText("diagnosisSummary"))}</h4>
         <div class="support-stat-grid">
-          <span><strong>${analysis.status.label}</strong><small>status</small></span>
-          <span><strong>${formatNumber(analysis.files.length)}</strong><small>files</small></span>
-          <span><strong>${analysis.errorDiagnostics.matches.length}</strong><small>recipes</small></span>
-          <span><strong>${analysis.environment.checks.length}</strong><small>checks</small></span>
+          <span><strong>${analysis.status.label}</strong><small>${escapeHtml(getUiText("statusStat"))}</small></span>
+          <span><strong>${formatNumber(analysis.files.length)}</strong><small>${escapeHtml(getUiText("filesStat"))}</small></span>
+          <span><strong>${analysis.errorDiagnostics.matches.length}</strong><small>${escapeHtml(getUiText("recipesStat"))}</small></span>
+          <span><strong>${analysis.environment.checks.length}</strong><small>${escapeHtml(getUiText("checksStat"))}</small></span>
         </div>
       </article>
     </div>
     <div class="section-title">
-      <h3>会包含的文件</h3>
-      <span>metadata only</span>
+      <h3>${escapeHtml(getUiText("includedFiles"))}</h3>
+      <span>${escapeHtml(getUiText("metadataOnly"))}</span>
     </div>
     <article class="support-card">
       <div class="support-file-list">
         ${entries.map((path) => `<code>${escapeHtml(path)}</code>`).join("")}
       </div>
-      <p class="support-note">文件清单最多导出 ${formatNumber(SUPPORT_BUNDLE_FILE_LIMIT)} 条相对路径；超出时会在 file-manifest.json 标记 truncated。</p>
+      <p class="support-note">${escapeHtml(getUiText("exportLimitNote", { count: formatNumber(SUPPORT_BUNDLE_FILE_LIMIT) }))}</p>
     </article>
     <div class="section-title">
-      <h3>可复制摘要</h3>
-      <span>issue-ready</span>
+      <h3>${escapeHtml(getUiText("copyableSummary"))}</h3>
+      <span>${escapeHtml(getUiText("issueReady"))}</span>
     </div>
     <article class="support-card">
       <ul class="support-issue-list">${issueCards}</ul>
@@ -3240,7 +3760,7 @@ function downloadSupportBundle(analysis, errorText) {
   const bundle = buildSupportBundle(analysis, errorText);
   const blob = createZipBlob(bundle.entries);
   downloadBlob(bundle.filename, blob);
-  showToast("求助包已生成");
+  showToast(getUiText("toastSupportCreated"));
 }
 
 function createZipBlob(entries) {
@@ -3432,9 +3952,9 @@ profilesPanel.addEventListener("click", (event) => {
   const profileJson = JSON.stringify(getPublicProfile(profile), null, 2);
   if (action === "copy-command") {
     const command = profile.hasDesktopPath ? profile.commandAbsolute : profile.commandPreview;
-    void copyText(command, profile.hasDesktopPath ? "已复制桌面命令" : "已复制相对命令");
+    void copyText(command, profile.hasDesktopPath ? getUiText("toastDesktopCommandCopied") : getUiText("toastRelativeCommandCopied"));
   } else if (action === "copy-json") {
-    void copyText(profileJson, "配置 JSON 已复制");
+    void copyText(profileJson, getUiText("toastProfileJsonCopied"));
   } else if (action === "download-json") {
     downloadText(`${profile.id}.galaid-profile.json`, profileJson);
   }
@@ -3445,7 +3965,7 @@ roadmapPanel.addEventListener("click", (event) => {
   if (!button || !currentAnalysis) return;
 
   if (button.dataset.roadmapAction === "copy-checklist") {
-    void copyText(buildRoadmapChecklistText(currentAnalysis, getAssistantLanguage()), "路线清单已复制");
+    void copyText(buildRoadmapChecklistText(currentAnalysis, getAssistantLanguage()), getUiText("toastRoadmapCopied"));
   }
 });
 
@@ -3460,9 +3980,9 @@ supportPanel.addEventListener("click", (event) => {
   const action = button.dataset.supportAction;
 
   if (action === "copy-summary") {
-    void copyText(buildSupportSummaryText(currentAnalysis, manifest, bundle.filename, language), "求助摘要已复制");
+    void copyText(buildSupportSummaryText(currentAnalysis, manifest, bundle.filename, language), getUiText("toastSummaryCopied"));
   } else if (action === "copy-manifest") {
-    void copyText(manifestEntry.content, "求助包清单已复制");
+    void copyText(manifestEntry.content, getUiText("toastManifestCopied"));
   } else if (action === "download-bundle") {
     downloadSupportBundle(currentAnalysis, errorInput.value);
   }
@@ -3530,7 +4050,9 @@ assistantLanguageSelect.addEventListener("change", () => {
     // Ignore storage failures; the selected value still applies to this session.
   }
   refreshCurrentReport();
+  applyStaticUiLanguage();
   if (currentAnalysis) render();
+  else renderEmpty();
 });
 
 dropZone.addEventListener("dragover", (event) => {
@@ -3545,8 +4067,8 @@ dropZone.addEventListener("drop", async (event) => {
   const runId = ++scanRunId;
   setControlsBusy(true);
   updateScanState({
-    title: "Scanning dropped folder",
-    detail: "Walking folder tree...",
+    title: getUiText("scanDroppedFolder"),
+    detail: getUiText("scanWalkingTree"),
     progress: 8,
     phase: "scanning",
   });
@@ -3554,10 +4076,10 @@ dropZone.addEventListener("drop", async (event) => {
     const files = await collectDroppedFiles(event.dataTransfer, (done, total) => {
       if (runId !== scanRunId) return;
       updateScanState({
-        title: "Scanning dropped folder",
+        title: getUiText("scanDroppedFolder"),
         detail: total
-          ? `${formatNumber(done)} / ${formatNumber(total)} files indexed`
-          : `${formatNumber(done)} files indexed`,
+          ? getUiText("scanFilesIndexed", { done: formatNumber(done), total: formatNumber(total) })
+          : getUiText("scanFilesIndexedSolo", { done: formatNumber(done) }),
         progress: total ? Math.min(82, Math.round((done / total) * 80)) : 45,
         phase: "scanning",
       });
@@ -3586,15 +4108,15 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
 copyReportButton.addEventListener("click", async () => {
   if (!currentAnalysis) {
-    showToast("还没有报告");
+    showToast(getUiText("toastNoReport"));
     return;
   }
-  await copyText(currentAnalysis.report, "报告已复制");
+  await copyText(currentAnalysis.report, getUiText("toastReportCopied"));
 });
 
 downloadReportButton.addEventListener("click", () => {
   if (!currentAnalysis) {
-    showToast("还没有报告");
+    showToast(getUiText("toastNoReport"));
     return;
   }
   downloadText("galaid-report.md", currentAnalysis.report, "text/markdown;charset=utf-8");
@@ -3602,10 +4124,11 @@ downloadReportButton.addEventListener("click", () => {
 
 downloadBundleButton.addEventListener("click", () => {
   if (!currentAnalysis) {
-    showToast("还没有可导出的诊断");
+    showToast(getUiText("toastNoDiagnosis"));
     return;
   }
   downloadSupportBundle(currentAnalysis, errorInput.value);
 });
 
+applyStaticUiLanguage();
 renderEmpty();
