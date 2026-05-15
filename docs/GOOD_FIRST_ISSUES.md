@@ -75,7 +75,7 @@ Acceptance checklist:
 
 - Keep wording beginner-friendly and short.
 - Explain safe local next steps: collect all parts, extract from the first part, mount or unpack a disc image.
-- Keep ZIP preflight wording clear that it reads directory metadata only and does not extract files.
+- Keep package preflight wording clear that it reads directory/media metadata only and does not extract or mount files.
 - Do not mention bypassing disc checks or downloading missing game files.
 - Run `npm run check`.
 

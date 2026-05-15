@@ -32,7 +32,7 @@ npm run build:engines
 npm run check
 ```
 
-The desktop ZIP preflight reads the same JSON rules, so one rule update improves both the web diagnosis and archive directory preview.
+The desktop package preflight reads the same JSON rules for ZIP and optional local RAR/7z metadata listings, so one rule update improves both the web diagnosis and package directory preview.
 
 ## Evidence Explanations
 

@@ -1,5 +1,6 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { spawn } = require("node:child_process");
 const { TextDecoder } = require("node:util");
 const ENGINE_RULES = require("../data/engine-rules.json");
 
@@ -10,21 +11,29 @@ const CENTRAL_DIRECTORY_SIGNATURE = 0x02014b50;
 const ZIP64_LIMIT_32 = 0xffffffff;
 const MAX_EOCD_SEARCH_BYTES = 128 * 1024;
 const MAX_CENTRAL_DIRECTORY_BYTES = 8 * 1024 * 1024;
+const MAX_EXTERNAL_LIST_BYTES = 8 * 1024 * 1024;
 const MAX_PARSED_ENTRIES = 20000;
 const MAX_SAMPLE_FILES = 80;
 const MAX_SIGNAL_SAMPLES = 8;
+const EXTERNAL_LIST_TIMEOUT_MS = 12000;
 
 const LAUNCH_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk", "html"]);
+const INSTALLER_EXTS = new Set(["msi", "cab", "inf"]);
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "bmp", "webp", "tga", "dds", "gif", "psd"]);
 const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "mid", "midi"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
 const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]));
+const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 
 async function previewArchiveFile(filePath, ext) {
-  if (ext !== "zip") return null;
-  return previewZipFile(filePath);
+  const previewKind = getPreviewKind(filePath, ext);
+  if (!previewKind) return null;
+  if (previewKind.kind === "zip") return previewZipFile(filePath);
+  if (previewKind.kind === "external-list") return previewExternalArchiveFile(filePath, previewKind.format);
+  if (previewKind.kind === "disc-image") return previewDiscImageFile(filePath, previewKind.ext);
+  return null;
 }
 
 async function previewZipFile(filePath) {
@@ -35,14 +44,108 @@ async function previewZipFile(filePath) {
     handle = await fs.open(filePath, "r");
     return await readZipPreview(handle, stat.size);
   } catch (error) {
-    return makeUnavailablePreview("error", `ZIP directory preview failed: ${error.message || "unknown error"}`);
+    return makeUnavailablePreview("error", "ZIP", `ZIP directory preview failed: ${error.message || "unknown error"}`);
   } finally {
     await handle?.close();
   }
 }
 
+function getPreviewKind(filePath, ext) {
+  const lowerName = path.basename(filePath).toLowerCase();
+  const normalizedExt = String(ext || "").toLowerCase();
+  const rarPart = lowerName.match(/\.part0*(\d+)\.rar$/);
+
+  if (normalizedExt === "zip" && !/\.zip\.\d{3}$/.test(lowerName)) return { kind: "zip", format: "ZIP" };
+  if (normalizedExt === "7z" || /\.7z\.001$/.test(lowerName)) return { kind: "external-list", format: "7Z" };
+  if (normalizedExt === "rar" && (!rarPart || Number(rarPart[1]) === 1)) return { kind: "external-list", format: "RAR" };
+  if (/\.zip\.001$/.test(lowerName)) return { kind: "external-list", format: "ZIP split" };
+  if (/\.r\d{2}$/.test(lowerName)) return null;
+  if (DISC_EXTS.has(normalizedExt)) return { kind: "disc-image", format: `${normalizedExt.toUpperCase()} disc image`, ext: normalizedExt };
+  return null;
+}
+
+async function previewExternalArchiveFile(filePath, format) {
+  try {
+    const stat = await fs.stat(filePath);
+    if (!stat.isFile()) return null;
+  } catch (error) {
+    return makeUnavailablePreview("error", format, `${format} metadata preview failed: ${error.message || "unknown error"}`);
+  }
+
+  const result = await runExternalList(filePath);
+  if (result.missing) {
+    return makeUnavailablePreview(
+      "tool-missing",
+      format,
+      `${format} metadata preview needs a local 7z/7zz command. GalAid will not extract or upload this archive.`,
+    );
+  }
+
+  if (result.timedOut) {
+    return makeUnavailablePreview(
+      "timeout",
+      format,
+      `${format} metadata preview timed out while listing the archive directory.`,
+    );
+  }
+
+  if (result.error) {
+    return makeUnavailablePreview(
+      "error",
+      format,
+      `${format} metadata preview failed: ${result.error.message || "unknown error"}`,
+    );
+  }
+
+  const warnings = ["Listed with a local 7z-compatible command; no files were extracted."];
+  if (result.truncated) warnings.push("External listing output was truncated.");
+  if (result.code !== 0) warnings.push(`7z-compatible listing exited with code ${result.code}.`);
+  if (result.stderr && result.code !== 0) warnings.push(trimMessage(result.stderr));
+
+  const preview = parseSevenZipListOutput(result.stdout, format, {
+    warnings,
+    truncated: result.truncated,
+  });
+
+  if (!preview.scannedEntries && result.code !== 0) {
+    return makeUnavailablePreview(
+      "error",
+      format,
+      `${format} metadata preview could not read a safe directory listing.`,
+    );
+  }
+
+  return preview;
+}
+
+async function previewDiscImageFile(filePath, ext) {
+  try {
+    const stat = await fs.stat(filePath);
+    if (!stat.isFile()) return null;
+    const format = `${String(ext || "disc").toUpperCase()} disc image`;
+    const preview = makeBasePreview(format, {
+      packageKind: "disc-image",
+      totalEntries: 1,
+      warnings: getDiscImageWarnings(ext),
+    });
+    const entry = makeEntry(path.basename(filePath), stat.size, stat.size);
+    preview.scannedEntries = 1;
+    preview.fileCount = 1;
+    preview.sampleFiles.push(entry);
+    collectSignals(preview.signals, new Map(), entry);
+    return preview;
+  } catch (error) {
+    return makeUnavailablePreview(
+      "error",
+      `${String(ext || "disc").toUpperCase()} disc image`,
+      `Disc image metadata preview failed: ${error.message || "unknown error"}`,
+      "disc-image",
+    );
+  }
+}
+
 async function readZipPreview(handle, fileSize) {
-  if (fileSize < 22) return makeUnavailablePreview("error", "ZIP file is too small to contain a directory.");
+  if (fileSize < 22) return makeUnavailablePreview("error", "ZIP", "ZIP file is too small to contain a directory.");
 
   const tailLength = Math.min(fileSize, MAX_EOCD_SEARCH_BYTES);
   const tailStart = fileSize - tailLength;
@@ -50,22 +153,22 @@ async function readZipPreview(handle, fileSize) {
   const eocdOffsetInTail = findLastSignature(tail, EOCD_SIGNATURE, Math.max(0, tail.length - 22));
 
   if (eocdOffsetInTail < 0) {
-    return makeUnavailablePreview("unsupported", "ZIP end directory was not found.");
+    return makeUnavailablePreview("unsupported", "ZIP", "ZIP end directory was not found.");
   }
 
   const eocdOffset = tailStart + eocdOffsetInTail;
   const directoryInfo = await readDirectoryInfo(handle, tail, tailStart, eocdOffsetInTail, eocdOffset);
   if (!directoryInfo) {
-    return makeUnavailablePreview("unsupported", "ZIP64 directory metadata is not supported in this file.");
+    return makeUnavailablePreview("unsupported", "ZIP", "ZIP64 directory metadata is not supported in this file.");
   }
 
   const { centralDirectoryOffset, centralDirectorySize, totalEntries } = directoryInfo;
   if (!Number.isSafeInteger(centralDirectoryOffset) || !Number.isSafeInteger(centralDirectorySize)) {
-    return makeUnavailablePreview("unsupported", "ZIP directory is too large for a safe metadata preview.");
+    return makeUnavailablePreview("unsupported", "ZIP", "ZIP directory is too large for a safe metadata preview.");
   }
 
   if (centralDirectoryOffset < 0 || centralDirectoryOffset >= fileSize) {
-    return makeUnavailablePreview("error", "ZIP directory offset is outside the file.");
+    return makeUnavailablePreview("error", "ZIP", "ZIP directory offset is outside the file.");
   }
 
   const bytesToRead = Math.min(centralDirectorySize, MAX_CENTRAL_DIRECTORY_BYTES);
@@ -117,32 +220,10 @@ async function readZip64Locator(handle, tail, tailStart, eocdOffset) {
 }
 
 function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
-  const preview = {
-    schema: "galaid.archivePreview.v1",
-    format: "ZIP",
-    status: "ok",
+  const preview = makeBasePreview("ZIP", {
     totalEntries,
-    scannedEntries: 0,
-    fileCount: 0,
-    directoryCount: 0,
-    encryptedEntries: 0,
     truncated: Boolean(directoryBytesTruncated),
-    warnings: [],
-    sampleFiles: [],
-    signals: {
-      launchCandidateCount: 0,
-      launchSamples: [],
-      engineHints: [],
-      assetCounts: {
-        images: 0,
-        audio: 0,
-        video: 0,
-        scripts: 0,
-        resourceArchives: 0,
-        commercialArchives: 0,
-      },
-    },
-  };
+  });
   const engineHints = new Map();
   let offset = 0;
 
@@ -192,6 +273,67 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
   return preview;
 }
 
+function parseSevenZipListOutput(output, format = "7Z", options = {}) {
+  const preview = makeBasePreview(format, {
+    warnings: options.warnings || [],
+    truncated: Boolean(options.truncated),
+  });
+  const engineHints = new Map();
+  const records = parseKeyValueRecords(output);
+
+  for (const record of records) {
+    if (preview.scannedEntries >= MAX_PARSED_ENTRIES) {
+      preview.truncated = true;
+      break;
+    }
+
+    if (!record.Path || record.Type) continue;
+    const entryPath = normalizeZipPath(record.Path);
+    if (!entryPath || entryPath === "." || entryPath === "..") continue;
+
+    preview.scannedEntries += 1;
+    const isDirectory = record.Folder === "+" || entryPath.endsWith("/");
+    if (record.Encrypted === "+") preview.encryptedEntries += 1;
+
+    if (isDirectory) {
+      preview.directoryCount += 1;
+      continue;
+    }
+
+    const entry = makeEntry(entryPath, parseDecimalSize(record.Size), parseDecimalSize(record["Packed Size"]));
+    preview.fileCount += 1;
+    if (preview.sampleFiles.length < MAX_SAMPLE_FILES) preview.sampleFiles.push(entry);
+    collectSignals(preview.signals, engineHints, entry);
+  }
+
+  if (records.length > MAX_PARSED_ENTRIES) preview.truncated = true;
+  if (preview.encryptedEntries) preview.warnings.push(`${preview.encryptedEntries} encrypted entries were detected.`);
+  if (preview.signals.launchCandidateCount && preview.signals.assetCounts.commercialArchives >= 2) {
+    addEngineHint(engineHints, "commercial-proprietary", "商业/自研引擎（文件结构）", preview.signals.launchSamples[0]);
+  }
+  preview.signals.engineHints = [...engineHints.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  return preview;
+}
+
+function parseKeyValueRecords(output) {
+  const records = [];
+  let record = {};
+
+  for (const line of String(output || "").split(/\r?\n/)) {
+    if (!line.trim()) {
+      if (Object.keys(record).length) records.push(record);
+      record = {};
+      continue;
+    }
+    const index = line.indexOf(" = ");
+    if (index <= 0) continue;
+    record[line.slice(0, index)] = line.slice(index + 3);
+  }
+
+  if (Object.keys(record).length) records.push(record);
+  return records;
+}
+
 function makeEntry(entryPath, size, compressedSize) {
   const normalized = normalizeZipPath(entryPath);
   const name = path.posix.basename(normalized);
@@ -219,6 +361,10 @@ function collectSignals(signals, engineHints, entry) {
   if (LAUNCH_EXTS.has(entry.ext) && !isSetupLike(lower)) {
     signals.launchCandidateCount += 1;
     pushLimited(signals.launchSamples, entry.path);
+  }
+  if (isInstallerLike(lower, entry.ext)) {
+    signals.installerCount += 1;
+    pushLimited(signals.installerSamples, entry.path);
   }
   if (IMAGE_EXTS.has(entry.ext)) signals.assetCounts.images += 1;
   if (AUDIO_EXTS.has(entry.ext)) signals.assetCounts.audio += 1;
@@ -284,6 +430,14 @@ function isSetupLike(lowerPath) {
   return /(setup|install|unins|uninstall|config|update|patch|redist|vcredist|directx|dxsetup)/i.test(lowerPath);
 }
 
+function isInstallerLike(lowerPath, ext) {
+  return (
+    INSTALLER_EXTS.has(ext) ||
+    /(^|\/)(setup|install|installer|autorun|dxsetup|vcredist|vc_redist|directx)(\.[a-z0-9]+)?$/i.test(lowerPath) ||
+    /(\/redist\/|\/support\/|\/directx\/|data\d+\.cab$|autorun\.inf$)/i.test(lowerPath)
+  );
+}
+
 function readZip32Size(buffer, offset) {
   const value = buffer.readUInt32LE(offset);
   return value === ZIP64_LIMIT_32 ? 0 : value;
@@ -323,9 +477,92 @@ function normalizeZipPath(value) {
     .replace(/^[A-Za-z]:\//, "");
 }
 
+function getDiscImageWarnings(ext) {
+  const normalizedExt = String(ext || "").toLowerCase();
+  if (["cue", "mds", "ccd"].includes(normalizedExt)) {
+    return ["Descriptor metadata only; keep the paired image/data files in the same folder."];
+  }
+  if (["bin", "mdf", "img", "sub"].includes(normalizedExt)) {
+    return ["Image data file metadata only; keep the matching descriptor files together."];
+  }
+  return ["Disc image metadata only; GalAid does not mount, extract, or inspect disc contents."];
+}
+
+async function runExternalList(filePath) {
+  const candidates = getExternalListCandidates();
+  for (const command of candidates) {
+    const result = await runExternalListCommand(command, filePath);
+    if (result.error?.code === "ENOENT") continue;
+    return result;
+  }
+  return { missing: true };
+}
+
+function getExternalListCandidates() {
+  return [...new Set([process.env.GALAID_7Z_PATH, "7zz", "7z", "7za"].filter(Boolean))];
+}
+
+function runExternalListCommand(command, filePath) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let stdout = "";
+    let stderr = "";
+    let truncated = false;
+    let timer;
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve({
+        command: path.basename(command),
+        stdout,
+        stderr,
+        truncated,
+        ...result,
+      });
+    };
+
+    const child = spawn(command, ["l", "-slt", "-ba", filePath], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    timer = setTimeout(() => {
+      child.kill();
+      finish({ timedOut: true });
+    }, EXTERNAL_LIST_TIMEOUT_MS);
+
+    child.stdout?.on("data", (chunk) => {
+      const text = chunk.toString("utf8");
+      if (stdout.length + text.length > MAX_EXTERNAL_LIST_BYTES) {
+        truncated = true;
+        stdout += text.slice(0, Math.max(0, MAX_EXTERNAL_LIST_BYTES - stdout.length));
+        child.kill();
+      } else {
+        stdout += text;
+      }
+    });
+    child.stderr?.on("data", (chunk) => {
+      const text = chunk.toString("utf8");
+      if (stderr.length + text.length <= 64 * 1024) stderr += text;
+    });
+    child.on("error", (error) => finish({ error }));
+    child.on("close", (code) => finish({ code }));
+  });
+}
+
+function trimMessage(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 220);
+}
+
 function getExt(name) {
   const index = String(name || "").lastIndexOf(".");
   return index >= 0 ? name.slice(index + 1).toLowerCase() : "";
+}
+
+function parseDecimalSize(value) {
+  const parsed = Number.parseInt(String(value || "0"), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
 function findLastSignature(buffer, signature, start) {
@@ -345,22 +582,25 @@ function safeBigIntToNumber(value) {
   return value > BigInt(Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : Number(value);
 }
 
-function makeUnavailablePreview(status, message) {
+function makeBasePreview(format, options = {}) {
   return {
     schema: "galaid.archivePreview.v1",
-    format: "ZIP",
-    status,
-    totalEntries: 0,
+    format,
+    packageKind: options.packageKind || "archive",
+    status: options.status || "ok",
+    totalEntries: options.totalEntries || 0,
     scannedEntries: 0,
     fileCount: 0,
     directoryCount: 0,
     encryptedEntries: 0,
-    truncated: false,
-    warnings: [message],
+    truncated: Boolean(options.truncated),
+    warnings: [...(options.warnings || [])],
     sampleFiles: [],
     signals: {
       launchCandidateCount: 0,
       launchSamples: [],
+      installerCount: 0,
+      installerSamples: [],
       engineHints: [],
       assetCounts: {
         images: 0,
@@ -374,7 +614,17 @@ function makeUnavailablePreview(status, message) {
   };
 }
 
+function makeUnavailablePreview(status, format, message, packageKind = "archive") {
+  return makeBasePreview(format, {
+    packageKind,
+    status,
+    warnings: [message],
+  });
+}
+
 module.exports = {
+  parseSevenZipListOutput,
+  previewDiscImageFile,
   previewArchiveFile,
   previewZipFile,
 };

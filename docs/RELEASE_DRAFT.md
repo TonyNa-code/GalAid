@@ -1,8 +1,8 @@
 # Release Draft
 
-## v0.1.4 beta
+## v0.1.5 beta
 
-GalAid v0.1.4 is a local-first launch doctor for visual novel and galgame folders. It helps players answer: "Which file do I run, and why is this game not starting?"
+GalAid v0.1.5 is a local-first launch doctor for visual novel and galgame folders. It helps players answer: "Which file do I run, and why is this game not starting?"
 
 ## Highlights
 
@@ -17,7 +17,7 @@ GalAid v0.1.4 is a local-first launch doctor for visual novel and galgame folder
 - Ordered next-step roadmap for beginners
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages
-- Desktop ZIP directory preflight that spots internal launch and engine clues without extracting files
+- Desktop package preflight for ZIP metadata, optional local 7z-compatible RAR/7z listings, and disc-image media/descriptor clues
 - English default README with Chinese/Japanese translations and Chinese/English/Japanese diagnosis output language
 - Community-editable startup error recipes in `data/error-recipes.json`
 - Metadata-only support bundle with reports, launch profiles, launch-failure notes, roadmap, recipe matches, and sanitized file manifest
@@ -27,7 +27,7 @@ GalAid v0.1.4 is a local-first launch doctor for visual novel and galgame folder
 
 GalAid does not provide games, cracks, DRM bypasses, serials, decryption keys, or unauthorized asset extraction.
 
-The app reads metadata such as filenames, relative paths, sizes, extensions, and ZIP directory entries. It does not upload game files or file contents.
+The app reads metadata such as filenames, relative paths, sizes, extensions, ZIP directory entries, safe local 7z-compatible archive listings, and disc-image media/descriptor roles. It does not upload game files or file contents.
 
 ## Try It
 
@@ -66,7 +66,7 @@ npm start
 ## Known Limits
 
 - Web mode does not inspect inside large archives or disc images yet.
-- Desktop ZIP preflight reads directory metadata only; RAR/7z and disc-image internals are not inspected yet.
+- Desktop package preflight stays metadata-only: ZIP is parsed locally, RAR/7z requires a local 7z-compatible listing tool, and disc images are not mounted or internally extracted.
 - Desktop beta only launches trusted scanned `.exe/.com` entries after an explicit user click.
 - Desktop one-click launch only starts trusted scanned `.exe/.com` entries after the user clicks.
 - Launch profiles are hints only; GalAid does not run games automatically.

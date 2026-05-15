@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { previewZipFile } = require("../desktop/archive-preview");
+const { parseSevenZipListOutput, previewDiscImageFile, previewZipFile } = require("../desktop/archive-preview");
 
 async function main() {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "galaid-zip-preview-"));
@@ -25,6 +25,51 @@ async function main() {
   assert.equal(preview.signals.engineHints[0].id, "kirikiri");
   assert.ok(preview.signals.engineHints[0].samples.includes("SnowTrial/system/Config.tjs"));
   assert.equal(preview.sampleFiles[1].path, "SnowTrial/data.xp3");
+
+  const rarPreview = parseSevenZipListOutput(
+    [
+      "Path = sample.rar",
+      "Type = Rar",
+      "",
+      "Path = MoonlightCafe/Game.exe",
+      "Size = 1422000",
+      "Packed Size = 980000",
+      "Encrypted = -",
+      "",
+      "Path = MoonlightCafe/setup.exe",
+      "Size = 2610000",
+      "Packed Size = 1800000",
+      "Encrypted = -",
+      "",
+      "Path = MoonlightCafe/data00.arc",
+      "Size = 1380000000",
+      "Packed Size = 1200000000",
+      "Encrypted = -",
+      "",
+      "Path = MoonlightCafe/system.dat",
+      "Size = 4800000",
+      "Packed Size = 2800000",
+      "Encrypted = +",
+      "",
+    ].join("\n"),
+    "RAR",
+    { warnings: ["Listed with a local 7z-compatible command; no files were extracted."] },
+  );
+  assert.equal(rarPreview.status, "ok");
+  assert.equal(rarPreview.format, "RAR");
+  assert.equal(rarPreview.fileCount, 4);
+  assert.equal(rarPreview.encryptedEntries, 1);
+  assert.deepEqual(rarPreview.signals.launchSamples, ["MoonlightCafe/Game.exe"]);
+  assert.deepEqual(rarPreview.signals.installerSamples, ["MoonlightCafe/setup.exe"]);
+  assert.equal(rarPreview.signals.assetCounts.commercialArchives, 2);
+
+  const isoPath = path.join(tempDir, "MoonlightCafe_Bonus.iso");
+  await fs.writeFile(isoPath, Buffer.alloc(32));
+  const isoPreview = await previewDiscImageFile(isoPath, "iso");
+  assert.equal(isoPreview.status, "ok");
+  assert.equal(isoPreview.packageKind, "disc-image");
+  assert.equal(isoPreview.fileCount, 1);
+  assert.match(isoPreview.warnings[0], /does not mount/);
 
   await fs.rm(tempDir, { recursive: true, force: true });
   console.log("Archive preview smoke passed.");

@@ -31,7 +31,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
   await expect(page.locator(".support-privacy-list")).toContainText("不包含游戏文件");
-  await expect(page.locator(".support-privacy-list")).toContainText("ZIP 只预检目录");
+  await expect(page.locator(".support-privacy-list")).toContainText("包/镜像只预检元数据");
 
   const supportPreview = page.locator(".support-preview");
   await expect(supportPreview).toContainText("## GalAid 求助摘要");
@@ -39,16 +39,20 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(supportPreview).toContainText("DirectX 旧组件");
 });
 
-test("package sample shows zip directory preview without treating it as runnable", async ({ page }) => {
+test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 
   await page.getByRole("button", { name: "包/镜像样例" }).click();
   await page.locator('[data-tab="packages"]').click();
 
-  await expect(page.locator(".archive-preview")).toContainText("ZIP 目录预检");
-  await expect(page.locator(".archive-preview")).toContainText("SnowTrial/Game.exe");
-  await expect(page.locator(".archive-preview")).toContainText("KiriKiri / 吉里吉里");
-  await expect(page.locator(".package-roadmap")).toContainText("压缩包里看到启动线索");
+  const packagesPanel = page.locator("#packagesPanel");
+  await expect(packagesPanel).toContainText("ZIP 目录预检");
+  await expect(packagesPanel).toContainText("SnowTrial/Game.exe");
+  await expect(packagesPanel).toContainText("KiriKiri / 吉里吉里");
+  await expect(packagesPanel).toContainText("RAR 包/镜像预检");
+  await expect(packagesPanel).toContainText("MoonlightCafe/Game.exe");
+  await expect(packagesPanel).toContainText("ISO disc image 包/镜像预检");
+  await expect(page.locator(".package-roadmap")).toContainText("包里看到启动线索");
   await expect(page.locator("main")).toContainText("Blocked");
 
   await page.locator('[data-tab="launch"]').click();

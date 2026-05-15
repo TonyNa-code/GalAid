@@ -27,7 +27,7 @@
 ## 0.4 Windows Desktop
 
 - Real folder picker with full paths
-- ZIP directory preflight without extraction
+- Package and disc-image metadata preflight without extraction or mounting
 - One-click launch for trusted scanned `.exe/.com` entries
 - Launch history
 - Create shortcuts

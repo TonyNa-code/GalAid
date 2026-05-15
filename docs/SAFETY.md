@@ -14,7 +14,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Generate a local next-step roadmap without changing system settings
 - Generate a local diagnosis report
 - Generate a local support ZIP containing diagnosis metadata only
-- Preflight ZIP central-directory metadata in the desktop beta without extraction
+- Preflight ZIP/RAR/7z package metadata and disc-image media roles in the desktop beta without extraction or mounting
 - Preview or list assets only when the format is open or user-controlled
 
 ## Out of Scope
@@ -41,7 +41,7 @@ The app does not read file contents for diagnosis in the MVP.
 
 Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. The support tab previews the included file list before download.
 
-Desktop ZIP preflight reads the archive directory table only. It can list internal filenames, sizes, and extension-based clues, but it does not extract, decrypt, mount, or execute files inside the archive.
+Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z can be listed through a local 7z-compatible command when available, and disc images are treated as media/descriptor files. GalAid does not extract, decrypt, mount, or execute files inside packages.
 
 ## Desktop Beta Guardrails
 

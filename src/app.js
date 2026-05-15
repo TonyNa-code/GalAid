@@ -342,10 +342,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noPackagesTitle: "没有压缩包或镜像",
       noPackagesBody: "当前文件更像已经解压后的目录，可以直接看启动页。",
       zipPreview: "ZIP 目录预检",
+      packagePreview: "包/镜像预检",
       metadataOnly: "仅元数据",
       unavailable: "不可用",
       internalFiles: "内部文件",
+      imageFiles: "镜像文件",
       launchClues: "启动线索",
+      installerClues: "安装线索",
       truncated: "已截断",
       assetsTitle: "素材地图",
       samplePathsTitle: "样例路径",
@@ -360,7 +363,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       privacyBoundary: "隐私边界",
       noGameFiles: "不包含游戏文件",
       noFileContents: "不读取文件内容",
-      zipMetadataOnly: "ZIP 只预检目录",
+      zipMetadataOnly: "包/镜像只预检元数据",
       relativePaths: "只保留相对路径",
       noUpload: "不上传任何内容",
       diagnosisSummary: "诊断摘要",
@@ -457,7 +460,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noBlockers: "暂无明显阻断项。",
       privacyMetadata: "求助包只包含诊断元数据，不包含游戏文件或文件内容。",
       privacyPaths: "文件路径为相对路径，桌面绝对路径已省略。",
-      privacyZip: "ZIP 预检只读取目录元数据，不解压文件。",
+      privacyZip: "包/镜像预检只读取本地目录或介质元数据，不解压、不挂载文件。",
     },
   },
   en: {
@@ -593,10 +596,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noPackagesTitle: "No archives or images",
       noPackagesBody: "These files look like an extracted folder, so the launch page is the next stop.",
       zipPreview: "ZIP directory preflight",
+      packagePreview: "Package/image preflight",
       metadataOnly: "metadata only",
       unavailable: "unavailable",
       internalFiles: "internal files",
+      imageFiles: "image files",
       launchClues: "launch clues",
+      installerClues: "installer clues",
       truncated: "truncated",
       assetsTitle: "Asset map",
       samplePathsTitle: "Sample paths",
@@ -611,7 +617,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       privacyBoundary: "Privacy boundary",
       noGameFiles: "No game files",
       noFileContents: "No file contents",
-      zipMetadataOnly: "ZIP metadata only",
+      zipMetadataOnly: "Package/image metadata only",
       relativePaths: "Relative paths only",
       noUpload: "No uploads",
       diagnosisSummary: "Diagnosis summary",
@@ -708,7 +714,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noBlockers: "No obvious blockers.",
       privacyMetadata: "The support bundle contains diagnosis metadata only, not game files or file contents.",
       privacyPaths: "Paths are relative; desktop absolute paths are omitted.",
-      privacyZip: "ZIP preflight reads directory metadata only and does not extract files.",
+      privacyZip: "Package/image preflight reads local directory or media metadata only and does not extract or mount files.",
     },
   },
   ja: {
@@ -844,10 +850,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noPackagesTitle: "アーカイブやイメージなし",
       noPackagesBody: "展開済みフォルダに見えるため、次は起動画面を確認してください。",
       zipPreview: "ZIP ディレクトリ事前チェック",
+      packagePreview: "パッケージ/イメージ事前チェック",
       metadataOnly: "メタデータのみ",
       unavailable: "利用不可",
       internalFiles: "内部ファイル",
+      imageFiles: "イメージファイル",
       launchClues: "起動手がかり",
+      installerClues: "インストーラー手がかり",
       truncated: "切り詰め",
       assetsTitle: "アセットマップ",
       samplePathsTitle: "サンプルパス",
@@ -862,7 +871,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       privacyBoundary: "プライバシー範囲",
       noGameFiles: "ゲームファイルなし",
       noFileContents: "ファイル内容なし",
-      zipMetadataOnly: "ZIP はメタデータのみ",
+      zipMetadataOnly: "パッケージ/イメージはメタデータのみ",
       relativePaths: "相対パスのみ",
       noUpload: "アップロードなし",
       diagnosisSummary: "診断概要",
@@ -959,7 +968,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noBlockers: "明確な阻害要因はありません。",
       privacyMetadata: "サポートバンドルには診断メタデータのみが含まれ、ゲームファイルや内容は含まれません。",
       privacyPaths: "パスは相対パスで保存され、デスクトップの絶対パスは省略されます。",
-      privacyZip: "ZIP 事前チェックはディレクトリメタデータのみを読み取り、ファイルを展開しません。",
+      privacyZip: "パッケージ/イメージ事前チェックはローカルのディレクトリまたは媒体メタデータのみを読み取り、展開やマウントは行いません。",
     },
   },
 };
@@ -1031,6 +1040,8 @@ const PACKAGE_SAMPLE_FILES = [
         signals: {
           launchCandidateCount: 1,
           launchSamples: ["SnowTrial/Game.exe"],
+          installerCount: 0,
+          installerSamples: [],
           engineHints: [{ id: "kirikiri", name: "KiriKiri / 吉里吉里", count: 2, samples: ["SnowTrial/data.xp3", "SnowTrial/scenario/common.ks"] }],
           assetCounts: {
             images: 18,
@@ -1038,16 +1049,90 @@ const PACKAGE_SAMPLE_FILES = [
             video: 0,
             scripts: 24,
             resourceArchives: 2,
+            commercialArchives: 0,
           },
         },
       },
     },
   ],
-  ["MoonlightCafe.part1.rar", 2147483648],
+  [
+    "MoonlightCafe.part1.rar",
+    2147483648,
+    {
+      archivePreview: {
+        schema: "galaid.archivePreview.v1",
+        format: "RAR",
+        packageKind: "archive",
+        status: "ok",
+        totalEntries: 86,
+        scannedEntries: 86,
+        fileCount: 79,
+        directoryCount: 7,
+        encryptedEntries: 0,
+        truncated: false,
+        warnings: ["Listed with a local 7z-compatible command; no files were extracted."],
+        sampleFiles: [
+          { path: "MoonlightCafe/Game.exe", name: "Game.exe", ext: "exe", size: 1680000, compressedSize: 910000, depth: 1 },
+          { path: "MoonlightCafe/setup.exe", name: "setup.exe", ext: "exe", size: 2610000, compressedSize: 1800000, depth: 1 },
+          { path: "MoonlightCafe/data00.arc", name: "data00.arc", ext: "arc", size: 1380000000, compressedSize: 1200000000, depth: 1 },
+          { path: "MoonlightCafe/system.dat", name: "system.dat", ext: "dat", size: 4800000, compressedSize: 2800000, depth: 1 },
+        ],
+        signals: {
+          launchCandidateCount: 1,
+          launchSamples: ["MoonlightCafe/Game.exe"],
+          installerCount: 1,
+          installerSamples: ["MoonlightCafe/setup.exe"],
+          engineHints: [{ id: "commercial-proprietary", name: "商业/自研引擎（文件结构）", count: 2, samples: ["MoonlightCafe/Game.exe", "MoonlightCafe/data00.arc"] }],
+          assetCounts: {
+            images: 0,
+            audio: 0,
+            video: 0,
+            scripts: 1,
+            resourceArchives: 2,
+            commercialArchives: 2,
+          },
+        },
+      },
+    },
+  ],
   ["MoonlightCafe.part2.rar", 2147483648],
   ["MoonlightCafe.part3.rar", 913000000],
   ["MoonlightCafe_readme.txt", 2400],
-  ["MoonlightCafe_Bonus.iso", 4810000000],
+  [
+    "MoonlightCafe_Bonus.iso",
+    4810000000,
+    {
+      archivePreview: {
+        schema: "galaid.archivePreview.v1",
+        format: "ISO disc image",
+        packageKind: "disc-image",
+        status: "ok",
+        totalEntries: 1,
+        scannedEntries: 1,
+        fileCount: 1,
+        directoryCount: 0,
+        encryptedEntries: 0,
+        truncated: false,
+        warnings: ["Disc image metadata only; GalAid does not mount, extract, or inspect disc contents."],
+        sampleFiles: [{ path: "MoonlightCafe_Bonus.iso", name: "MoonlightCafe_Bonus.iso", ext: "iso", size: 4810000000, compressedSize: 4810000000, depth: 0 }],
+        signals: {
+          launchCandidateCount: 0,
+          launchSamples: [],
+          installerCount: 0,
+          installerSamples: [],
+          engineHints: [],
+          assetCounts: {
+            images: 0,
+            audio: 0,
+            video: 0,
+            scripts: 0,
+            resourceArchives: 0,
+            commercialArchives: 0,
+          },
+        },
+      },
+    },
+  ],
   ["OldVN_Disc2.cue", 1200],
   ["OldVN_Disc2.bin", 734000000],
 ];
@@ -1555,6 +1640,7 @@ function buildArchiveSets(archives) {
       const isSplit = sorted.length > 1 || sorted.some((item) => item.volumeIndex);
       const archivePreview = getBestArchivePreview(sorted);
       const previewLaunchSample = archivePreview?.signals?.launchSamples?.[0];
+      const previewInstallerSample = archivePreview?.signals?.installerSamples?.[0];
       const level = missing.length ? "warning" : archivePreview?.status === "ok" || isSplit ? "good" : "info";
       const summary = archivePreview
         ? summarizeArchivePreview(archivePreview)
@@ -1565,6 +1651,8 @@ function buildArchiveSets(archives) {
           : "单个压缩包，网页版不会读取内部目录";
       const nextStep = archivePreview?.status === "ok" && previewLaunchSample
         ? `先完整解压，再优先检查 ${previewLaunchSample}`
+        : archivePreview?.status === "ok" && previewInstallerSample
+          ? `先完整解压，再检查安装器/介质线索 ${previewInstallerSample}`
         : first.action;
 
       return {
@@ -1589,14 +1677,26 @@ function getBestArchivePreview(items) {
 
 function summarizeArchivePreview(preview) {
   if (!preview) return "";
-  if (preview.status !== "ok") return `ZIP 目录预检不可用：${preview.warnings?.[0] || "无法读取目录"}`;
-  const pieces = [`ZIP 目录已预检：${formatNumber(preview.fileCount || 0)} files`];
+  const label = getPreviewFormatLabel(preview);
+  if (preview.status !== "ok") return `${label} 预检不可用：${preview.warnings?.[0] || "无法读取元数据"}`;
+  if (preview.packageKind === "disc-image") {
+    const pieces = [`${label} 已识别：镜像元数据`];
+    if (preview.warnings?.length) pieces.push(preview.warnings[0]);
+    return pieces.join("，");
+  }
+  const pieces = [`${label} 目录已预检：${formatNumber(preview.fileCount || 0)} files`];
   const launchCount = preview.signals?.launchCandidateCount || 0;
   if (launchCount) pieces.push(`${formatNumber(launchCount)} 个解压后启动线索`);
+  const installerCount = preview.signals?.installerCount || 0;
+  if (installerCount) pieces.push(`${formatNumber(installerCount)} 个安装/介质线索`);
   const engineNames = (preview.signals?.engineHints || []).slice(0, 2).map((hint) => hint.name);
   if (engineNames.length) pieces.push(engineNames.join(" / "));
   if (preview.truncated) pieces.push("结果已截断");
   return pieces.join("，");
+}
+
+function getPreviewFormatLabel(preview) {
+  return preview?.format || "包/镜像";
 }
 
 function buildDiscSets(discs) {
@@ -1604,10 +1704,12 @@ function buildDiscSets(discs) {
   const byExt = countBy(discs, (item) => item.file.ext);
   return [...groups.entries()]
     .map(([family, items]) => {
+      const sorted = items.sort((a, b) => a.file.path.localeCompare(b.file.path));
+      const archivePreview = getBestArchivePreview(sorted);
       const exts = new Set(items.map((item) => item.file.ext));
       let level = "info";
       let format = items[0].format;
-      let summary = "镜像文件已识别";
+      let summary = archivePreview ? summarizeArchivePreview(archivePreview) : "镜像文件已识别";
       let nextStep = "先挂载或解包镜像，再运行镜像内的安装器或复制完整游戏目录";
 
       if (exts.has("cue") && exts.has("bin")) {
@@ -1635,18 +1737,19 @@ function buildDiscSets(discs) {
         summary = "有 .ccd 但没看到同名 .img";
         nextStep = "把 .ccd/.img/.sub 放在同一目录后再挂载";
       } else if (exts.has("iso")) {
-        summary = "ISO 通常可以直接挂载";
+        summary = archivePreview ? summarizeArchivePreview(archivePreview) : "ISO 通常可以直接挂载";
       }
 
       return {
         family,
         type: "disc",
         format,
-        files: items.sort((a, b) => a.file.path.localeCompare(b.file.path)),
-        firstFile: items[0].file,
+        files: sorted,
+        firstFile: sorted[0].file,
         level,
         summary,
         nextStep,
+        archivePreview,
       };
     })
     .sort((a, b) => b.files.length - a.files.length || a.family.localeCompare(b.family));
@@ -1655,8 +1758,10 @@ function buildDiscSets(discs) {
 function buildPackageRecommendations(archiveSets, discSets, archives, discs, files) {
   const steps = [];
   const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext));
-  const previewedArchiveSet = archiveSets.find((set) => set.archivePreview?.status === "ok");
-  const previewWithLaunch = archiveSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.launchCandidateCount);
+  const packageSets = [...archiveSets, ...discSets];
+  const previewedArchiveSet = packageSets.find((set) => set.archivePreview?.status === "ok");
+  const previewWithLaunch = packageSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.launchCandidateCount);
+  const previewWithInstaller = packageSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.installerCount);
 
   if (archives.length && !executableCount) {
     steps.push({
@@ -1677,17 +1782,23 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
     const sample = preview.signals.launchSamples[0];
     const engineNames = (preview.signals.engineHints || []).slice(0, 2).map((hint) => hint.name).join(" / ");
     steps.push({
-      title: "压缩包里看到启动线索",
-      body: `桌面预检只读取 ZIP 目录元数据，不解压文件；已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。先完整解压后，再扫描解压出的文件夹。`,
+      title: "包里看到启动线索",
+      body: `桌面预检只读取本地目录/介质元数据，不解压也不挂载；已经看到 ${sample}${engineNames ? `，并有 ${engineNames} 线索` : ""}。先完整解压或挂载后，再扫描处理后的文件夹。`,
+    });
+  } else if (previewWithInstaller) {
+    const sample = previewWithInstaller.archivePreview.signals.installerSamples[0];
+    steps.push({
+      title: "看到古早安装盘线索",
+      body: `预检里看到了 ${sample} 这类安装/介质线索。先按压缩包或镜像的正常流程解压、挂载或安装，再把安装后的完整目录拖回 GalAid。`,
     });
   } else if (previewedArchiveSet) {
     steps.push({
-      title: "压缩包目录已预检",
-      body: "桌面版已读取 ZIP 目录元数据（不解压文件），但还没有发现明确启动入口。先完整解压，再用解压后的目录重新诊断。",
+      title: "包/镜像元数据已预检",
+      body: "桌面版已读取本地目录或介质元数据，但还没有发现明确启动入口。先完整解压、挂载或安装，再用处理后的目录重新诊断。",
     });
   }
 
-  if (archiveSets.some((set) => set.archivePreview?.encryptedEntries)) {
+  if (packageSets.some((set) => set.archivePreview?.encryptedEntries)) {
     steps.push({
       title: "压缩包可能包含加密条目",
       body: "GalAid 只做目录预检，不破解密码也不绕过保护。请只处理你合法拥有且有权限解压的文件。",
@@ -3926,6 +4037,8 @@ function renderArchivePreview(preview) {
   if (!preview) return "";
   const statusClass = preview.status === "ok" ? "good" : "warn";
   const engineNames = (preview.signals?.engineHints || []).slice(0, 2).map((hint) => hint.name);
+  const installerCount = preview.signals?.installerCount || 0;
+  const fileLabel = preview.packageKind === "disc-image" ? getUiText("imageFiles") : getUiText("internalFiles");
   const sampleFiles = (preview.sampleFiles || [])
     .slice(0, 5)
     .map((file) => `<code>${escapeHtml(file.path)} <span>${formatBytes(file.size || 0)}</span></code>`)
@@ -3935,12 +4048,13 @@ function renderArchivePreview(preview) {
   return `
     <div class="archive-preview">
       <div class="archive-preview-header">
-        <strong>${escapeHtml(getUiText("zipPreview"))}</strong>
+        <strong>${escapeHtml(getArchivePreviewTitle(preview))}</strong>
         <span class="chip ${statusClass}">${escapeHtml(preview.status === "ok" ? getUiText("metadataOnly") : getUiText("unavailable"))}</span>
       </div>
       <div class="meta-row">
-        <span class="chip">${formatNumber(preview.fileCount || 0)} ${escapeHtml(getUiText("internalFiles"))}</span>
+        <span class="chip">${formatNumber(preview.fileCount || 0)} ${escapeHtml(fileLabel)}</span>
         <span class="chip">${formatNumber(preview.signals?.launchCandidateCount || 0)} ${escapeHtml(getUiText("launchClues"))}</span>
+        ${installerCount ? `<span class="chip">${formatNumber(installerCount)} ${escapeHtml(getUiText("installerClues"))}</span>` : ""}
         ${engineNames.map((name) => `<span class="chip good">${escapeHtml(name)}</span>`).join("")}
         ${preview.truncated ? `<span class="chip warn">${escapeHtml(getUiText("truncated"))}</span>` : ""}
         ${warnings}
@@ -3948,6 +4062,10 @@ function renderArchivePreview(preview) {
       ${sampleFiles ? `<div class="sample-list package-files">${sampleFiles}</div>` : ""}
     </div>
   `;
+}
+
+function getArchivePreviewTitle(preview) {
+  return preview?.format === "ZIP" ? getUiText("zipPreview") : `${preview?.format || ""} ${getUiText("packagePreview")}`.trim();
 }
 
 function renderAssets(analysis) {
@@ -4193,8 +4311,9 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
       lines.push(`- ${set.format}: ${set.summary}`);
       lines.push(`  - ${labels.nextStep}: ${set.nextStep}`);
       if (set.archivePreview) {
-        lines.push(`  - ZIP preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} internal files, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues`);
+        lines.push(`  - ${set.archivePreview.format || "Package"} preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} metadata entries, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues, ${set.archivePreview.signals?.installerCount || 0} installer clues`);
         for (const sample of set.archivePreview.signals?.launchSamples || []) lines.push(`  - Preview launch clue: ${sample}`);
+        for (const sample of set.archivePreview.signals?.installerSamples || []) lines.push(`  - Preview installer clue: ${sample}`);
       }
       for (const item of set.files.slice(0, 8)) {
         lines.push(`  - ${item.file.path} (${item.role})`);
@@ -4364,7 +4483,7 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
       launchFailureEvidence: Boolean(analysis.launchFailure?.hasEvidence),
       environmentChecks: analysis.environment.checks.length,
       roadmapSteps: analysis.roadmap.steps.length,
-      archivePreviews: analysis.packages.archiveSets.filter((set) => set.archivePreview).length,
+      archivePreviews: [...analysis.packages.archiveSets, ...analysis.packages.discSets].filter((set) => set.archivePreview).length,
     },
     roots: analysis.roots,
     desktopMeta: analysis.desktopMeta

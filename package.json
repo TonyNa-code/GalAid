@@ -1,6 +1,6 @@
 {
   "name": "galaid",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Local-first launch doctor for visual novel and galgame folders.",
   "main": "desktop/main.js",
   "private": true,

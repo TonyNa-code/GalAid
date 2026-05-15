@@ -216,7 +216,7 @@ function checkReadmes(errors) {
     },
     {
       file: "README.ja.md",
-      phrases: ["GalAid は", "診断言語", "商用/自社", "アップロード、実行、変更、復号、展開しません"],
+      phrases: ["GalAid は", "診断言語", "商用/自社", "アップロード、実行、変更、復号、展開、マウントしません"],
     },
   ];
 
@@ -474,13 +474,15 @@ function checkArchivePreview(errors) {
     "galaid.archivePreview.v1",
     "CENTRAL_DIRECTORY_SIGNATURE",
     "previewZipFile",
+    "parseSevenZipListOutput",
+    "previewDiscImageFile",
     "metadata preview",
     "encryptedEntries",
   ]) {
     assert(previewText.includes(phrase), `${previewFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["makeZip", "SnowTrial/Game.exe", "Archive preview smoke passed"]) {
+  for (const phrase of ["makeZip", "SnowTrial/Game.exe", "MoonlightCafe/Game.exe", "does not mount", "Archive preview smoke passed"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }
