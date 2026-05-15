@@ -228,8 +228,7 @@ function collectSignals(signals, engineHints, entry) {
     lower.includes("kirikiri") ||
     lower.includes("krkr") ||
     lower.endsWith(".ks") ||
-    lower.includes("/scenario/") ||
-    lower.includes("/system/")
+    lower.includes("/scenario/")
   ) {
     addEngineHint(engineHints, "kirikiri", "KiriKiri / 吉里吉里", entry.path);
   }

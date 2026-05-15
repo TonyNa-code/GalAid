@@ -1411,8 +1411,7 @@ function detectEngines(files) {
           file.lowerPath.includes("kirikiri") ||
           file.lowerPath.includes("krkr") ||
           file.lowerPath.endsWith(".ks") ||
-          file.lowerPath.includes("/scenario/") ||
-          file.lowerPath.includes("/system/");
+          file.lowerPath.includes("/scenario/");
         return hit;
       },
       advice: "KiriKiri/KAG 线索常来自 .xp3 资源、.ks 剧本、.tjs 配置或 krkr/krkrz 启动器；优先尝试根目录主程序，乱码或闪退时先检查日区/Locale Emulator 与路径编码。",
