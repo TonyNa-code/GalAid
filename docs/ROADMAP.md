@@ -14,8 +14,8 @@
 - Community-editable JSON engine rules
 - Expand engine fingerprints
 - Improve commercial/self-developed engine startup-route diagnostics
-- Add common error dictionary
 - Add confidence explanations for each rule
+- Add common error dictionary
 
 ## 0.3 Asset Explorer
 

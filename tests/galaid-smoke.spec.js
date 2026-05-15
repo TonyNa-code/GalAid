@@ -15,6 +15,12 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await page.locator('[data-tab="launch"]').click();
   await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("判断依据");
   await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("SakuraTrial/game.exe");
+  await page.locator('[data-tab="profiles"]').click();
+  await expect(page.locator("#profilesPanel")).toContainText("可选启动模板");
+  await expect(page.locator("#profilesPanel")).toContainText("Locale Emulator");
+  await expect(page.locator("#profilesPanel")).toContainText("Wine Japanese locale");
+  await expect(page.locator("#profilesPanel")).toContainText("Proton / Steam Deck");
+  await expect(page.locator("#profilesPanel")).toContainText("LEProc.exe");
 
   const recipeCount = await page.evaluate(() => window.GALAID_ERROR_RECIPES.length);
   expect(recipeCount).toBeGreaterThanOrEqual(11);
@@ -68,6 +74,9 @@ test("commercial sample promotes proprietary engine startup route", async ({ pag
   await expect(page.locator("#enginePanel")).toContainText("data02.pak");
   await expect(page.locator("#enginePanel")).toContainText("movie.cpk");
   await expect(page.locator("#enginePanel")).toContainText("MovieRuntime.dll");
+  await expect(page.locator("#enginePanel")).toContainText("为什么命中");
+  await expect(page.locator("#enginePanel")).toContainText("commercial resource archive family");
+  await expect(page.locator("#enginePanel")).toContainText("下一步");
 
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).toContainText("商业/自研引擎启动链");
@@ -84,6 +93,11 @@ test("interface and assistant output language can switch to English and Japanese
   await expect(page.getByText("Interface / diagnosis language")).toBeVisible();
   await expect(page.locator('[data-tab="roadmap"]')).toHaveText("Roadmap");
   await expect(page.locator(".summary-strip small").first()).toHaveText("files");
+  await page.locator('[data-tab="profiles"]').click();
+  await expect(page.locator("#profilesPanel")).toContainText("Use only with a trusted local Locale Emulator install");
+  await page.locator('[data-tab="engine"]').click();
+  await expect(page.locator("#enginePanel")).toContainText("Next step");
+  await expect(page.locator("#enginePanel")).toContainText("Try the root launcher first");
 
   await page.locator('[data-tab="report"]').click();
 
@@ -100,6 +114,10 @@ test("interface and assistant output language can switch to English and Japanese
   await expect(page.getByText("UI / 診断言語")).toBeVisible();
   await expect(page.locator('[data-tab="roadmap"]')).toHaveText("手順");
   await expect(page.locator(".summary-strip small").first()).toHaveText("ファイル");
+  await page.locator('[data-tab="engine"]').click();
+  await expect(page.locator("#enginePanel")).toContainText("次の手順");
+  await expect(page.locator("#enginePanel")).toContainText("まずルートフォルダの起動ファイル");
+  await page.locator('[data-tab="support"]').click();
   await expect(page.getByRole("heading", { name: "サポートバンドル" })).toBeVisible();
   await expect(page.locator(".support-preview")).toContainText("## GalAid サポート概要");
   await expect(page.locator(".support-preview")).toContainText("診断言語: 日本語");

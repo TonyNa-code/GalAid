@@ -640,6 +640,53 @@ textarea {
   font-size: 13px;
 }
 
+.launch-template-list {
+  display: grid;
+  gap: 8px;
+}
+
+.launch-template-list > strong {
+  font-size: 12px;
+}
+
+.launch-template-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(64, 125, 163, 0.22);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(64, 125, 163, 0.06);
+}
+
+.launch-template-card h5 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.launch-template-card p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.launch-template-card code {
+  display: block;
+  overflow-x: auto;
+  border-radius: 6px;
+  padding: 5px 6px;
+  background: #fff;
+  color: #334039;
+  font-size: 12px;
+}
+
+.launch-template-card button {
+  min-height: 34px;
+  white-space: nowrap;
+}
+
 .profile-notes {
   display: flex;
   flex-wrap: wrap;
@@ -1184,6 +1231,30 @@ textarea {
   background: rgba(217, 154, 43, 0.07);
 }
 
+.engine-next-step {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.engine-next-step strong {
+  font-size: 12px;
+}
+
+.engine-next-step p {
+  margin-top: 4px;
+}
+
+.engine-evidence-details code {
+  display: grid;
+  gap: 3px;
+}
+
+.engine-evidence-details code span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .package-files code {
   display: flex;
   justify-content: space-between;
@@ -1353,6 +1424,7 @@ textarea {
 
   .error-summary,
   .error-recipe-header,
+  .launch-template-card,
   .launch-history-item,
   .roadmap-summary,
   .roadmap-step-header,

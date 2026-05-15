@@ -34,6 +34,17 @@ npm run check
 
 The desktop ZIP preflight reads the same JSON rules, so one rule update improves both the web diagnosis and archive directory preview.
 
+## Evidence Explanations
+
+The app turns every rule match into a user-facing explanation. A good rule should therefore be narrow enough that its matched extension, filename, path fragment, or DLL clue can be shown as evidence without overstating certainty.
+
+Engine cards show:
+
+- confidence and score
+- why the rule matched
+- sample metadata paths
+- a next step for startup diagnosis
+
 ## Safety Notes
 
 - Use fake or redacted sample paths in issues and tests.

@@ -105,6 +105,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchCandidates: "启动候选",
       diagnosisFindings: "诊断结论",
       evidenceTitle: "判断依据",
+      whyMatched: "为什么命中",
+      nextStepLabel: "下一步",
+      launchTemplatesTitle: "可选启动模板",
+      copyTemplate: "复制模板",
+      localeEmulatorTemplateDescription: "仅在本机已安装可信 Locale Emulator 时使用；如果需要，请把 LEProc.exe 换成你的本机启动器路径。",
+      wineJaTemplateDescription: "给已配置 Wine 和日文 locale 的 Linux 高阶用户参考。",
+      protonRunTemplateDescription: "给 Proton / Steam Deck 高阶环境参考；请把 compatdata 路径换成你自己的本机 Steam 前缀。",
       noLaunchTitle: "没有候选入口",
       noLaunchBody: "请换成完整解压后的游戏根目录再试。",
       items: "项",
@@ -223,6 +230,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastSupportCreated: "求助包已生成",
       toastDesktopCommandCopied: "已复制桌面命令",
       toastRelativeCommandCopied: "已复制相对命令",
+      toastTemplateCopied: "启动模板已复制",
       toastProfileJsonCopied: "配置 JSON 已复制",
       toastLaunchStarted: "已启动 {name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
@@ -334,6 +342,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchCandidates: "Launch candidates",
       diagnosisFindings: "Diagnosis findings",
       evidenceTitle: "Evidence",
+      whyMatched: "Why it matched",
+      nextStepLabel: "Next step",
+      launchTemplatesTitle: "Optional launch templates",
+      copyTemplate: "Copy template",
+      localeEmulatorTemplateDescription: "Use only with a trusted local Locale Emulator install; replace LEProc.exe with your own launcher path if needed.",
+      wineJaTemplateDescription: "For advanced Linux users with Wine and Japanese locale support already installed.",
+      protonRunTemplateDescription: "For advanced Proton setups; replace the compatdata path with your own local Steam prefix.",
       noLaunchTitle: "No launch candidate",
       noLaunchBody: "Try again with the fully extracted game root folder.",
       items: "items",
@@ -452,6 +467,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastSupportCreated: "Support bundle created",
       toastDesktopCommandCopied: "Desktop command copied",
       toastRelativeCommandCopied: "Relative command copied",
+      toastTemplateCopied: "Launch template copied",
       toastProfileJsonCopied: "Profile JSON copied",
       toastLaunchStarted: "Launched {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
@@ -563,6 +579,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchCandidates: "起動候補",
       diagnosisFindings: "診断結果",
       evidenceTitle: "根拠",
+      whyMatched: "一致理由",
+      nextStepLabel: "次の手順",
+      launchTemplatesTitle: "任意の起動テンプレート",
+      copyTemplate: "テンプレートをコピー",
+      localeEmulatorTemplateDescription: "信頼できるローカルの Locale Emulator がある場合のみ使用します。必要に応じて LEProc.exe を自分のランチャーパスに置き換えてください。",
+      wineJaTemplateDescription: "Wine と日本語 locale を設定済みの Linux 上級者向けの参考テンプレートです。",
+      protonRunTemplateDescription: "Proton / Steam Deck の上級設定向けです。compatdata パスは自分の Steam prefix に置き換えてください。",
       noLaunchTitle: "起動候補なし",
       noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
       items: "件",
@@ -681,6 +704,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastSupportCreated: "サポートバンドルを作成しました",
       toastDesktopCommandCopied: "デスクトップ用コマンドをコピーしました",
       toastRelativeCommandCopied: "相対パスコマンドをコピーしました",
+      toastTemplateCopied: "起動テンプレートをコピーしました",
       toastProfileJsonCopied: "設定 JSON をコピーしました",
       toastLaunchStarted: "{name} を起動しました",
       toastLaunchUnavailable: "ここでは直接起動できません",
@@ -1465,23 +1489,33 @@ function detectEngines(files) {
     if (rule.id === "commercial-proprietary") continue;
     let score = Number.isFinite(rule.score) ? rule.score : 0;
     const evidence = [];
+    const evidenceDetails = [];
 
     for (const file of files) {
-      if (matchesEngineRule(rule, file)) {
+      const reasons = getEngineRuleMatchReasons(rule, file);
+      if (reasons.length) {
         score += scoreEvidence(file);
         if (evidence.length < 5) evidence.push(file.path);
+        if (evidenceDetails.length < 5) {
+          evidenceDetails.push({
+            path: file.path,
+            reasons: reasons.slice(0, 3),
+            weight: scoreEvidence(file),
+          });
+        }
       }
     }
 
     if (score > 0) {
-      matched.push({
+      matched.push(decorateEngineResult({
         id: rule.id,
         name: rule.name,
         confidence: confidenceFromEngineScore(score),
         score,
         evidence,
+        evidenceDetails,
         advice: rule.advice,
-      });
+      }));
     }
   }
 
@@ -1492,19 +1526,31 @@ function detectEngines(files) {
 }
 
 function matchesEngineRule(rule, file) {
+  return getEngineRuleMatchReasons(rule, file).length > 0;
+}
+
+function getEngineRuleMatchReasons(rule, file) {
   const match = rule?.match || {};
   const lowerName = file.name.toLowerCase();
   const lowerPath = file.lowerPath || file.path.toLowerCase();
+  const reasons = [];
 
-  if (arrayIncludesLower(match.extensions, file.ext)) return true;
-  if (arrayIncludesLower(match.filenames, lowerName)) return true;
-  if (arraySome(match.pathIncludes, (pattern) => lowerPath.includes(normalizeRulePathPattern(pattern)))) return true;
-  if (arraySome(match.pathEndsWith, (pattern) => lowerPath.endsWith(normalizeRulePathPattern(pattern)))) return true;
-  if (arraySome(match.filenameRegex, (pattern) => safeRegexTest(pattern, file.name))) return true;
-  if (arraySome(match.pathRegex, (pattern) => safeRegexTest(pattern, file.path))) return true;
-  if (file.ext === "dll" && arraySome(match.dllNameIncludes, (pattern) => lowerName.includes(pattern.toLowerCase()))) return true;
+  if (arrayIncludesLower(match.extensions, file.ext)) reasons.push(`.${file.ext} extension`);
+  if (arrayIncludesLower(match.filenames, lowerName)) reasons.push(`known filename: ${file.name}`);
+  appendMatchingPatterns(reasons, match.pathIncludes, (pattern) => lowerPath.includes(normalizeRulePathPattern(pattern)), "path contains");
+  appendMatchingPatterns(reasons, match.pathEndsWith, (pattern) => lowerPath.endsWith(normalizeRulePathPattern(pattern)), "path ends with");
+  appendMatchingPatterns(reasons, match.filenameRegex, (pattern) => safeRegexTest(pattern, file.name), "filename pattern");
+  appendMatchingPatterns(reasons, match.pathRegex, (pattern) => safeRegexTest(pattern, file.path), "path pattern");
+  if (file.ext === "dll") appendMatchingPatterns(reasons, match.dllNameIncludes, (pattern) => lowerName.includes(pattern.toLowerCase()), "DLL name contains");
 
-  return false;
+  return reasons;
+}
+
+function appendMatchingPatterns(reasons, patterns, predicate, label) {
+  if (!Array.isArray(patterns)) return;
+  for (const pattern of patterns) {
+    if (typeof pattern === "string" && predicate(pattern)) reasons.push(`${label}: ${pattern}`);
+  }
 }
 
 function normalizeRulePathPattern(pattern) {
@@ -1529,6 +1575,73 @@ function safeRegexTest(pattern, value) {
 
 function confidenceFromEngineScore(score) {
   return score >= 12 ? "high" : score >= 6 ? "medium" : "low";
+}
+
+function decorateEngineResult(engine) {
+  return {
+    ...engine,
+    explanation: buildEngineExplanation(engine),
+    nextStep: getEngineNextStep(engine),
+  };
+}
+
+function buildEngineExplanation(engine, language = getAssistantLanguage()) {
+  const clueCount = engine.evidenceDetails?.length || engine.evidence?.length || 0;
+  const reasonSamples = compactEvidence(
+    (engine.evidenceDetails || []).flatMap((detail) => detail.reasons || []),
+    3,
+  );
+  if (language === "en") {
+    const reasonText = reasonSamples.length ? `, for example ${reasonSamples.join(", ")}` : "";
+    return `${engine.confidence} confidence: ${clueCount} metadata clue${clueCount === 1 ? "" : "s"} matched${reasonText}.`;
+  }
+  if (language === "ja") {
+    const reasonText = reasonSamples.length ? `。例: ${reasonSamples.join("、")}` : "";
+    return `${engine.confidence} 信頼度：${clueCount} 件のメタデータ手がかりが一致しました${reasonText}。`;
+  }
+  const reasonText = reasonSamples.length ? `，例如 ${reasonSamples.join("、")}` : "";
+  return `${engine.confidence} 置信度：命中 ${clueCount} 条元数据线索${reasonText}。`;
+}
+
+function getEngineNextStep(engine, language = getAssistantLanguage()) {
+  const fallback = engine.advice || "先按命中的文件结构确认入口，再根据报错补充诊断。";
+  const steps = {
+    "zh-CN": {
+      kirikiri: "优先尝试根目录主程序；如果乱码、闪退或脚本报错，先检查日区/Locale Emulator、英文短路径和完整 .xp3/.tjs 文件结构。",
+      renpy: "优先尝试根目录同名启动器；如果是网页版结构，检查是否需要本地服务器而不是直接 file:// 打开。",
+      nscript: "优先检查 0.txt/nscript.dat 与资源封包是否同目录；老游戏失败时先看日区、字体和兼容模式。",
+      unity: "优先运行与 _Data/UnityPlayer.dll 同级的 exe；缺 DLL 或黑屏时先检查文件完整性和运行库。",
+      rpgmaker: "优先运行 Game.exe；如果提示 RTP 或 RGSS DLL，安装对应 RPG Maker RTP/运行库后再试。",
+      siglus: "优先尝试 SiglusEngine.exe 或根目录启动器；乱码/闪退时先检查日区、字体、英文路径和旧运行库。",
+      tyrano: "优先用本地服务器打开 index.html；直接 file:// 运行可能被浏览器安全策略阻止。",
+      "commercial-proprietary": "不要只拷贝 exe；保持 exe、DLL、资源封包和配置文件的原始相对位置，再按工作目录、日区和运行库顺序排查。",
+      fallback,
+    },
+    en: {
+      kirikiri: "Try the root launcher first. If mojibake, crashes, or script errors appear, check Japanese locale / Locale Emulator, a short ASCII path, and a complete .xp3/.tjs structure.",
+      renpy: "Try the root launcher with the game name first. For web-style builds, check whether a local server is required instead of opening file:// directly.",
+      nscript: "Check that 0.txt/nscript.dat and resource archives stay in the same folder. For older games, start with Japanese locale, fonts, and compatibility mode.",
+      unity: "Run the exe next to _Data/UnityPlayer.dll. If DLL errors or black screens appear, verify file completeness and runtimes.",
+      rpgmaker: "Run Game.exe first. If RTP or RGSS DLL errors appear, install the matching RPG Maker RTP/runtime and retry.",
+      siglus: "Try SiglusEngine.exe or the root launcher first. For mojibake or crashes, check Japanese locale, fonts, an ASCII path, and older runtimes.",
+      tyrano: "Open index.html through a local server. Direct file:// launch can be blocked by browser security rules.",
+      "commercial-proprietary": "Do not copy only the exe. Keep the exe, DLLs, resource archives, and config files in their original relative layout, then check working directory, Japanese locale, and runtimes.",
+      fallback: "Confirm the matched startup structure first, then use the exact error text for the next diagnosis step.",
+    },
+    ja: {
+      kirikiri: "まずルートフォルダの起動ファイルを試します。文字化け、クラッシュ、スクリプトエラーが出る場合は、日本語 locale / Locale Emulator、短い英数字パス、完全な .xp3/.tjs 構成を確認してください。",
+      renpy: "まずルートフォルダの同名ランチャーを試します。Web 形式の構成では、file:// ではなくローカルサーバーが必要か確認してください。",
+      nscript: "0.txt/nscript.dat とリソースアーカイブが同じ場所にあるか確認します。古いゲームでは日本語 locale、フォント、互換モードから確認してください。",
+      unity: "_Data/UnityPlayer.dll と同じ階層の exe を実行します。DLL エラーや黒画面が出る場合は、ファイル完全性とランタイムを確認してください。",
+      rpgmaker: "まず Game.exe を実行します。RTP や RGSS DLL のエラーが出る場合は、対応する RPG Maker RTP/ランタイムを入れてから再試行してください。",
+      siglus: "SiglusEngine.exe またはルートのランチャーを先に試します。文字化けやクラッシュでは、日本語 locale、フォント、英数字パス、古いランタイムを確認してください。",
+      tyrano: "index.html はローカルサーバー経由で開いてください。file:// 直開きはブラウザの安全制限で止まることがあります。",
+      "commercial-proprietary": "exe だけをコピーしないでください。exe、DLL、リソースアーカイブ、設定ファイルの相対配置を保ち、作業ディレクトリ、日本語 locale、ランタイムの順に確認してください。",
+      fallback: "一致した起動構造を先に確認し、実際のエラー文に沿って次の診断へ進んでください。",
+    },
+  };
+  const pack = steps[language] || steps["zh-CN"];
+  return pack[engine.id] || pack.fallback;
 }
 
 function detectCommercialEngineStructure(files, knownEngines) {
@@ -1570,24 +1683,24 @@ function detectCommercialEngineStructure(files, knownEngines) {
   if (specificHighConfidence && score < 22) return null;
   if (!specificHighConfidence && score < 11) return null;
 
-  const evidence = compactEvidence(
-    [
-      ...executableSamples,
-      ...sampleDiverseCommercialResources(largeResources.length ? largeResources : genericResources, 5),
-      ...rootDllSamples,
-      ...configSamples,
-    ],
-    9,
-  );
+  const resourceSamples = sampleDiverseCommercialResources(largeResources.length ? largeResources : genericResources, 5);
+  const evidence = compactEvidence([...executableSamples, ...resourceSamples, ...rootDllSamples, ...configSamples], 9);
+  const evidenceDetails = [
+    ...executableSamples.map((sample) => ({ path: sample, reasons: ["root or near-root executable"], weight: 4 })),
+    ...resourceSamples.map((sample) => ({ path: sample, reasons: ["commercial resource archive family"], weight: 4 })),
+    ...rootDllSamples.map((sample) => ({ path: sample, reasons: ["same-folder DLL/plugin clue"], weight: 2 })),
+    ...configSamples.map((sample) => ({ path: sample, reasons: ["startup/config file clue"], weight: 2 })),
+  ].slice(0, 6);
 
-  return {
+  return decorateEngineResult({
     id: "commercial-proprietary",
     name: commercialRule.name,
     confidence: score >= 22 ? "high" : score >= 15 ? "medium" : "low",
     score,
     evidence,
+    evidenceDetails,
     advice: commercialRule.advice,
-  };
+  });
 }
 
 function sampleDiverseCommercialResources(files, limit = 5) {
@@ -1738,6 +1851,10 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
       workingDirectory: workingDirectoryFull || workingDirectory,
       useAbsolute: Boolean(file.fullPath),
     });
+    const launchTemplates = buildOptionalLaunchTemplates({
+      entryPath: file.path,
+      localeSensitive: localeSensitive || commercialStructure || /[^\x00-\x7F]/.test(file.path),
+    });
 
     return {
       id: `profile-${index + 1}`,
@@ -1750,6 +1867,7 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
       confidence: candidate.score,
       commandPreview,
       commandAbsolute,
+      launchTemplates,
       notes,
       checks,
       config: {
@@ -1761,9 +1879,36 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
         confidence: candidate.score,
         engineClues: topEngines,
         localeSensitive,
+        launchTemplates,
       },
     };
   });
+}
+
+function buildOptionalLaunchTemplates({ entryPath, localeSensitive }) {
+  if (!localeSensitive) return [];
+  const windowsEntry = toWindowsPath(entryPath);
+  const posixEntry = String(entryPath || "").replaceAll("\\", "/");
+  return [
+    {
+      id: "locale-emulator",
+      title: "Locale Emulator (Windows)",
+      descriptionKey: "localeEmulatorTemplateDescription",
+      command: `"LEProc.exe" "${windowsEntry}"`,
+    },
+    {
+      id: "wine-ja",
+      title: "Wine Japanese locale",
+      descriptionKey: "wineJaTemplateDescription",
+      command: `LANG=ja_JP.UTF-8 wine "${posixEntry}"`,
+    },
+    {
+      id: "proton-run",
+      title: "Proton / Steam Deck",
+      descriptionKey: "protonRunTemplateDescription",
+      command: `STEAM_COMPAT_DATA_PATH="/path/to/compatdata" proton run "${posixEntry}"`,
+    },
+  ];
 }
 
 function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics) {
@@ -3061,6 +3206,7 @@ function renderProfileCard(profile) {
         <span class="chip ${profile.hasDesktopPath ? "good" : "warn"}">${escapeHtml(profile.hasDesktopPath ? getUiText("desktopPathReady") : getUiText("relativePathOnly"))}</span>
       </div>
       <pre class="command-box"><code>${escapeHtml(profile.commandPreview)}</code></pre>
+      ${renderLaunchTemplates(profile)}
       <div class="profile-notes">
         ${profile.notes.map((note) => `<span>${escapeHtml(note)}</span>`).join("")}
       </div>
@@ -3073,6 +3219,36 @@ function renderProfileCard(profile) {
       </div>
     </article>
   `;
+}
+
+function renderLaunchTemplates(profile) {
+  if (!profile.launchTemplates?.length) return "";
+  const language = getAssistantLanguage();
+  return `
+    <div class="launch-template-list">
+      <strong>${escapeHtml(getUiText("launchTemplatesTitle"))}</strong>
+      ${profile.launchTemplates
+        .map(
+          (template) => `
+            <article class="launch-template-card">
+              <div>
+                <h5>${escapeHtml(template.title)}</h5>
+                <p>${escapeHtml(getLaunchTemplateDescription(template, language))}</p>
+                <code>${escapeHtml(template.command)}</code>
+              </div>
+              <button type="button" data-profile-action="copy-template" data-profile-id="${profile.id}" data-template-id="${template.id}">
+                ${escapeHtml(getUiText("copyTemplate"))}
+              </button>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function getLaunchTemplateDescription(template, language = getAssistantLanguage()) {
+  return template.descriptionKey ? getUiText(template.descriptionKey, {}, language) : template.description || "";
 }
 
 function renderProfileLaunchButton(profile) {
@@ -3289,16 +3465,52 @@ function renderEngines(analysis) {
           (engine) => `
             <article class="engine-card">
               <h4>${escapeHtml(engine.name)}</h4>
-              <p>${escapeHtml(engine.advice)}</p>
+              <p>${escapeHtml(buildEngineExplanation(engine))}</p>
               <div class="meta-row">
                 <span class="chip ${engine.confidence === "high" ? "good" : "warn"}">${engine.confidence}</span>
                 <span class="chip">${escapeHtml(getUiText("scoreLabel"))} ${engine.score}</span>
                 ${engine.id === "commercial-proprietary" ? `<span class="chip warn">${escapeHtml(getUiText("startupStructure"))}</span>` : ""}
               </div>
-              <div class="sample-list">
-                ${engine.evidence.map((path) => `<code>${escapeHtml(path)}</code>`).join("")}
+              <div class="engine-next-step">
+                <strong>${escapeHtml(getUiText("nextStepLabel"))}</strong>
+                <p>${escapeHtml(getEngineNextStep(engine))}</p>
               </div>
+              ${renderEngineEvidenceDetails(engine)}
             </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderEngineEvidenceDetails(engine) {
+  const primaryDetails = engine.evidenceDetails?.length
+    ? engine.evidenceDetails
+    : (engine.evidence || []).map((path) => ({ path, reasons: [], weight: 0 }));
+  const seen = new Set();
+  const details = [];
+  for (const detail of primaryDetails) {
+    if (!detail?.path || seen.has(detail.path)) continue;
+    seen.add(detail.path);
+    details.push(detail);
+  }
+  for (const path of engine.evidence || []) {
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    details.push({ path, reasons: ["metadata evidence"], weight: 0 });
+  }
+  if (!details.length) return "";
+  return `
+    <div class="sample-list engine-evidence-details">
+      <strong>${escapeHtml(getUiText("whyMatched"))}</strong>
+      ${details
+        .map(
+          (detail) => `
+            <code>
+              ${escapeHtml(detail.path)}
+              ${detail.reasons?.length ? `<span>${escapeHtml(detail.reasons.join(" / "))}</span>` : ""}
+            </code>
           `,
         )
         .join("")}
@@ -3558,6 +3770,9 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
       lines.push(`- ${profile.title}: ${profile.entryPath}`);
       lines.push(`  - ${labels.workdir}: ${profile.workingDirectory}`);
       lines.push(`  - ${labels.command}: ${profile.commandPreview}`);
+      for (const template of profile.launchTemplates || []) {
+        lines.push(`  - ${template.title}: ${template.command}`);
+      }
       for (const note of profile.notes.slice(0, 4)) lines.push(`  - ${note}`);
     }
   } else {
@@ -3602,7 +3817,11 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
   if (analysis.engines.length) {
     for (const engine of analysis.engines) {
       lines.push(`- ${engine.name}: ${engine.confidence}, score ${engine.score}`);
-      for (const evidence of engine.evidence) lines.push(`  - ${evidence}`);
+      lines.push(`  - ${labels.detail}: ${buildEngineExplanation(engine, language)}`);
+      lines.push(`  - ${labels.nextStep}: ${getEngineNextStep(engine, language)}`);
+      for (const detail of engine.evidenceDetails || []) {
+        lines.push(`  - ${labels.evidence}: ${detail.path}${detail.reasons?.length ? ` (${detail.reasons.join("; ")})` : ""}`);
+      }
     }
   } else {
     lines.push(`- ${labels.noEngine}`);
@@ -3648,6 +3867,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
   const title = getDisplayTitle(analysis);
   const generatedAt = new Date().toISOString();
   const safeTitle = slugifyFilename(title, "galaid-diagnosis");
+  const diagnosisReport = buildMarkdownReport(analysis, errorText, language);
   const manifest = buildSupportManifest(analysis, title, generatedAt, language);
   const fileManifest = buildFileManifest(analysis);
   const errorRecipeReport = {
@@ -3667,7 +3887,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     steps: analysis.roadmap.steps,
     checklist: buildRoadmapChecklistText(analysis, language),
   };
-  const profiles = analysis.profiles.map(getPublicProfile);
+  const profiles = analysis.profiles.map((profile) => getPublicProfile(profile, language));
   const entries = [
     {
       path: "README.txt",
@@ -3676,7 +3896,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     },
     {
       path: "galaid-report.md",
-      content: analysis.report,
+      content: diagnosisReport,
       type: "text/markdown;charset=utf-8",
     },
     {
@@ -4068,11 +4288,15 @@ function showToast(message) {
   window.setTimeout(() => toast.remove(), 2400);
 }
 
-function getPublicProfile(profile) {
+function getPublicProfile(profile, language = getAssistantLanguage()) {
   return {
     ...profile.config,
     checks: profile.checks,
     notes: profile.notes,
+    launchTemplates: (profile.launchTemplates || []).map((template) => ({
+      ...template,
+      description: getLaunchTemplateDescription(template, language),
+    })),
     privacy: "This profile intentionally omits absolute local paths.",
   };
 }
@@ -4216,7 +4440,7 @@ profilesPanel.addEventListener("click", (event) => {
   if (!profile) return;
 
   const action = button.dataset.profileAction;
-  const profileJson = JSON.stringify(getPublicProfile(profile), null, 2);
+  const profileJson = JSON.stringify(getPublicProfile(profile, getAssistantLanguage()), null, 2);
   if (action === "launch") {
     void launchDesktopFile(
       {
@@ -4235,6 +4459,9 @@ profilesPanel.addEventListener("click", (event) => {
       },
       button,
     );
+  } else if (action === "copy-template") {
+    const template = profile.launchTemplates?.find((item) => item.id === button.dataset.templateId);
+    if (template) void copyText(template.command, getUiText("toastTemplateCopied"));
   } else if (action === "copy-command") {
     const command = profile.hasDesktopPath ? profile.commandAbsolute : profile.commandPreview;
     void copyText(command, profile.hasDesktopPath ? getUiText("toastDesktopCommandCopied") : getUiText("toastRelativeCommandCopied"));

@@ -7,7 +7,7 @@
 
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
-    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.2-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.3-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
     <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
@@ -56,7 +56,7 @@ GalAid turns that mess into a small diagnosis report.
 | --- | --- | --- |
 | Launch route | Ranks `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html` candidates, while flagging installers and support tools. | A folder has many executables and no obvious start button. |
 | Package diagnosis | Identifies archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, and `.mds/.mdf`. | The download still looks like a pile of compressed parts or old disc files. |
-| Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts. | The game uses a private or company-specific structure instead of a famous public engine. |
+| Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts with evidence explanations and next steps. | The game uses a private or company-specific structure instead of a famous public engine. |
 | Runtime checks | Checks extraction state, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs. | The right launcher exists, but the game crashes, shows mojibake, or complains about missing DLLs. |
 | Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, environment checks, and sanitized file metadata. | A player needs to ask for help without uploading game files or private paths. |
 | Desktop beta | Adds native folder selection, recursive local scanning, ZIP directory preflight, trusted Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
@@ -77,7 +77,7 @@ GalAid turns that mess into a small diagnosis report.
 | Surface | Start here | Best for |
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
-| Windows beta | [v0.1.2-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.2-beta) | Native folder picking, recursive scans, ZIP preflight, trusted one-click launch, shortcuts, and launch history. |
+| Windows beta | [v0.1.3-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.3-beta) | Native folder picking, recursive scans, ZIP preflight, trusted one-click launch, shortcuts, launch history, and locale launch templates. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
@@ -89,7 +89,7 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - engine and locale notes
 - a portable `.galaid-profile.json` file
 
-Profiles do not auto-run games by themselves. In the web app, commands use relative paths. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a trusted scanned Windows `.exe/.com` entry with the correct working directory, and users can create a Windows shortcut for the same allowlisted entry.
+Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a trusted scanned Windows `.exe/.com` entry with the correct working directory, and users can create a Windows shortcut for the same allowlisted entry.
 
 ## Next-Step Roadmap
 
@@ -121,6 +121,8 @@ See [docs/ERROR_RECIPES.md](docs/ERROR_RECIPES.md) for the recipe format and con
 ## Engine Rules
 
 Engine and structure fingerprints live in `data/engine-rules.json`. The rules use only metadata such as filenames, extensions, and relative paths, so contributors can improve KiriKiri, Ren'Py, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed route detection without touching game contents.
+
+The engine panel explains why each route matched, shows the confidence score, lists the metadata evidence, and gives a concrete next step. This keeps commercial/self-developed detection useful without pretending to know a private engine name.
 
 After editing engine rules, run:
 
@@ -242,7 +244,7 @@ npm run build:pages
 
 ### Desktop Beta
 
-Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.2-beta), or run the Electron shell locally:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.3-beta), or run the Electron shell locally:
 
 ```bash
 npm install
@@ -274,8 +276,7 @@ The static web MVP only reads browser-exposed file metadata. The desktop beta ca
 
 ## Roadmap
 
-- Desktop launch assistant: richer launch-failure follow-up and environment templates
-- Locale Emulator / Wine / Proton hint integration
+- Desktop launch assistant: richer launch-failure follow-up
 - Screenshot OCR for error dialogs
 - Better engine fingerprints
 - Safe open-format asset preview

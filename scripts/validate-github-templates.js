@@ -56,6 +56,10 @@ function readRelative(relativePath) {
   return fs.readFileSync(absolutePath, "utf8");
 }
 
+function readPackageVersion() {
+  return JSON.parse(readRelative("package.json")).version;
+}
+
 function assert(condition, message, errors) {
   if (!condition) errors.push(message);
 }
@@ -175,8 +179,9 @@ function checkReleaseDocs(errors) {
   checkNoTrailingWhitespace(releaseFile, releaseText, errors);
   checkNoTrailingWhitespace(topicsFile, topicsText, errors);
 
+  const expectedVersionHeading = `v${readPackageVersion()} beta`;
   for (const phrase of [
-    "v0.1.0 beta",
+    expectedVersionHeading,
     "Highlights",
     "Safety Boundary",
     "Pre-Release Checklist",
