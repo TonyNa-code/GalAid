@@ -17,9 +17,11 @@ const LAUNCH_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk", "html"]);
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "bmp", "webp", "tga", "dds", "gif", "psd"]);
 const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "mid", "midi"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
-const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
+const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
 const COMMERCIAL_RESOURCE_ARCHIVES = new Set(["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]);
+const KIRIKIRI_LAUNCHERS = new Set(["krkr.exe", "krkrz.exe", "kirikiri.exe", "kag.exe"]);
+const KIRIKIRI_SCRIPT_HINTS = new Set(["startup.tjs", "config.tjs", "envinit.tjs"]);
 
 async function previewArchiveFile(filePath, ext) {
   if (ext !== "zip") return null;
@@ -217,7 +219,18 @@ function collectSignals(signals, engineHints, entry) {
   if (RESOURCE_ARCHIVES.has(entry.ext)) signals.assetCounts.resourceArchives += 1;
   if (COMMERCIAL_RESOURCE_ARCHIVES.has(entry.ext)) signals.assetCounts.commercialArchives += 1;
 
-  if (entry.ext === "xp3" || lower.includes("kirikiri") || lower.includes("krkr") || lower.endsWith(".ks")) {
+  if (
+    entry.ext === "xp3" ||
+    entry.ext === "tjs" ||
+    entry.ext === "tpm" ||
+    KIRIKIRI_LAUNCHERS.has(entry.name.toLowerCase()) ||
+    KIRIKIRI_SCRIPT_HINTS.has(entry.name.toLowerCase()) ||
+    lower.includes("kirikiri") ||
+    lower.includes("krkr") ||
+    lower.endsWith(".ks") ||
+    lower.includes("/scenario/") ||
+    lower.includes("/system/")
+  ) {
     addEngineHint(engineHints, "kirikiri", "KiriKiri / 吉里吉里", entry.path);
   }
   if (entry.ext === "rpa" || entry.ext === "rpy" || entry.ext === "rpyc" || lower.includes("/renpy/")) {
