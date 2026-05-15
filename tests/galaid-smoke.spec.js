@@ -23,6 +23,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.getByRole("heading", { name: "求助包" })).toBeVisible();
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
+  await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
   await expect(page.locator(".support-privacy-list")).toContainText("不包含游戏文件");
   await expect(page.locator(".support-privacy-list")).toContainText("ZIP 只预检目录");
 
@@ -42,6 +43,7 @@ test("package sample shows zip directory preview without treating it as runnable
   await expect(page.locator(".archive-preview")).toContainText("SnowTrial/Game.exe");
   await expect(page.locator(".archive-preview")).toContainText("KiriKiri / 吉里吉里");
   await expect(page.locator(".package-roadmap")).toContainText("压缩包里看到启动线索");
+  await expect(page.locator("main")).toContainText("Blocked");
 
   await page.locator('[data-tab="launch"]').click();
   await expect(page.getByRole("heading", { name: "没有候选入口" })).toBeVisible();
