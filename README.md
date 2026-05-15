@@ -1,8 +1,22 @@
 # GalAid
 
+![Local-first](https://img.shields.io/badge/local--first-no_upload-36a779)
+![Static web app](https://img.shields.io/badge/web-static_app-20252b)
+![GitHub Pages ready](https://img.shields.io/badge/demo-GitHub_Pages-2088ff)
+![License: MIT](https://img.shields.io/badge/license-MIT-d95a48)
+
 GalAid is a local-first launch doctor for visual novel and galgame folders.
 
-It helps players and archivists answer the first painful question: "Which file do I run, and why is this game not starting?"
+It helps players answer the first painful question: "Which file do I run, and why is this game not starting?"
+
+- Drop in a VN folder, archive, or disc-image file list
+- Get launch candidates, engine clues, runtime checks, and an ordered next-step route
+- Export a metadata-only support bundle without uploading game files
+- Run it as a static web app, GitHub Pages demo, or local desktop beta
+
+Live demo after publishing: `https://YOUR_GITHUB_NAME.github.io/GalAid/`
+
+![GalAid roadmap demo](docs/assets/galaid-roadmap-demo.png)
 
 The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes only file names, paths, sizes, and extensions in your browser. A desktop shell is also available for native folder selection and full local path scanning.
 
