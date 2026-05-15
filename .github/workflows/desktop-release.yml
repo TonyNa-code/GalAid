@@ -2,12 +2,17 @@ name: Desktop Release
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing GitHub release tag to receive the Windows portable exe
+        required: false
+        type: string
   push:
     tags:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -42,3 +47,24 @@ jobs:
           name: GalAid-windows-portable
           path: dist/desktop/*.exe
           if-no-files-found: error
+
+      - name: Upload Windows release asset
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: pwsh
+        run: |
+          $asset = Get-ChildItem -Path dist/desktop -Filter '*.exe' | Select-Object -First 1
+          if (-not $asset) {
+            throw "No Windows portable exe was built."
+          }
+
+          $release = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json assets | ConvertFrom-Json
+          foreach ($item in $release.assets) {
+            if ($item.name -like 'GalAid-*-win-x64.exe' -and $item.name -ne $asset.Name) {
+              gh release delete-asset $env:RELEASE_TAG $item.name -y --repo $env:GITHUB_REPOSITORY
+            }
+          }
+
+          gh release upload $env:RELEASE_TAG $asset.FullName --clobber --repo $env:GITHUB_REPOSITORY
