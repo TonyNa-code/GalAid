@@ -25,6 +25,8 @@ The release workflow builds a portable Windows `.exe` on GitHub Actions:
 - trigger: manual `workflow_dispatch` or a `v*` tag
 - command: `npm run dist:win`
 - output: `dist/desktop/*.exe`
+- tag pushes create or update a GitHub pre-release when the tag looks like `alpha`, `beta`, or `rc`, then upload the Windows portable `.exe`
+- manual runs can still pass `release_tag` to upload a rebuilt `.exe` to an existing release
 
 The package uses `electron-builder` with a portable x64 Windows target. It does not ask for administrator privileges.
 

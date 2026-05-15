@@ -48,16 +48,44 @@ jobs:
           path: dist/desktop/*.exe
           if-no-files-found: error
 
-      - name: Upload Windows release asset
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag != '' }}
+      - name: Publish Windows release asset
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') }}
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
         shell: pwsh
         run: |
           $asset = Get-ChildItem -Path dist/desktop -Filter '*.exe' | Select-Object -First 1
           if (-not $asset) {
             throw "No Windows portable exe was built."
+          }
+
+          if (-not $env:RELEASE_TAG) {
+            Write-Host "No release tag was provided; skipping release upload."
+            exit 0
+          }
+
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            $releaseCreateArgs = @(
+              "release",
+              "create",
+              $env:RELEASE_TAG,
+              "--repo",
+              $env:GITHUB_REPOSITORY,
+              "--title",
+              "GalAid $($env:RELEASE_TAG)",
+              "--generate-notes"
+            )
+
+            if ($env:RELEASE_TAG -match "(?i)(alpha|beta|rc)") {
+              $releaseCreateArgs += "--prerelease"
+            }
+
+            & gh @releaseCreateArgs
+            if ($LASTEXITCODE -ne 0) {
+              throw "Could not create GitHub release $($env:RELEASE_TAG)."
+            }
           }
 
           $release = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json assets | ConvertFrom-Json

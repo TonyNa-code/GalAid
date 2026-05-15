@@ -410,6 +410,11 @@ function checkDesktopRelease(errors) {
     "npm run dist:win",
     "actions/upload-artifact@v4",
     "dist/desktop/*.exe",
+    "github.ref_name",
+    "releaseCreateArgs",
+    "--generate-notes",
+    "--prerelease",
+    "gh release upload",
   ]) {
     assert(workflowText.includes(phrase), `${workflowFile} is missing phrase: ${phrase}`, errors);
   }
