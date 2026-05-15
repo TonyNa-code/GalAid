@@ -4,19 +4,59 @@
   "description": "Local-first launch doctor for visual novel and galgame folders.",
   "main": "desktop/main.js",
   "private": true,
+  "author": "TonyNa-code",
+  "license": "MIT",
+  "homepage": "https://github.com/TonyNa-code/GalAid#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TonyNa-code/GalAid.git"
+  },
   "scripts": {
     "start": "electron .",
     "build:recipes": "node scripts/build-error-recipes.js",
+    "build:engines": "node scripts/build-engine-rules.js",
     "build:pages": "node scripts/build-pages.js",
+    "dist:win": "electron-builder --win portable --x64 --publish never",
     "audit:release": "node scripts/release-audit.js",
     "check:pages": "node scripts/build-pages.js --check",
     "check:templates": "node scripts/validate-github-templates.js",
     "test:archive": "node scripts/test-archive-preview.js",
     "test:smoke": "playwright test",
-    "check": "node --check playwright.config.js && node --check tests/galaid-smoke.spec.js && node --check scripts/build-error-recipes.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/test-archive-preview.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && npm run check:pages && npm run check:templates && npm run test:archive && npm run audit:release && node --check src/error-recipes.js && node --check src/app.js && node --check desktop/archive-preview.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
+    "check": "node --check playwright.config.js && node --check tests/galaid-smoke.spec.js && node --check scripts/build-error-recipes.js && node --check scripts/build-engine-rules.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/test-archive-preview.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && node scripts/build-engine-rules.js --check && npm run check:pages && npm run check:templates && npm run test:archive && npm run audit:release && node --check src/error-recipes.js && node --check src/engine-rules.js && node --check src/app.js && node --check desktop/archive-preview.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
+  },
+  "build": {
+    "appId": "io.github.tonyna.galaid",
+    "productName": "GalAid",
+    "directories": {
+      "output": "dist/desktop"
+    },
+    "files": [
+      "index.html",
+      "src/**/*",
+      "desktop/**/*",
+      "data/**/*",
+      "package.json",
+      "LICENSE",
+      "README.md"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "win": {
+      "artifactName": "GalAid-${version}-win-${arch}.${ext}",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    }
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
-    "electron": "^42.0.1"
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1"
   }
 }

@@ -37,9 +37,10 @@ Useful metadata-only clues:
 
 Acceptance checklist:
 
-- Update engine detection without reading file contents.
+- Update `data/engine-rules.json` without reading file contents.
 - Add at least one sample path to the existing built-in sample or a small metadata-only fixture if needed.
 - Confirm the roadmap still suggests locale checks for KiriKiri folders.
+- Run `npm run build:engines`.
 - Run `npm run check`.
 
 ## 3. Add more commercial engine structure examples
@@ -59,7 +60,9 @@ Acceptance checklist:
 
 - Do not claim a specific private engine name unless there is strong filename evidence.
 - Keep the advice focused on startup diagnosis: working directory, complete archives, locale, and runtime checks.
+- Update `data/engine-rules.json` if the clue is a reusable metadata fingerprint.
 - Add or update a small metadata-only sample if needed.
+- Run `npm run build:engines`.
 - Run `npm run check`.
 
 ## 4. Polish archive and disc-image copy

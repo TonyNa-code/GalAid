@@ -1,0 +1,100 @@
+[
+  {
+    "id": "kirikiri",
+    "name": "KiriKiri / 吉里吉里",
+    "description": "KiriKiri/KAG metadata-only markers.",
+    "score": 0,
+    "match": {
+      "extensions": ["xp3", "tjs", "tpm"],
+      "filenames": ["krkr.exe", "krkrz.exe", "kirikiri.exe", "kag.exe", "startup.tjs", "config.tjs", "envinit.tjs"],
+      "pathIncludes": ["kirikiri", "krkr", "/scenario/"],
+      "pathEndsWith": [".ks"]
+    },
+    "advice": "KiriKiri/KAG 线索常来自 .xp3 资源、.ks 剧本、.tjs 配置或 krkr/krkrz 启动器；优先尝试根目录主程序，乱码或闪退时先检查日区/Locale Emulator 与路径编码。"
+  },
+  {
+    "id": "renpy",
+    "name": "Ren'Py",
+    "description": "Ren'Py archive, script, and folder markers.",
+    "score": 0,
+    "match": {
+      "extensions": ["rpa", "rpy", "rpyc"],
+      "pathIncludes": ["/renpy/", "/game/"]
+    },
+    "advice": "通常根目录同名 exe 就是入口；macOS/Linux 版本可能包含 .app 或 .sh。"
+  },
+  {
+    "id": "nscript",
+    "name": "NScripter / ONScripter",
+    "description": "NScripter resource and script markers.",
+    "score": 0,
+    "match": {
+      "extensions": ["nsa", "ns2", "sar"],
+      "pathIncludes": ["nscript"],
+      "pathRegex": ["(^|/)(nscript\\.dat|0\\.txt|00\\.txt|arc\\.nsa)$"]
+    },
+    "advice": "老游戏更容易受系统区域、字体和兼容模式影响。"
+  },
+  {
+    "id": "unity",
+    "name": "Unity",
+    "description": "Unity player/runtime layout markers.",
+    "score": 0,
+    "match": {
+      "extensions": ["unity3d"],
+      "filenames": ["UnityPlayer.dll", "GameAssembly.dll"],
+      "pathRegex": ["_Data/"]
+    },
+    "advice": "优先运行与 _Data 文件夹同级的 exe；报 Mono/UnityPlayer 错误时检查文件是否完整。"
+  },
+  {
+    "id": "rpgmaker",
+    "name": "RPG Maker",
+    "description": "RPG Maker classic and HTML5 layout markers.",
+    "score": 0,
+    "match": {
+      "filenames": ["Game.ini"],
+      "filenameRegex": ["^RGSS\\d+.*\\.dll$"],
+      "pathIncludes": ["/www/"],
+      "pathEndsWith": ["/www/data/system.json", "/data/system.json"]
+    },
+    "advice": "提示 RTP 时安装对应 RPG Maker RTP；HTML5 版本可从 www/index.html 启动。"
+  },
+  {
+    "id": "siglus",
+    "name": "Siglus / RealLive family",
+    "description": "SiglusEngine and RealLive-family layout markers.",
+    "score": 0,
+    "match": {
+      "extensions": ["sig"],
+      "filenames": ["SiglusEngine.exe", "Gameexe.ini"],
+      "pathIncludes": ["siglus", "reallive"],
+      "pathEndsWith": ["/scene.pck"]
+    },
+    "advice": "常见问题是日区、字体和旧运行库；先用根目录启动器或 SiglusEngine.exe 尝试。"
+  },
+  {
+    "id": "tyrano",
+    "name": "TyranoScript / web VN",
+    "description": "TyranoScript and browser VN layout markers.",
+    "score": 0,
+    "match": {
+      "filenames": ["tyrano.ks"],
+      "pathIncludes": ["/tyrano/", "/data/scenario/"],
+      "pathEndsWith": ["/index.html"]
+    },
+    "advice": "可以尝试本地服务器打开 index.html；浏览器安全限制会影响直接 file:// 运行。"
+  },
+  {
+    "id": "commercial-proprietary",
+    "name": "商业/自研引擎（文件结构）",
+    "description": "Commercial or self-developed VN engine startup-chain structure. This route stays generic unless filenames strongly identify a public engine.",
+    "score": 0,
+    "match": {
+      "extensions": ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"],
+      "pathRegex": ["(^|/)(boot|config|env|game|setting|startup|system)\\.(ini|cfg|dat)$"],
+      "dllNameIncludes": ["movie", "audio", "plugin", "system", "engine"]
+    },
+    "advice": "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。"
+  }
+]

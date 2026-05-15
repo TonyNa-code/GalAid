@@ -7,6 +7,7 @@ GalAid is local-first and safety-focused. Contributions should help users diagno
 ## Good First Contributions
 
 - Add or improve an error recipe in `data/error-recipes.json`
+- Add or improve an engine rule in `data/engine-rules.json`
 - Add clearer wording to beginner-facing diagnosis text
 - Improve engine fingerprints using filenames and folder structure only
 - Improve commercial/self-developed engine startup-route heuristics using metadata only
@@ -53,12 +54,29 @@ npm run check
 
 `src/error-recipes.js` is generated from JSON so users can still open `index.html` directly. Do not edit that generated file by hand.
 
+## Add an Engine Rule
+
+1. Edit `data/engine-rules.json`.
+2. Use metadata-only matchers such as extensions, exact filenames, relative path fragments, or narrow regular expressions.
+3. Keep commercial/self-developed engines generic unless public filenames clearly identify a known engine.
+4. Run:
+
+```bash
+npm run build:engines
+npm run check
+```
+
+5. Open the web app or desktop beta with a redacted sample folder and confirm the engine tab and roadmap stay useful.
+
+`src/engine-rules.js` is generated from JSON so users can still open `index.html` directly. Do not edit that generated file by hand.
+
 ## Pull Request Checklist
 
 - The change stays metadata-only and local-first.
 - `npm run check` passes.
 - `npm run test:smoke` passes when the change touches browser behavior.
 - New recipe patterns compile and avoid broad words that would match too often.
+- New engine rules stay narrow and do not require reading file contents.
 - Any pasted logs are redacted.
 - Docs mention safe official prerequisites, not unofficial downloads or bypasses.
 

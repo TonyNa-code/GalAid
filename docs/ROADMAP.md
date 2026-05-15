@@ -11,10 +11,10 @@
 
 ## 0.2 Better Diagnosis Recipes
 
+- Community-editable JSON engine rules
 - Expand engine fingerprints
 - Improve commercial/self-developed engine startup-route diagnostics
 - Add common error dictionary
-- Add community-editable YAML/JSON rules
 - Add confidence explanations for each rule
 
 ## 0.3 Asset Explorer
@@ -28,6 +28,7 @@
 
 - Real folder picker with full paths
 - ZIP directory preflight without extraction
+- Portable Windows release workflow
 - Create launch profiles
 - Create shortcuts
 - Optional Locale Emulator command template

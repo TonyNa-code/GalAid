@@ -1,6 +1,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { TextDecoder } = require("node:util");
+const ENGINE_RULES = require("../data/engine-rules.json");
 
 const EOCD_SIGNATURE = 0x06054b50;
 const ZIP64_EOCD_SIGNATURE = 0x06064b50;
@@ -19,9 +20,7 @@ const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
-const COMMERCIAL_RESOURCE_ARCHIVES = new Set(["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]);
-const KIRIKIRI_LAUNCHERS = new Set(["krkr.exe", "krkrz.exe", "kirikiri.exe", "kag.exe"]);
-const KIRIKIRI_SCRIPT_HINTS = new Set(["startup.tjs", "config.tjs", "envinit.tjs"]);
+const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]));
 
 async function previewArchiveFile(filePath, ext) {
   if (ext !== "zip") return null;
@@ -206,6 +205,15 @@ function makeEntry(entryPath, size, compressedSize) {
   };
 }
 
+function getEngineRule(id) {
+  return ENGINE_RULES.find((rule) => rule.id === id) || null;
+}
+
+function getEngineRuleExtensions(id, fallback = []) {
+  const extensions = getEngineRule(id)?.match?.extensions;
+  return Array.isArray(extensions) && extensions.length ? extensions.map((ext) => ext.toLowerCase()) : fallback;
+}
+
 function collectSignals(signals, engineHints, entry) {
   const lower = entry.path.toLowerCase();
   if (LAUNCH_EXTS.has(entry.ext) && !isSetupLike(lower)) {
@@ -219,33 +227,45 @@ function collectSignals(signals, engineHints, entry) {
   if (RESOURCE_ARCHIVES.has(entry.ext)) signals.assetCounts.resourceArchives += 1;
   if (COMMERCIAL_RESOURCE_ARCHIVES.has(entry.ext)) signals.assetCounts.commercialArchives += 1;
 
-  if (
-    entry.ext === "xp3" ||
-    entry.ext === "tjs" ||
-    entry.ext === "tpm" ||
-    KIRIKIRI_LAUNCHERS.has(entry.name.toLowerCase()) ||
-    KIRIKIRI_SCRIPT_HINTS.has(entry.name.toLowerCase()) ||
-    lower.includes("kirikiri") ||
-    lower.includes("krkr") ||
-    lower.endsWith(".ks") ||
-    lower.includes("/scenario/")
-  ) {
-    addEngineHint(engineHints, "kirikiri", "KiriKiri / 吉里吉里", entry.path);
+  for (const rule of ENGINE_RULES) {
+    if (rule.id === "commercial-proprietary") continue;
+    if (matchesEngineRule(rule, entry)) addEngineHint(engineHints, rule.id, rule.name, entry.path);
   }
-  if (entry.ext === "rpa" || entry.ext === "rpy" || entry.ext === "rpyc" || lower.includes("/renpy/")) {
-    addEngineHint(engineHints, "renpy", "Ren'Py", entry.path);
-  }
-  if (["nsa", "ns2", "sar"].includes(entry.ext) || lower.includes("nscript")) {
-    addEngineHint(engineHints, "nscript", "NScripter / ONScripter", entry.path);
-  }
-  if (lower.includes("/www/") || entry.name === "Game.ini" || /^rgss\d+.*\.dll$/i.test(entry.name)) {
-    addEngineHint(engineHints, "rpgmaker", "RPG Maker", entry.path);
-  }
-  if (entry.ext === "unity3d" || entry.name === "UnityPlayer.dll" || lower.includes("_data/")) {
-    addEngineHint(engineHints, "unity", "Unity", entry.path);
-  }
-  if (entry.ext === "sig" || lower.includes("siglusengine")) {
-    addEngineHint(engineHints, "siglus", "SiglusEngine", entry.path);
+}
+
+function matchesEngineRule(rule, entry) {
+  const match = rule?.match || {};
+  const lowerName = entry.name.toLowerCase();
+  const lowerPath = entry.path.toLowerCase();
+
+  if (arrayIncludesLower(match.extensions, entry.ext)) return true;
+  if (arrayIncludesLower(match.filenames, lowerName)) return true;
+  if (arraySome(match.pathIncludes, (pattern) => lowerPath.includes(normalizeRulePathPattern(pattern)))) return true;
+  if (arraySome(match.pathEndsWith, (pattern) => lowerPath.endsWith(normalizeRulePathPattern(pattern)))) return true;
+  if (arraySome(match.filenameRegex, (pattern) => safeRegexTest(pattern, entry.name))) return true;
+  if (arraySome(match.pathRegex, (pattern) => safeRegexTest(pattern, entry.path))) return true;
+  if (entry.ext === "dll" && arraySome(match.dllNameIncludes, (pattern) => lowerName.includes(pattern.toLowerCase()))) return true;
+
+  return false;
+}
+
+function normalizeRulePathPattern(pattern) {
+  return pattern.replace(/\\/g, "/").toLowerCase();
+}
+
+function arrayIncludesLower(values, candidate) {
+  return Array.isArray(values) && values.some((value) => value.toLowerCase() === candidate);
+}
+
+function arraySome(values, predicate) {
+  return Array.isArray(values) && values.some((value) => typeof value === "string" && predicate(value));
+}
+
+function safeRegexTest(pattern, value) {
+  try {
+    return new RegExp(pattern, "i").test(value);
+  } catch {
+    return false;
   }
 }
 

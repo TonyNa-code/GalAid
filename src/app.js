@@ -42,9 +42,8 @@ const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro"]);
-const COMMERCIAL_RESOURCE_ARCHIVES = new Set(["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]);
-const KIRIKIRI_LAUNCHERS = new Set(["krkr.exe", "krkrz.exe", "kirikiri.exe", "kag.exe"]);
-const KIRIKIRI_SCRIPT_HINTS = new Set(["startup.tjs", "config.tjs", "envinit.tjs"]);
+const ENGINE_RULES = Array.isArray(window.GALAID_ENGINE_RULES) ? window.GALAID_ENGINE_RULES : [];
+const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf"]));
 const SCAN_BATCH_SIZE = 1000;
 const LARGE_FOLDER_THRESHOLD = 20000;
 const HUGE_FOLDER_THRESHOLD = 50000;
@@ -1397,143 +1396,100 @@ function groupBy(items, getter) {
   return groups;
 }
 
-function detectEngines(files) {
-  const detectors = [
-    {
-      id: "kirikiri",
-      name: "KiriKiri / 吉里吉里",
-      score: 0,
-      evidence: [],
-      test(file) {
-        const hit =
-          file.ext === "xp3" ||
-          file.ext === "tjs" ||
-          file.ext === "tpm" ||
-          KIRIKIRI_LAUNCHERS.has(file.name.toLowerCase()) ||
-          KIRIKIRI_SCRIPT_HINTS.has(file.name.toLowerCase()) ||
-          file.lowerPath.includes("kirikiri") ||
-          file.lowerPath.includes("krkr") ||
-          file.lowerPath.endsWith(".ks") ||
-          file.lowerPath.includes("/scenario/");
-        return hit;
-      },
-      advice: "KiriKiri/KAG 线索常来自 .xp3 资源、.ks 剧本、.tjs 配置或 krkr/krkrz 启动器；优先尝试根目录主程序，乱码或闪退时先检查日区/Locale Emulator 与路径编码。",
-    },
-    {
-      id: "renpy",
-      name: "Ren'Py",
-      score: 0,
-      evidence: [],
-      test(file) {
-        return (
-          file.ext === "rpa" ||
-          file.ext === "rpy" ||
-          file.ext === "rpyc" ||
-          file.lowerPath.includes("/renpy/") ||
-          file.lowerPath.includes("/game/")
-        );
-      },
-      advice: "通常根目录同名 exe 就是入口；macOS/Linux 版本可能包含 .app 或 .sh。",
-    },
-    {
-      id: "nscript",
-      name: "NScripter / ONScripter",
-      score: 0,
-      evidence: [],
-      test(file) {
-        return (
-          ["nsa", "ns2", "sar"].includes(file.ext) ||
-          /(^|\/)(nscript\.dat|0\.txt|00\.txt|arc\.nsa)$/i.test(file.path)
-        );
-      },
-      advice: "老游戏更容易受系统区域、字体和兼容模式影响。",
-    },
-    {
-      id: "unity",
-      name: "Unity",
-      score: 0,
-      evidence: [],
-      test(file) {
-        return (
-          file.name === "UnityPlayer.dll" ||
-          file.name === "GameAssembly.dll" ||
-          /_Data\//i.test(file.path)
-        );
-      },
-      advice: "优先运行与 _Data 文件夹同级的 exe；报 Mono/UnityPlayer 错误时检查文件是否完整。",
-    },
-    {
-      id: "rpgmaker",
-      name: "RPG Maker",
-      score: 0,
-      evidence: [],
-      test(file) {
-        return (
-          file.name === "Game.ini" ||
-          /^RGSS\d+.*\.dll$/i.test(file.name) ||
-          file.lowerPath.endsWith("/www/data/system.json") ||
-          file.lowerPath.endsWith("/data/system.json")
-        );
-      },
-      advice: "提示 RTP 时安装对应 RPG Maker RTP；HTML5 版本可从 www/index.html 启动。",
-    },
-    {
-      id: "siglus",
-      name: "Siglus / RealLive family",
-      score: 0,
-      evidence: [],
-      test(file) {
-        return (
-          file.name.toLowerCase() === "siglusengine.exe" ||
-          file.lowerPath.endsWith("/scene.pck") ||
-          file.lowerPath.includes("reallive")
-        );
-      },
-      advice: "常见问题是日区、字体和旧运行库；先用根目录启动器或 SiglusEngine.exe 尝试。",
-    },
-    {
-      id: "tyrano",
-      name: "TyranoScript / web VN",
-      score: 0,
-      evidence: [],
-      test(file) {
-        return (
-          file.lowerPath.includes("/tyrano/") ||
-          file.lowerPath.includes("/data/scenario/") ||
-          file.lowerPath.endsWith("/index.html")
-        );
-      },
-      advice: "可以尝试本地服务器打开 index.html；浏览器安全限制会影响直接 file:// 运行。",
-    },
-  ];
+function getEngineRule(id) {
+  return ENGINE_RULES.find((rule) => rule.id === id) || null;
+}
 
-  for (const detector of detectors) {
+function getEngineRuleExtensions(id, fallback = []) {
+  const extensions = getEngineRule(id)?.match?.extensions;
+  return Array.isArray(extensions) && extensions.length ? extensions.map((ext) => ext.toLowerCase()) : fallback;
+}
+
+function isEngineRuleFilename(id, filename) {
+  const names = getEngineRule(id)?.match?.filenames;
+  if (!Array.isArray(names)) return false;
+  const lowerName = filename.toLowerCase();
+  return names.some((name) => name.toLowerCase() === lowerName);
+}
+
+function detectEngines(files) {
+  const matched = [];
+
+  for (const rule of ENGINE_RULES) {
+    if (rule.id === "commercial-proprietary") continue;
+    let score = Number.isFinite(rule.score) ? rule.score : 0;
+    const evidence = [];
+
     for (const file of files) {
-      if (detector.test(file)) {
-        detector.score += scoreEvidence(file);
-        if (detector.evidence.length < 5) detector.evidence.push(file.path);
+      if (matchesEngineRule(rule, file)) {
+        score += scoreEvidence(file);
+        if (evidence.length < 5) evidence.push(file.path);
       }
+    }
+
+    if (score > 0) {
+      matched.push({
+        id: rule.id,
+        name: rule.name,
+        confidence: confidenceFromEngineScore(score),
+        score,
+        evidence,
+        advice: rule.advice,
+      });
     }
   }
 
-  const matched = detectors
-    .filter((detector) => detector.score > 0)
-    .map((detector) => ({
-      id: detector.id,
-      name: detector.name,
-      confidence:
-        detector.score >= 12 ? "high" : detector.score >= 6 ? "medium" : "low",
-      score: detector.score,
-      evidence: detector.evidence,
-      advice: detector.advice,
-    }));
   const commercialStructure = detectCommercialEngineStructure(files, matched);
   if (commercialStructure) matched.push(commercialStructure);
 
   return matched.sort((a, b) => b.score - a.score);
 }
 
+function matchesEngineRule(rule, file) {
+  const match = rule?.match || {};
+  const lowerName = file.name.toLowerCase();
+  const lowerPath = file.lowerPath || file.path.toLowerCase();
+
+  if (arrayIncludesLower(match.extensions, file.ext)) return true;
+  if (arrayIncludesLower(match.filenames, lowerName)) return true;
+  if (arraySome(match.pathIncludes, (pattern) => lowerPath.includes(normalizeRulePathPattern(pattern)))) return true;
+  if (arraySome(match.pathEndsWith, (pattern) => lowerPath.endsWith(normalizeRulePathPattern(pattern)))) return true;
+  if (arraySome(match.filenameRegex, (pattern) => safeRegexTest(pattern, file.name))) return true;
+  if (arraySome(match.pathRegex, (pattern) => safeRegexTest(pattern, file.path))) return true;
+  if (file.ext === "dll" && arraySome(match.dllNameIncludes, (pattern) => lowerName.includes(pattern.toLowerCase()))) return true;
+
+  return false;
+}
+
+function normalizeRulePathPattern(pattern) {
+  return pattern.replace(/\\/g, "/").toLowerCase();
+}
+
+function arrayIncludesLower(values, candidate) {
+  return Array.isArray(values) && values.some((value) => value.toLowerCase() === candidate);
+}
+
+function arraySome(values, predicate) {
+  return Array.isArray(values) && values.some((value) => typeof value === "string" && predicate(value));
+}
+
+function safeRegexTest(pattern, value) {
+  try {
+    return new RegExp(pattern, "i").test(value);
+  } catch {
+    return false;
+  }
+}
+
+function confidenceFromEngineScore(score) {
+  return score >= 12 ? "high" : score >= 6 ? "medium" : "low";
+}
+
 function detectCommercialEngineStructure(files, knownEngines) {
+  const commercialRule = getEngineRule("commercial-proprietary") || {
+    name: "商业/自研引擎（文件结构）",
+    advice: "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。",
+  };
   const executableSamples = samplePaths(
     files,
     (file) => EXE_EXTS.has(file.ext) && file.depth <= 2 && !isSetupLike(file.lowerPath),
@@ -1580,11 +1536,11 @@ function detectCommercialEngineStructure(files, knownEngines) {
 
   return {
     id: "commercial-proprietary",
-    name: "商业/自研引擎（文件结构）",
+    name: commercialRule.name,
     confidence: score >= 22 ? "high" : score >= 15 ? "medium" : "low",
     score,
     evidence,
-    advice: "按商业 galgame 常见启动链排查：根目录主程序、同级 DLL、资源封包和配置文件必须保持原结构；不要只拷 exe，失败时先看报错、日区和运行库。",
+    advice: commercialRule.advice,
   };
 }
 
@@ -1660,12 +1616,12 @@ function detectLaunchCandidates(files, engines) {
         reasons.push("Ren'Py root exe");
       }
 
-      if (engineIds.has("siglus") && base === "siglusengine.exe") {
+      if (engineIds.has("siglus") && isEngineRuleFilename("siglus", base)) {
         score += 18;
         reasons.push("engine executable");
       }
 
-      if (engineIds.has("kirikiri") && KIRIKIRI_LAUNCHERS.has(base)) {
+      if (engineIds.has("kirikiri") && isEngineRuleFilename("kirikiri", base)) {
         score += 18;
         reasons.push("KiriKiri/KAG launcher");
       }

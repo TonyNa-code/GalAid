@@ -30,15 +30,21 @@ const REQUIRED_FILES = [
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   ".github/workflows/ci.yml",
+  ".github/workflows/desktop-release.yml",
   ".github/workflows/pages.yml",
+  "data/engine-rules.json",
   "docs/CONTRIBUTING.md",
+  "docs/DESKTOP.md",
+  "docs/ENGINE_RULES.md",
   "docs/GOOD_FIRST_ISSUES.md",
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
   "desktop/archive-preview.js",
   "playwright.config.js",
+  "scripts/build-engine-rules.js",
   "scripts/test-archive-preview.js",
   "scripts/release-audit.js",
+  "src/engine-rules.js",
   "tests/galaid-smoke.spec.js",
 ];
 
@@ -89,6 +95,8 @@ function checkPrTemplate(errors) {
     "## Checks",
     "`npm run check`",
     "data/error-recipes.json",
+    "data/engine-rules.json",
+    "`npm run build:engines`",
     "metadata-only",
     "game files",
     "bypass instructions",
@@ -105,7 +113,9 @@ function checkContributing(errors) {
   for (const phrase of [
     "local-first",
     "data/error-recipes.json",
+    "data/engine-rules.json",
     "npm run build:recipes",
+    "npm run build:engines",
     "npm run check",
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
@@ -292,6 +302,8 @@ function checkGoodFirstIssues(errors) {
     "good first issue",
     "Acceptance checklist",
     "data/error-recipes.json",
+    "data/engine-rules.json",
+    "npm run build:engines",
     "KiriKiri",
     "commercial/self-developed engine",
     "browser smoke",
@@ -331,6 +343,81 @@ function checkBrowserSmoke(errors) {
     "商业/自研引擎启动链",
   ]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkEngineRules(errors) {
+  const dataFile = "data/engine-rules.json";
+  const generatedFile = "src/engine-rules.js";
+  const docsFile = "docs/ENGINE_RULES.md";
+  const dataText = readRelative(dataFile);
+  const generatedText = readRelative(generatedFile);
+  const docsText = readRelative(docsFile);
+
+  checkNoTrailingWhitespace(dataFile, dataText, errors);
+  checkNoTrailingWhitespace(generatedFile, generatedText, errors);
+  checkNoTrailingWhitespace(docsFile, docsText, errors);
+
+  let rules = [];
+  try {
+    rules = JSON.parse(dataText);
+  } catch (error) {
+    errors.push(`${dataFile} must be valid JSON: ${error.message}`);
+  }
+
+  for (const phrase of [
+    "GALAID_ENGINE_RULES",
+    "data/engine-rules.json",
+    "npm run build:engines",
+    "KiriKiri / 吉里吉里",
+    "commercial-proprietary",
+  ]) {
+    assert(generatedText.includes(phrase) || docsText.includes(phrase) || dataText.includes(phrase), `engine rules are missing phrase: ${phrase}`, errors);
+  }
+
+  if (Array.isArray(rules)) {
+    for (const id of ["kirikiri", "renpy", "commercial-proprietary"]) {
+      assert(rules.some((rule) => rule.id === id), `${dataFile} is missing ${id}`, errors);
+    }
+  }
+}
+
+function checkDesktopRelease(errors) {
+  const workflowFile = ".github/workflows/desktop-release.yml";
+  const desktopDoc = "docs/DESKTOP.md";
+  const packageFile = "package.json";
+  const workflowText = readRelative(workflowFile);
+  const desktopText = readRelative(desktopDoc);
+  const packageText = readRelative(packageFile);
+
+  checkNoTrailingWhitespace(workflowFile, workflowText, errors);
+  checkNoTrailingWhitespace(desktopDoc, desktopText, errors);
+  checkNoTrailingWhitespace(packageFile, packageText, errors);
+
+  for (const phrase of [
+    "windows-latest",
+    "npm ci --ignore-scripts",
+    "npm run check",
+    "npm run dist:win",
+    "actions/upload-artifact@v4",
+    "dist/desktop/*.exe",
+  ]) {
+    assert(workflowText.includes(phrase), `${workflowFile} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of [
+    "electron-builder",
+    "portable",
+    "requestedExecutionLevel",
+    "asInvoker",
+    "dist:win",
+    "data/**/*",
+  ]) {
+    assert(packageText.includes(phrase), `${packageFile} is missing desktop build phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of ["Windows Portable Build", "workflow_dispatch", "npm run audit:release -- --strict"]) {
+    assert(desktopText.includes(phrase), `${desktopDoc} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -380,6 +467,8 @@ function main() {
   checkGoodFirstIssues(errors);
   checkBrowserSmoke(errors);
   checkArchivePreview(errors);
+  checkEngineRules(errors);
+  checkDesktopRelease(errors);
   checkSecurityPolicy(errors);
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);

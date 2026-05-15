@@ -4,8 +4,8 @@ const { execFileSync } = require("node:child_process");
 
 const ROOT = path.join(__dirname, "..");
 const DIST = path.join(ROOT, "dist");
-const REQUIRED_SOURCES = ["index.html", "src", "data/error-recipes.json", "LICENSE"];
-const REQUIRED_OUTPUTS = ["index.html", "src/app.js", "src/styles.css", "src/error-recipes.js", ".nojekyll"];
+const REQUIRED_SOURCES = ["index.html", "src", "data/error-recipes.json", "data/engine-rules.json", "LICENSE"];
+const REQUIRED_OUTPUTS = ["index.html", "src/app.js", "src/styles.css", "src/error-recipes.js", "src/engine-rules.js", ".nojekyll"];
 
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -31,6 +31,10 @@ function validateSources() {
   const errors = [];
 
   execFileSync(process.execPath, [path.join(ROOT, "scripts", "build-error-recipes.js"), "--check"], {
+    cwd: ROOT,
+    stdio: "inherit",
+  });
+  execFileSync(process.execPath, [path.join(ROOT, "scripts", "build-engine-rules.js"), "--check"], {
     cwd: ROOT,
     stdio: "inherit",
   });

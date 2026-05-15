@@ -95,6 +95,19 @@ npm run check
 
 See [docs/ERROR_RECIPES.md](docs/ERROR_RECIPES.md) for the recipe format and contribution notes.
 
+## Engine Rules
+
+Engine and structure fingerprints live in `data/engine-rules.json`. The rules use only metadata such as filenames, extensions, and relative paths, so contributors can improve KiriKiri, Ren'Py, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed route detection without touching game contents.
+
+After editing engine rules, run:
+
+```bash
+npm run build:engines
+npm run check
+```
+
+See [docs/ENGINE_RULES.md](docs/ENGINE_RULES.md) for the rule format and contribution notes.
+
 CI runs the same check on pull requests and pushes to `main`.
 
 Browser smoke tests run in GitHub Actions after installing Chromium. Run them locally with:
@@ -108,6 +121,8 @@ npm run test:smoke
 Recipe improvements, engine fingerprints, docs, and redacted false-positive reports are welcome. Start with [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 For new startup-error rules, open a "New error recipe" issue or edit `data/error-recipes.json` directly in a pull request.
+
+For engine and commercial/self-developed structure clues, edit `data/engine-rules.json`.
 
 Starter tasks live in [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md).
 
@@ -185,7 +200,7 @@ http://localhost:4173
 
 ### GitHub Pages Demo
 
-For a public repository, enable GitHub Pages with GitHub Actions as the source. The `Deploy Pages` workflow builds the static demo from `index.html`, `src/`, `data/error-recipes.json`, and `LICENSE`, then publishes the `dist/` artifact. The demo URL is usually `https://TonyNa-code.github.io/GalAid/`.
+For a public repository, enable GitHub Pages with GitHub Actions as the source. The `Deploy Pages` workflow builds the static demo from `index.html`, `src/`, `data/error-recipes.json`, `data/engine-rules.json`, and `LICENSE`, then publishes the `dist/` artifact. The demo URL is usually `https://TonyNa-code.github.io/GalAid/`.
 
 Build the same artifact locally:
 
@@ -203,6 +218,14 @@ npm start
 ```
 
 The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations.
+
+Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
+
+```bash
+npm run dist:win
+```
+
+See [docs/DESKTOP.md](docs/DESKTOP.md) for packaging notes.
 
 ## Safety Boundary
 
@@ -224,7 +247,7 @@ The static web MVP only reads browser-exposed file metadata. The desktop beta ca
 - Screenshot OCR for error dialogs
 - Better engine fingerprints
 - Safe open-format asset preview
-- Community-maintained diagnosis recipes
+- Community-maintained diagnosis recipes and engine rules
 
 ## License
 
