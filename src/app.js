@@ -9,6 +9,7 @@ const clearButton = document.querySelector("#clearButton");
 const copyReportButton = document.querySelector("#copyReportButton");
 const downloadReportButton = document.querySelector("#downloadReportButton");
 const downloadBundleButton = document.querySelector("#downloadBundleButton");
+const assistantLanguageSelect = document.querySelector("#assistantLanguageSelect");
 const dropZone = document.querySelector("#dropZone");
 const errorInput = document.querySelector("#errorInput");
 const projectTitle = document.querySelector("#projectTitle");
@@ -48,6 +49,171 @@ const HUGE_FOLDER_THRESHOLD = 50000;
 const MAX_SORTED_FILES = 50000;
 const SUPPORT_BUNDLE_FILE_LIMIT = 5000;
 const ERROR_RECIPES = Array.isArray(window.GALAID_ERROR_RECIPES) ? window.GALAID_ERROR_RECIPES : [];
+const ASSISTANT_LANGUAGE_STORAGE_KEY = "GalAid.assistantLanguage.v1";
+const ASSISTANT_LANGUAGE_PACKS = {
+  "zh-CN": {
+    name: "中文",
+    reportTitle: "GalAid diagnosis report",
+    checklistTitle: "GalAid next-step checklist",
+    supportTitle: "GalAid 求助摘要",
+    supportBundleTitle: "GalAid support bundle",
+    labels: {
+      project: "项目",
+      generated: "生成时间",
+      root: "Root",
+      files: "Files",
+      size: "Size",
+      status: "Status",
+      mode: "Mode",
+      modeDetail: "Mode detail",
+      riskFindings: "Risk findings",
+      assistantLanguage: "Assistant language",
+      launchCandidates: "Launch candidates",
+      launchProfiles: "Launch profiles",
+      nextRoadmap: "Next-step roadmap",
+      environmentChecks: "Environment checks",
+      errorRecipes: "Error recipes",
+      engineClues: "Engine and structure clues",
+      findings: "Findings",
+      packages: "Archives and disc images",
+      assetMap: "Asset map",
+      errorText: "Error text",
+      summary: "Summary",
+      detail: "Detail",
+      action: "Action",
+      evidence: "Evidence",
+      step: "Step",
+      workdir: "Workdir",
+      command: "Command",
+      noLaunch: "No launch candidates found.",
+      noProfiles: "No launch profiles generated.",
+      noErrorText: "No error text provided.",
+      noErrorRecipe: "No known error recipe matched.",
+      noEngine: "No obvious engine markers found.",
+      noPackages: "No archives or disc images found.",
+      privacy: "隐私说明",
+      mainNotices: "主要提示",
+      route: "路线图",
+      supportFile: "求助包",
+      recommendedEntry: "推荐入口",
+      environmentConclusion: "环境结论",
+      nextStep: "下一步",
+      recipeResult: "报错配方",
+      noBlockers: "暂无明显阻断项。",
+      privacyMetadata: "求助包只包含诊断元数据，不包含游戏文件或文件内容。",
+      privacyPaths: "文件路径为相对路径，桌面绝对路径已省略。",
+      privacyZip: "ZIP 预检只读取目录元数据，不解压文件。",
+    },
+  },
+  en: {
+    name: "English",
+    reportTitle: "GalAid diagnosis report",
+    checklistTitle: "GalAid next-step checklist",
+    supportTitle: "GalAid support summary",
+    supportBundleTitle: "GalAid support bundle",
+    labels: {
+      project: "Project",
+      generated: "Generated",
+      root: "Root",
+      files: "Files",
+      size: "Size",
+      status: "Status",
+      mode: "Mode",
+      modeDetail: "Mode detail",
+      riskFindings: "Risk findings",
+      assistantLanguage: "Assistant language",
+      launchCandidates: "Launch candidates",
+      launchProfiles: "Launch profiles",
+      nextRoadmap: "Next-step roadmap",
+      environmentChecks: "Environment checks",
+      errorRecipes: "Error recipes",
+      engineClues: "Engine and structure clues",
+      findings: "Findings",
+      packages: "Archives and disc images",
+      assetMap: "Asset map",
+      errorText: "Error text",
+      summary: "Summary",
+      detail: "Detail",
+      action: "Action",
+      evidence: "Evidence",
+      step: "Step",
+      workdir: "Workdir",
+      command: "Command",
+      noLaunch: "No launch candidates found.",
+      noProfiles: "No launch profiles generated.",
+      noErrorText: "No error text provided.",
+      noErrorRecipe: "No known error recipe matched.",
+      noEngine: "No obvious engine or structure markers found.",
+      noPackages: "No archives or disc images found.",
+      privacy: "Privacy",
+      mainNotices: "Main notices",
+      route: "Roadmap",
+      supportFile: "Support bundle",
+      recommendedEntry: "Recommended entry",
+      environmentConclusion: "Environment conclusion",
+      nextStep: "Next step",
+      recipeResult: "Error recipes",
+      noBlockers: "No obvious blockers.",
+      privacyMetadata: "The support bundle contains diagnosis metadata only, not game files or file contents.",
+      privacyPaths: "Paths are relative; desktop absolute paths are omitted.",
+      privacyZip: "ZIP preflight reads directory metadata only and does not extract files.",
+    },
+  },
+  ja: {
+    name: "日本語",
+    reportTitle: "GalAid 診断レポート",
+    checklistTitle: "GalAid 次の手順チェックリスト",
+    supportTitle: "GalAid サポート概要",
+    supportBundleTitle: "GalAid サポートバンドル",
+    labels: {
+      project: "プロジェクト",
+      generated: "生成日時",
+      root: "ルート",
+      files: "ファイル数",
+      size: "サイズ",
+      status: "状態",
+      mode: "モード",
+      modeDetail: "モード詳細",
+      riskFindings: "注意点",
+      assistantLanguage: "診断言語",
+      launchCandidates: "起動候補",
+      launchProfiles: "起動プロファイル",
+      nextRoadmap: "次の手順",
+      environmentChecks: "環境チェック",
+      errorRecipes: "エラーレシピ",
+      engineClues: "エンジン/構造の手がかり",
+      findings: "診断メモ",
+      packages: "アーカイブとディスクイメージ",
+      assetMap: "アセット概要",
+      errorText: "エラー本文",
+      summary: "概要",
+      detail: "詳細",
+      action: "対応",
+      evidence: "根拠",
+      step: "手順",
+      workdir: "作業フォルダ",
+      command: "コマンド",
+      noLaunch: "起動候補は見つかりませんでした。",
+      noProfiles: "起動プロファイルは生成されませんでした。",
+      noErrorText: "エラー本文は入力されていません。",
+      noErrorRecipe: "既知のエラーレシピには一致しませんでした。",
+      noEngine: "明確なエンジン/構造の手がかりは見つかりませんでした。",
+      noPackages: "アーカイブやディスクイメージは見つかりませんでした。",
+      privacy: "プライバシー",
+      mainNotices: "主な注意点",
+      route: "手順",
+      supportFile: "サポートバンドル",
+      recommendedEntry: "推奨起動ファイル",
+      environmentConclusion: "環境チェック結果",
+      nextStep: "次の手順",
+      recipeResult: "エラーレシピ",
+      noBlockers: "明確な阻害要因はありません。",
+      privacyMetadata: "サポートバンドルには診断メタデータのみが含まれ、ゲームファイルや内容は含まれません。",
+      privacyPaths: "パスは相対パスで保存され、デスクトップの絶対パスは省略されます。",
+      privacyZip: "ZIP 事前チェックはディレクトリメタデータのみを読み取り、ファイルを展開しません。",
+    },
+  },
+};
 
 const SAMPLE_FILES = [
   ["SakuraTrial/game.exe", 1422000],
@@ -131,6 +297,31 @@ let currentFiles = [];
 let currentAnalysis = null;
 let scanRunId = 0;
 const desktopApi = window.galaidDesktop || null;
+
+assistantLanguageSelect.value = getStoredAssistantLanguage();
+
+function getAssistantLanguage() {
+  const value = assistantLanguageSelect?.value || getStoredAssistantLanguage();
+  return ASSISTANT_LANGUAGE_PACKS[value] ? value : "zh-CN";
+}
+
+function getAssistantPack(language = getAssistantLanguage()) {
+  return ASSISTANT_LANGUAGE_PACKS[language] || ASSISTANT_LANGUAGE_PACKS["zh-CN"];
+}
+
+function getStoredAssistantLanguage() {
+  try {
+    const stored = window.localStorage?.getItem(ASSISTANT_LANGUAGE_STORAGE_KEY);
+    return ASSISTANT_LANGUAGE_PACKS[stored] ? stored : "zh-CN";
+  } catch {
+    return "zh-CN";
+  }
+}
+
+function refreshCurrentReport() {
+  if (!currentAnalysis) return;
+  currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value, getAssistantLanguage());
+}
 
 function normalizePath(path) {
   return String(path || "").replaceAll("\\", "/").replace(/^\/+/, "");
@@ -1996,7 +2187,7 @@ async function setFiles(files, options = {}) {
     currentFiles = uniqueFiles(files);
     currentAnalysis = analyze(currentFiles, errorInput.value);
     if (options.desktopMeta) currentAnalysis.desktopMeta = options.desktopMeta;
-    currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value);
+    refreshCurrentReport();
     updateScanState({
       title: currentAnalysis.mode.label,
       detail: currentAnalysis.mode.detail,
@@ -2529,8 +2720,9 @@ function renderAssets(analysis) {
 }
 
 function renderSupport(analysis) {
-  const bundle = buildSupportBundle(analysis, errorInput.value);
-  const manifest = buildSupportManifest(analysis, getDisplayTitle(analysis), new Date().toISOString());
+  const language = getAssistantLanguage();
+  const bundle = buildSupportBundle(analysis, errorInput.value, language);
+  const manifest = buildSupportManifest(analysis, getDisplayTitle(analysis), new Date().toISOString(), language);
   const entries = bundle.entries.map((entry) => entry.path);
   const topIssues = analysis.findings
     .filter((finding) => finding.level === "blocker" || finding.level === "warning")
@@ -2592,119 +2784,125 @@ function renderSupport(analysis) {
     </div>
     <article class="support-card">
       <ul class="support-issue-list">${issueCards}</ul>
-      <pre class="support-preview"><code>${escapeHtml(buildSupportSummaryText(analysis, manifest, bundle.filename))}</code></pre>
+      <pre class="support-preview"><code>${escapeHtml(buildSupportSummaryText(analysis, manifest, bundle.filename, language))}</code></pre>
     </article>
   `;
 }
 
-function buildRoadmapChecklistText(analysis) {
+function buildRoadmapChecklistText(analysis, language = getAssistantLanguage()) {
+  const pack = getAssistantPack(language);
+  const labels = pack.labels;
   const lines = [];
-  lines.push("# GalAid next-step checklist");
+  lines.push(`# ${pack.checklistTitle}`);
   lines.push("");
-  lines.push(`Project: ${getDisplayTitle(analysis)}`);
-  lines.push(`Summary: ${analysis.roadmap.summary.label}`);
+  lines.push(`${labels.project}: ${getDisplayTitle(analysis)}`);
+  lines.push(`${labels.assistantLanguage}: ${pack.name}`);
+  lines.push(`${labels.summary}: ${analysis.roadmap.summary.label}`);
   lines.push("");
   analysis.roadmap.steps.forEach((step, index) => {
     const marker = step.state === "info" ? "-" : "- [ ]";
     lines.push(`${marker} ${index + 1}. ${step.title} (${step.stateLabel})`);
     lines.push(`  - ${step.action}`);
-    if (step.evidence.length) lines.push(`  - Evidence: ${step.evidence.join(", ")}`);
+    if (step.evidence.length) lines.push(`  - ${labels.evidence}: ${step.evidence.join(", ")}`);
   });
   return lines.join("\n");
 }
 
-function buildMarkdownReport(analysis, errorText) {
+function buildMarkdownReport(analysis, errorText, language = getAssistantLanguage()) {
+  const pack = getAssistantPack(language);
+  const labels = pack.labels;
   const lines = [];
-  lines.push("# GalAid diagnosis report");
+  lines.push(`# ${pack.reportTitle}`);
   lines.push("");
-  lines.push(`- Root: ${analysis.roots.map((root) => `${root.name} (${root.count})`).join(", ") || "unknown"}`);
-  lines.push(`- Files: ${analysis.files.length}`);
-  lines.push(`- Size: ${formatBytes(analysis.totalSize)}`);
-  lines.push(`- Status: ${analysis.status.label}`);
-  lines.push(`- Mode: ${analysis.mode.label}`);
-  lines.push(`- Mode detail: ${analysis.mode.detail}`);
-  lines.push(`- Risk findings: ${analysis.riskTotal}`);
+  lines.push(`- ${labels.root}: ${analysis.roots.map((root) => `${root.name} (${root.count})`).join(", ") || "unknown"}`);
+  lines.push(`- ${labels.files}: ${analysis.files.length}`);
+  lines.push(`- ${labels.size}: ${formatBytes(analysis.totalSize)}`);
+  lines.push(`- ${labels.status}: ${analysis.status.label}`);
+  lines.push(`- ${labels.mode}: ${analysis.mode.label}`);
+  lines.push(`- ${labels.modeDetail}: ${analysis.mode.detail}`);
+  lines.push(`- ${labels.riskFindings}: ${analysis.riskTotal}`);
+  lines.push(`- ${labels.assistantLanguage}: ${pack.name}`);
   if (analysis.desktopMeta) {
     lines.push(`- Desktop platform: ${analysis.desktopMeta.platform || "unknown"}`);
     lines.push(`- Desktop selections: ${analysis.desktopMeta.selectedCount || 0}`);
     lines.push(`- Desktop skipped entries: ${analysis.desktopMeta.skipped || 0}`);
   }
   lines.push("");
-  lines.push("## Launch candidates");
+  lines.push(`## ${labels.launchCandidates}`);
   if (analysis.launchCandidates.length) {
     for (const candidate of analysis.launchCandidates) {
       lines.push(`- ${candidate.score}/100 ${candidate.file.path} (${candidate.reasons.join(", ") || "candidate"})`);
     }
   } else {
-    lines.push("- No launch candidates found.");
+    lines.push(`- ${labels.noLaunch}`);
   }
   lines.push("");
-  lines.push("## Launch profiles");
+  lines.push(`## ${labels.launchProfiles}`);
   if (analysis.profiles.length) {
     for (const profile of analysis.profiles) {
       lines.push(`- ${profile.title}: ${profile.entryPath}`);
-      lines.push(`  - Workdir: ${profile.workingDirectory}`);
-      lines.push(`  - Command: ${profile.commandPreview}`);
+      lines.push(`  - ${labels.workdir}: ${profile.workingDirectory}`);
+      lines.push(`  - ${labels.command}: ${profile.commandPreview}`);
       for (const note of profile.notes.slice(0, 4)) lines.push(`  - ${note}`);
     }
   } else {
-    lines.push("- No launch profiles generated.");
+    lines.push(`- ${labels.noProfiles}`);
   }
   lines.push("");
-  lines.push("## Next-step roadmap");
-  lines.push(`- Summary: ${analysis.roadmap.summary.label}`);
-  lines.push(`- Detail: ${analysis.roadmap.summary.detail}`);
+  lines.push(`## ${labels.nextRoadmap}`);
+  lines.push(`- ${labels.summary}: ${analysis.roadmap.summary.label}`);
+  lines.push(`- ${labels.detail}: ${analysis.roadmap.summary.detail}`);
   for (const [index, step] of analysis.roadmap.steps.entries()) {
     lines.push(`- ${index + 1}. [${step.state}] ${step.title}: ${step.action}`);
-    for (const evidence of step.evidence) lines.push(`  - Evidence: ${evidence}`);
+    for (const evidence of step.evidence) lines.push(`  - ${labels.evidence}: ${evidence}`);
   }
   lines.push("");
-  lines.push("## Environment checks");
-  lines.push(`- Summary: ${analysis.environment.summary.label}`);
-  lines.push(`- Detail: ${analysis.environment.summary.detail}`);
+  lines.push(`## ${labels.environmentChecks}`);
+  lines.push(`- ${labels.summary}: ${analysis.environment.summary.label}`);
+  lines.push(`- ${labels.detail}: ${analysis.environment.summary.detail}`);
   for (const check of analysis.environment.checks) {
     lines.push(`- [${check.status}] ${check.title}: ${check.detail}`);
-    lines.push(`  - Action: ${check.action}`);
-    for (const evidence of check.evidence) lines.push(`  - Evidence: ${evidence}`);
+    lines.push(`  - ${labels.action}: ${check.action}`);
+    for (const evidence of check.evidence) lines.push(`  - ${labels.evidence}: ${evidence}`);
   }
   lines.push("");
-  lines.push("## Error recipes");
+  lines.push(`## ${labels.errorRecipes}`);
   if (analysis.errorDiagnostics.hasText) {
-    lines.push(`- Summary: ${analysis.errorDiagnostics.summary.label}`);
-    lines.push(`- Detail: ${analysis.errorDiagnostics.summary.detail}`);
+    lines.push(`- ${labels.summary}: ${analysis.errorDiagnostics.summary.label}`);
+    lines.push(`- ${labels.detail}: ${analysis.errorDiagnostics.summary.detail}`);
     if (analysis.errorDiagnostics.matches.length) {
       for (const match of analysis.errorDiagnostics.matches) {
         lines.push(`- [${match.level}] ${match.title}: ${match.action}`);
-        for (const evidence of match.evidence) lines.push(`  - Evidence: ${evidence}`);
-        for (const step of match.checklist || []) lines.push(`  - Step: ${step}`);
+        for (const evidence of match.evidence) lines.push(`  - ${labels.evidence}: ${evidence}`);
+        for (const step of match.checklist || []) lines.push(`  - ${labels.step}: ${step}`);
       }
     } else {
-      lines.push("- No known error recipe matched.");
+      lines.push(`- ${labels.noErrorRecipe}`);
     }
   } else {
-    lines.push("- No error text provided.");
+    lines.push(`- ${labels.noErrorText}`);
   }
   lines.push("");
-  lines.push("## Engine and structure clues");
+  lines.push(`## ${labels.engineClues}`);
   if (analysis.engines.length) {
     for (const engine of analysis.engines) {
       lines.push(`- ${engine.name}: ${engine.confidence}, score ${engine.score}`);
       for (const evidence of engine.evidence) lines.push(`  - ${evidence}`);
     }
   } else {
-    lines.push("- No obvious engine markers found.");
+    lines.push(`- ${labels.noEngine}`);
   }
   lines.push("");
-  lines.push("## Findings");
+  lines.push(`## ${labels.findings}`);
   for (const finding of analysis.findings) {
     lines.push(`- [${finding.level}] ${finding.title}: ${finding.body}`);
   }
   lines.push("");
-  lines.push("## Archives and disc images");
+  lines.push(`## ${labels.packages}`);
   if (analysis.packages.hasPackages) {
     for (const set of [...analysis.packages.archiveSets, ...analysis.packages.discSets]) {
       lines.push(`- ${set.format}: ${set.summary}`);
-      lines.push(`  - Next step: ${set.nextStep}`);
+      lines.push(`  - ${labels.nextStep}: ${set.nextStep}`);
       if (set.archivePreview) {
         lines.push(`  - ZIP preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} internal files, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues`);
         for (const sample of set.archivePreview.signals?.launchSamples || []) lines.push(`  - Preview launch clue: ${sample}`);
@@ -2714,16 +2912,16 @@ function buildMarkdownReport(analysis, errorText) {
       }
     }
   } else {
-    lines.push("- No archives or disc images found.");
+    lines.push(`- ${labels.noPackages}`);
   }
   lines.push("");
-  lines.push("## Asset map");
+  lines.push(`## ${labels.assetMap}`);
   for (const category of analysis.categories) {
     lines.push(`- ${category.name}: ${category.count} files, ${formatBytes(category.size)}`);
   }
   if (errorText.trim()) {
     lines.push("");
-    lines.push("## Error text");
+    lines.push(`## ${labels.errorText}`);
     lines.push("```");
     lines.push(errorText.trim());
     lines.push("```");
@@ -2731,11 +2929,11 @@ function buildMarkdownReport(analysis, errorText) {
   return lines.join("\n");
 }
 
-function buildSupportBundle(analysis, errorText) {
+function buildSupportBundle(analysis, errorText, language = getAssistantLanguage()) {
   const title = getDisplayTitle(analysis);
   const generatedAt = new Date().toISOString();
   const safeTitle = slugifyFilename(title, "galaid-diagnosis");
-  const manifest = buildSupportManifest(analysis, title, generatedAt);
+  const manifest = buildSupportManifest(analysis, title, generatedAt, language);
   const fileManifest = buildFileManifest(analysis);
   const errorRecipeReport = {
     schema: "galaid.errorRecipes.v1",
@@ -2752,13 +2950,13 @@ function buildSupportBundle(analysis, errorText) {
     schema: "galaid.roadmap.v1",
     summary: analysis.roadmap.summary,
     steps: analysis.roadmap.steps,
-    checklist: buildRoadmapChecklistText(analysis),
+    checklist: buildRoadmapChecklistText(analysis, language),
   };
   const profiles = analysis.profiles.map(getPublicProfile);
   const entries = [
     {
       path: "README.txt",
-      content: buildSupportReadme(analysis, title, generatedAt),
+      content: buildSupportReadme(analysis, title, generatedAt, language),
       type: "text/plain;charset=utf-8",
     },
     {
@@ -2825,11 +3023,16 @@ function buildSupportBundle(analysis, errorText) {
   };
 }
 
-function buildSupportManifest(analysis, title, generatedAt) {
+function buildSupportManifest(analysis, title, generatedAt, language = getAssistantLanguage()) {
+  const pack = getAssistantPack(language);
   return {
     schema: "galaid.supportBundle.v1",
     generatedAt,
     title,
+    assistantLanguage: {
+      code: language,
+      name: pack.name,
+    },
     privacy: {
       localOnly: true,
       includesGameFiles: false,
@@ -2864,22 +3067,23 @@ function buildSupportManifest(analysis, title, generatedAt) {
   };
 }
 
-function buildSupportReadme(analysis, title, generatedAt) {
+function buildSupportReadme(analysis, title, generatedAt, language = getAssistantLanguage()) {
+  const pack = getAssistantPack(language);
+  const labels = pack.labels;
   return [
-    "GalAid support bundle",
+    pack.supportBundleTitle,
     "",
-    `Project: ${title}`,
-    `Generated: ${generatedAt}`,
-    `Status: ${analysis.status.label}`,
-    `Files indexed: ${formatNumber(analysis.files.length)}`,
-    `Size: ${formatBytes(analysis.totalSize)}`,
+    `${labels.project}: ${title}`,
+    `${labels.generated}: ${generatedAt}`,
+    `${labels.status}: ${analysis.status.label}`,
+    `${labels.files}: ${formatNumber(analysis.files.length)}`,
+    `${labels.size}: ${formatBytes(analysis.totalSize)}`,
+    `${labels.assistantLanguage}: ${pack.name}`,
     "",
-    "Privacy:",
-    "- This ZIP contains diagnosis metadata only.",
-    "- It does not contain game files or file contents.",
-    "- Archive previews read ZIP directory metadata only and do not extract files.",
-    "- Paths are relative paths from the selected folder/file list.",
-    "- Desktop absolute paths are intentionally omitted.",
+    `${labels.privacy}:`,
+    `- ${labels.privacyMetadata}`,
+    `- ${labels.privacyZip}`,
+    `- ${labels.privacyPaths}`,
     "",
     "Included files:",
     "- galaid-report.md: human-readable diagnosis",
@@ -2892,7 +3096,9 @@ function buildSupportReadme(analysis, title, generatedAt) {
   ].join("\n");
 }
 
-function buildSupportSummaryText(analysis, manifest, filename) {
+function buildSupportSummaryText(analysis, manifest, filename, language = getAssistantLanguage()) {
+  const pack = getAssistantPack(language);
+  const labels = pack.labels;
   const lines = [];
   const topLaunch = analysis.launchCandidates[0];
   const engineNames = analysis.engines.slice(0, 3).map((engine) => engine.name);
@@ -2900,34 +3106,36 @@ function buildSupportSummaryText(analysis, manifest, filename) {
     .filter((finding) => finding.level === "blocker" || finding.level === "warning")
     .slice(0, 5);
 
-  lines.push("## GalAid 求助摘要");
+  lines.push(`## ${pack.supportTitle}`);
   lines.push("");
-  lines.push(`- 项目：${manifest.title}`);
-  lines.push(`- 状态：${analysis.status.label}`);
-  lines.push(`- 文件：${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
-  lines.push(`- 模式：${analysis.mode.label}`);
-  lines.push(`- 推荐入口：${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : "未找到"}`);
-  lines.push(`- 引擎/结构线索：${engineNames.length ? engineNames.join(", ") : "未识别"}`);
-  lines.push(`- 环境结论：${analysis.environment.summary.label}`);
-  lines.push(`- 下一步：${analysis.roadmap.summary.label}`);
-  lines.push(`- 报错配方：${analysis.errorDiagnostics.summary.label}`);
-  lines.push(`- 求助包：${filename}`);
+  lines.push(`- ${labels.project}: ${manifest.title}`);
+  lines.push(`- ${labels.assistantLanguage}: ${pack.name}`);
+  lines.push(`- ${labels.status}: ${analysis.status.label}`);
+  lines.push(`- ${labels.files}: ${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
+  lines.push(`- ${labels.mode}: ${analysis.mode.label}`);
+  lines.push(`- ${labels.recommendedEntry}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : labels.noLaunch}`);
+  lines.push(`- ${labels.engineClues}: ${engineNames.length ? engineNames.join(", ") : labels.noEngine}`);
+  lines.push(`- ${labels.environmentConclusion}: ${analysis.environment.summary.label}`);
+  lines.push(`- ${labels.nextStep}: ${analysis.roadmap.summary.label}`);
+  lines.push(`- ${labels.recipeResult}: ${analysis.errorDiagnostics.summary.label}`);
+  lines.push(`- ${labels.supportFile}: ${filename}`);
   lines.push("");
-  lines.push("### 主要提示");
+  lines.push(`### ${labels.mainNotices}`);
   if (warnings.length) {
     for (const finding of warnings) lines.push(`- [${finding.level}] ${finding.title}: ${finding.body}`);
   } else {
-    lines.push("- 暂无明显阻断项。");
+    lines.push(`- ${labels.noBlockers}`);
   }
   lines.push("");
-  lines.push("### 路线图");
+  lines.push(`### ${labels.route}`);
   for (const [index, step] of analysis.roadmap.steps.slice(0, 6).entries()) {
     lines.push(`- ${index + 1}. ${step.title}: ${step.action}`);
   }
   lines.push("");
-  lines.push("### 隐私说明");
-  lines.push("- 求助包只包含诊断元数据，不包含游戏文件或文件内容。");
-  lines.push("- 文件路径为相对路径，桌面绝对路径已省略。");
+  lines.push(`### ${labels.privacy}`);
+  lines.push(`- ${labels.privacyMetadata}`);
+  lines.push(`- ${labels.privacyZip}`);
+  lines.push(`- ${labels.privacyPaths}`);
   return lines.join("\n");
 }
 
@@ -3210,7 +3418,7 @@ roadmapPanel.addEventListener("click", (event) => {
   if (!button || !currentAnalysis) return;
 
   if (button.dataset.roadmapAction === "copy-checklist") {
-    void copyText(buildRoadmapChecklistText(currentAnalysis), "路线清单已复制");
+    void copyText(buildRoadmapChecklistText(currentAnalysis, getAssistantLanguage()), "路线清单已复制");
   }
 });
 
@@ -3218,13 +3426,14 @@ supportPanel.addEventListener("click", (event) => {
   const button = event.target.closest("[data-support-action]");
   if (!button || !currentAnalysis) return;
 
-  const bundle = buildSupportBundle(currentAnalysis, errorInput.value);
+  const language = getAssistantLanguage();
+  const bundle = buildSupportBundle(currentAnalysis, errorInput.value, language);
   const manifestEntry = bundle.entries.find((entry) => entry.path === "manifest.json");
   const manifest = JSON.parse(manifestEntry.content);
   const action = button.dataset.supportAction;
 
   if (action === "copy-summary") {
-    void copyText(buildSupportSummaryText(currentAnalysis, manifest, bundle.filename), "求助摘要已复制");
+    void copyText(buildSupportSummaryText(currentAnalysis, manifest, bundle.filename, language), "求助摘要已复制");
   } else if (action === "copy-manifest") {
     void copyText(manifestEntry.content, "求助包清单已复制");
   } else if (action === "download-bundle") {
@@ -3274,8 +3483,10 @@ fileInput.addEventListener("change", () => {
 });
 errorInput.addEventListener("input", () => {
   if (!currentFiles.length) return;
+  const desktopMeta = currentAnalysis?.desktopMeta;
   currentAnalysis = analyze(currentFiles, errorInput.value);
-  currentAnalysis.report = buildMarkdownReport(currentAnalysis, errorInput.value);
+  if (desktopMeta) currentAnalysis.desktopMeta = desktopMeta;
+  refreshCurrentReport();
   updateScanState({
     title: currentAnalysis.mode.label,
     detail: currentAnalysis.mode.detail,
@@ -3283,6 +3494,16 @@ errorInput.addEventListener("input", () => {
     phase: currentAnalysis.mode.id === "normal" ? "ready" : "large",
   });
   render();
+});
+
+assistantLanguageSelect.addEventListener("change", () => {
+  try {
+    window.localStorage?.setItem(ASSISTANT_LANGUAGE_STORAGE_KEY, getAssistantLanguage());
+  } catch {
+    // Ignore storage failures; the selected value still applies to this session.
+  }
+  refreshCurrentReport();
+  if (currentAnalysis) render();
 });
 
 dropZone.addEventListener("dragover", (event) => {

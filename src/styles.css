@@ -35,7 +35,8 @@ body {
 
 button,
 textarea,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -66,6 +67,7 @@ button:disabled {
 
 button:focus-visible,
 textarea:focus-visible,
+select:focus-visible,
 .drop-zone:focus-visible {
   outline: 3px solid rgba(54, 167, 121, 0.28);
   outline-offset: 2px;
@@ -256,6 +258,16 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.language-select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
   color: var(--ink);
   background: #fff;
 }

@@ -14,6 +14,7 @@ GalAid v0.1.0 is a local-first launch doctor for visual novel and galgame folder
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages
 - Desktop ZIP directory preflight that spots internal launch and engine clues without extracting files
+- English default README with Chinese/Japanese translations and Chinese/English/Japanese diagnosis output language
 - Community-editable startup error recipes in `data/error-recipes.json`
 - Metadata-only support bundle with reports, launch profiles, roadmap, recipe matches, and sanitized file manifest
 - GitHub issue templates, PR template, CI checks, and GitHub Pages deployment workflow

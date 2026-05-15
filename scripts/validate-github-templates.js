@@ -24,6 +24,9 @@ const ISSUE_FORMS = [
 const REQUIRED_FILES = [
   "CODE_OF_CONDUCT.md",
   "SECURITY.md",
+  "README.md",
+  "README.zh-CN.md",
+  "README.ja.md",
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   ".github/workflows/ci.yml",
@@ -184,6 +187,31 @@ function checkReleaseDocs(errors) {
   }
 }
 
+function checkReadmes(errors) {
+  const readmes = [
+    {
+      file: "README.md",
+      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "GalAid is a local-first launch doctor"],
+    },
+    {
+      file: "README.zh-CN.md",
+      phrases: ["GalAid 是一个本地优先", "诊断语言", "商业/自研", "不上传、不运行、不修改、不解密、不解压"],
+    },
+    {
+      file: "README.ja.md",
+      phrases: ["GalAid は", "診断言語", "商用/自社", "アップロード、実行、変更、復号、展開しません"],
+    },
+  ];
+
+  for (const readme of readmes) {
+    const text = readRelative(readme.file);
+    checkNoTrailingWhitespace(readme.file, text, errors);
+    for (const phrase of readme.phrases) {
+      assert(text.includes(phrase), `${readme.file} is missing phrase: ${phrase}`, errors);
+    }
+  }
+}
+
 function checkReleaseAuditScript(errors) {
   const file = "scripts/release-audit.js";
   const text = readRelative(file);
@@ -286,7 +314,7 @@ function checkBrowserSmoke(errors) {
     assert(configText.includes(phrase), `${configFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["游戏样例", "自研样例", "DirectX 旧组件", "VC++ 运行库", "roadmap.json", "不包含游戏文件", "ZIP 目录预检", "商业/自研引擎启动链"]) {
+  for (const phrase of ["游戏样例", "自研样例", "诊断助手语言", "Assistant language", "GalAid サポート概要", "DirectX 旧组件", "VC++ 运行库", "roadmap.json", "不包含游戏文件", "ZIP 目录预检", "商业/自研引擎启动链"]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }
@@ -333,6 +361,7 @@ function main() {
   checkPagesWorkflow(errors);
   checkPrTemplate(errors);
   checkContributing(errors);
+  checkReadmes(errors);
   checkGoodFirstIssues(errors);
   checkBrowserSmoke(errors);
   checkArchivePreview(errors);

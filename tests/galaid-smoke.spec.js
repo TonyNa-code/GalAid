@@ -58,3 +58,22 @@ test("commercial sample promotes proprietary engine startup route", async ({ pag
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).toContainText("商业/自研引擎启动链");
 });
+
+test("assistant output language can switch to English and Japanese", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "游戏样例" }).click();
+  await page.getByLabel("诊断助手语言").selectOption("en");
+  await page.locator('[data-tab="report"]').click();
+
+  await expect(page.locator("#reportPanel")).toContainText("Assistant language: English");
+  await expect(page.locator("#reportPanel")).toContainText("## Environment checks");
+
+  await page.locator('[data-tab="support"]').click();
+  await expect(page.locator(".support-preview")).toContainText("## GalAid support summary");
+  await expect(page.locator(".support-preview")).toContainText("Recommended entry");
+
+  await page.getByLabel("诊断助手语言").selectOption("ja");
+  await expect(page.locator(".support-preview")).toContainText("## GalAid サポート概要");
+  await expect(page.locator(".support-preview")).toContainText("診断言語: 日本語");
+});
