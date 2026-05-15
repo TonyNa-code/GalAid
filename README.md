@@ -7,7 +7,7 @@
 
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
-    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.1-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.2-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
     <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
@@ -77,7 +77,7 @@ GalAid turns that mess into a small diagnosis report.
 | Surface | Start here | Best for |
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
-| Windows beta | [v0.1.1-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.1-beta) | Native folder picking, recursive scans, ZIP preflight, and trusted one-click launch. |
+| Windows beta | [v0.1.2-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.2-beta) | Native folder picking, recursive scans, ZIP preflight, trusted one-click launch, shortcuts, and launch history. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
@@ -242,7 +242,7 @@ npm run build:pages
 
 ### Desktop Beta
 
-Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.1-beta), or run the Electron shell locally:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.2-beta), or run the Electron shell locally:
 
 ```bash
 npm install
