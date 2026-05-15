@@ -96,6 +96,8 @@ Recipe improvements, engine fingerprints, docs, and redacted false-positive repo
 
 For new startup-error rules, open a "New error recipe" issue or edit `data/error-recipes.json` directly in a pull request.
 
+Please also read [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Release notes and repository topic suggestions live in [docs/RELEASE_DRAFT.md](docs/RELEASE_DRAFT.md) and [docs/REPO_TOPICS.md](docs/REPO_TOPICS.md).
+
 ## Support Bundle
 
 The support bundle is a local `.zip` for asking for help in an issue, forum, or chat. It includes:

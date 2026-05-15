@@ -14,6 +14,8 @@ GalAid is local-first and safety-focused. Contributions should help users diagno
 
 ## Safety Rules
 
+Read `SECURITY.md` and `CODE_OF_CONDUCT.md` before opening issues or pull requests.
+
 Do not include:
 
 - game downloads, serials, cracks, DRM bypasses, or decryption instructions

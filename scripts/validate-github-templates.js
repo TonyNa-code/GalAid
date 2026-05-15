@@ -22,11 +22,15 @@ const ISSUE_FORMS = [
 ];
 
 const REQUIRED_FILES = [
+  "CODE_OF_CONDUCT.md",
+  "SECURITY.md",
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   ".github/workflows/ci.yml",
   ".github/workflows/pages.yml",
   "docs/CONTRIBUTING.md",
+  "docs/RELEASE_DRAFT.md",
+  "docs/REPO_TOPICS.md",
 ];
 
 function readRelative(relativePath) {
@@ -94,11 +98,82 @@ function checkContributing(errors) {
     "data/error-recipes.json",
     "npm run build:recipes",
     "npm run check",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
     "Do not include",
     "cracks",
     "access tokens",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkSecurityPolicy(errors) {
+  const file = "SECURITY.md";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "Security Policy",
+    "local-first",
+    "Report a Vulnerability",
+    "Security Boundary",
+    "metadata only",
+    "must not upload, execute, modify, decrypt, or extract",
+    "game files",
+    "tokens",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkCodeOfConduct(errors) {
+  const file = "CODE_OF_CONDUCT.md";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "Code of Conduct",
+    "welcoming to beginners",
+    "Expected Behavior",
+    "Unacceptable Behavior",
+    "Enforcement",
+    "cracks",
+    "unauthorized downloads",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkReleaseDocs(errors) {
+  const releaseFile = "docs/RELEASE_DRAFT.md";
+  const topicsFile = "docs/REPO_TOPICS.md";
+  const releaseText = readRelative(releaseFile);
+  const topicsText = readRelative(topicsFile);
+
+  checkNoTrailingWhitespace(releaseFile, releaseText, errors);
+  checkNoTrailingWhitespace(topicsFile, topicsText, errors);
+
+  for (const phrase of [
+    "v0.1.0 beta",
+    "Highlights",
+    "Safety Boundary",
+    "Pre-Release Checklist",
+    "GitHub Pages",
+    "Known Limits",
+  ]) {
+    assert(releaseText.includes(phrase), `${releaseFile} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of [
+    "visual-novel",
+    "galgame",
+    "launch-doctor",
+    "local-first",
+    "metadata-only",
+    "github-pages",
+  ]) {
+    assert(topicsText.includes(phrase), `${topicsFile} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -167,12 +242,15 @@ function main() {
   checkPagesWorkflow(errors);
   checkPrTemplate(errors);
   checkContributing(errors);
+  checkSecurityPolicy(errors);
+  checkCodeOfConduct(errors);
+  checkReleaseDocs(errors);
 
   if (errors.length) {
     throw new Error(`Invalid GitHub templates:\n- ${errors.join("\n- ")}`);
   }
 
-  console.log(`Validated ${ISSUE_FORMS.length} issue forms, PR template, contribution guide, CI workflow, and Pages workflow.`);
+  console.log(`Validated ${ISSUE_FORMS.length} issue forms, release docs, project policies, and workflows.`);
 }
 
 main();
