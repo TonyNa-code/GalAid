@@ -1185,6 +1185,11 @@ textarea {
   font-size: 13px;
 }
 
+.sample-list strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
 .sample-list code,
 .report-box code {
   border-radius: 6px;

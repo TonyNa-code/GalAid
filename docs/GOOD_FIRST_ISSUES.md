@@ -23,11 +23,11 @@ Acceptance checklist:
 - Run `npm run check`.
 - Do not include game files, cracks, serials, or unofficial download links.
 
-## 2. Add KiriKiri engine fingerprints
+## 2. Add more KiriKiri engine fingerprints
 
 Labels: `good first issue`, `engine`
 
-Goal: improve KiriKiri / 吉里吉里 detection using filenames and resource archives only.
+Goal: improve KiriKiri / 吉里吉里 detection beyond the current baseline using filenames and resource archives only.
 
 Useful metadata-only clues:
 
@@ -42,11 +42,11 @@ Acceptance checklist:
 - Confirm the roadmap still suggests locale checks for KiriKiri folders.
 - Run `npm run check`.
 
-## 3. Add commercial engine structure examples
+## 3. Add more commercial engine structure examples
 
 Labels: `good first issue`, `engine`
 
-Goal: improve the commercial/self-developed engine route using metadata-only folder structures.
+Goal: improve the commercial/self-developed engine route with more metadata-only folder structures.
 
 Useful metadata-only clues:
 
@@ -62,11 +62,11 @@ Acceptance checklist:
 - Add or update a small metadata-only sample if needed.
 - Run `npm run check`.
 
-## 4. Improve archive and disc-image copy
+## 4. Polish archive and disc-image copy
 
 Labels: `good first issue`, `documentation`
 
-Goal: make package-stage guidance clearer for beginners who only have `.rar`, `.7z.001`, `.iso`, `.cue/.bin`, or `.mds/.mdf` files.
+Goal: keep package-stage guidance clear for beginners who only have `.rar`, `.7z.001`, `.iso`, `.cue/.bin`, or `.mds/.mdf` files.
 
 Acceptance checklist:
 

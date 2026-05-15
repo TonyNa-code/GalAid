@@ -105,6 +105,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyBody: "GalAid 会在本地分析启动文件、引擎/结构线索、镜像/压缩包、路径风险和素材分布。",
       launchCandidates: "启动候选",
       diagnosisFindings: "诊断结论",
+      evidenceTitle: "判断依据",
       noLaunchTitle: "没有候选入口",
       noLaunchBody: "请换成完整解压后的游戏根目录再试。",
       items: "项",
@@ -318,6 +319,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyBody: "GalAid analyzes launch files, engine/structure clues, archives/images, path risks, and asset categories locally.",
       launchCandidates: "Launch candidates",
       diagnosisFindings: "Diagnosis findings",
+      evidenceTitle: "Evidence",
       noLaunchTitle: "No launch candidate",
       noLaunchBody: "Try again with the fully extracted game root folder.",
       items: "items",
@@ -531,6 +533,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyBody: "GalAid は起動ファイル、エンジン/構造の手がかり、アーカイブ/イメージ、パスのリスク、アセット分類をローカルで分析します。",
       launchCandidates: "起動候補",
       diagnosisFindings: "診断結果",
+      evidenceTitle: "根拠",
       noLaunchTitle: "起動候補なし",
       noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
       items: "件",
@@ -2094,32 +2097,40 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const setupFiles = samplePaths(files, (file) => isSetupLike(file.lowerPath), 3);
   const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
+  const archivePaths = packages.archives.slice(0, 3).map((item) => item.file.path);
+  const discPaths = packages.discs.slice(0, 3).map((item) => item.file.path);
+  const packagePaths = compactEvidence([...archivePaths, ...discPaths], 4);
 
   if (mode.id !== "normal") {
     findings.push({
       level: mode.findingLevel,
       title: "已启用大文件夹模式",
       body: `${mode.detail} 这不会读取 10GB 级游戏文件内容，只会分析文件清单。`,
+      evidence: [`${formatNumber(files.length)} files`, mode.label],
     });
   }
 
   if (launchCandidates.length) {
+    const topCandidate = launchCandidates[0];
     findings.push({
       level: "good",
       title: "找到可尝试启动入口",
-      body: `最高置信度入口是 ${launchCandidates[0].file.path}。如果它失败，再按候选列表从上到下尝试。`,
+      body: `最高置信度入口是 ${topCandidate.file.path}。如果它失败，再按候选列表从上到下尝试。`,
+      evidence: compactEvidence([topCandidate.file.path, ...topCandidate.reasons], 4),
     });
   } else if (executableCount === 0 && !hasFile(files, (file) => file.name.toLowerCase() === "index.html")) {
     findings.push({
       level: "blocker",
       title: "没有发现明显启动入口",
       body: "当前选择里没有 exe、bat、cmd、lnk 或 index.html。可能只选中了压缩包、镜像、补丁包，或还没有完整解压。",
+      evidence: packagePaths.length ? packagePaths : roots.slice(0, 3).map((root) => `${root.name} (${root.count})`),
     });
   } else {
     findings.push({
       level: "warning",
       title: "启动入口不明确",
       body: "发现了可执行文件，但它们更像安装器、配置工具或运行库。请优先选择完整解压后的游戏根目录。",
+      evidence: compactEvidence([...setupFiles, ...launchCandidates.slice(0, 2).map((candidate) => candidate.file.path)], 4),
     });
   }
 
@@ -2128,6 +2139,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "warning",
       title: "主推商业/自研引擎路线",
       body: "这个目录更像商业 galgame 常见的私有启动链。诊断重点不是识别某个公开引擎，而是确认主程序、同级 DLL、资源封包、配置文件和工作目录保持完整。",
+      evidence: commercialEngine.evidence,
     });
   }
 
@@ -2136,12 +2148,14 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "warning",
       title: "看起来还停在压缩包阶段",
       body: "先完整解压 zip/rar/7z 等压缩包，再把解压后的游戏文件夹拖进来。分卷包要从 part1.rar、.7z.001 或 .zip.001 开始；直接在压缩软件里双击游戏经常会缺文件。",
+      evidence: archivePaths,
     });
   } else if (archiveCount) {
     findings.push({
       level: "info",
       title: "发现压缩包",
       body: "如果压缩包是补丁、特典或分卷，请确认所有分卷都在同一目录，并先解压到短英文路径。",
+      evidence: archivePaths,
     });
   }
 
@@ -2150,14 +2164,19 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "warning",
       title: "发现镜像文件",
       body: "iso/mds/mdf/cue/bin 通常需要先挂载或解包；cue/bin 与 mds/mdf 要保持配套文件同名同目录。挂载后再从虚拟光驱运行安装器或复制完整游戏目录。",
+      evidence: discPaths,
     });
   }
 
   if (packages.archiveSets.some((set) => set.missing?.length)) {
+    const missingSets = packages.archiveSets
+      .filter((set) => set.missing?.length)
+      .map((set) => `${set.family}: missing ${set.missing.join(", ")}`);
     findings.push({
       level: "warning",
       title: "压缩包分卷可能不完整",
       body: "检测到分卷编号缺口。请确认 part1/part2 或 .001/.002 等所有分卷都在同一目录后再解压。",
+      evidence: compactEvidence(missingSets, 4),
     });
   }
 
@@ -2166,6 +2185,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "warning",
       title: "路径里有非英文字符",
       body: `老游戏可能因为路径编码打不开。建议移动到 C:/Games/VNName 这类英文短路径。样例：${nonAsciiPaths.join(", ")}`,
+      evidence: nonAsciiPaths,
     });
   }
 
@@ -2174,6 +2194,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "warning",
       title: "路径过长",
       body: `Windows 老程序可能无法读取很长路径。建议缩短目录层级。样例：${longPaths.join(", ")}`,
+      evidence: longPaths,
     });
   }
 
@@ -2182,6 +2203,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "info",
       title: "选择里包含多个根目录",
       body: `检测到 ${roots.length} 个顶层目录。诊断仍可用，但启动判断会更保守。`,
+      evidence: roots.slice(0, 4).map((root) => `${root.name} (${formatNumber(root.count)} files)`),
     });
   }
 
@@ -2190,22 +2212,27 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "info",
       title: "可能需要先安装",
       body: `发现安装器或补丁工具：${setupFiles.join(", ")}。如果这是光盘镜像内容，通常先运行安装器。`,
+      evidence: setupFiles,
     });
   }
 
-  if (engines.some((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))) {
+  const localeRiskEngines = engines.filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id));
+  if (localeRiskEngines.length) {
     findings.push({
       level: "warning",
       title: "日区/编码风险较高",
       body: "吉里吉里、NScripter、Siglus/RealLive 或商业私有引擎老游戏常见乱码或闪退。优先尝试日区环境、Locale Emulator、英文路径和管理员权限。",
+      evidence: localeRiskEngines.flatMap((engine) => [engine.name, ...engine.evidence.slice(0, 1)]).slice(0, 4),
     });
   }
 
   if (engines.some((engine) => engine.id === "unity") && !hasFile(files, (file) => file.name === "UnityPlayer.dll")) {
+    const unityEngine = engines.find((engine) => engine.id === "unity");
     findings.push({
       level: "warning",
       title: "Unity 文件可能不完整",
       body: "发现 Unity 结构线索，但没有看到 UnityPlayer.dll。请确认解压完整，尤其不要漏掉同名 _Data 文件夹。",
+      evidence: unityEngine?.evidence || [],
     });
   }
 
@@ -2214,6 +2241,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       level: "info",
       title: "发现资源封包",
       body: "检测到 rpa/xp3/nsa/arc/pck 等资源封包。GalAid 当前只做识别和清单，不绕过加密或 DRM。",
+      evidence: samplePaths(files, (file) => RESOURCE_ARCHIVES.has(file.ext), 4),
     });
   }
 
@@ -2251,6 +2279,7 @@ function buildErrorDiagnostics(text) {
         level: match.level,
         title: `报错指向${match.title}`,
         body: `${match.cause} ${match.action}`,
+        evidence: match.evidence,
       }))
     : [
         {
@@ -2876,8 +2905,21 @@ function renderFinding(finding) {
       <div>
         <h4>${escapeHtml(finding.title)}</h4>
         <p>${escapeHtml(finding.body)}</p>
+        ${renderEvidenceList(finding.evidence, "finding-evidence")}
       </div>
     </article>
+  `;
+}
+
+function renderEvidenceList(evidence, className = "") {
+  const items = compactEvidence(Array.isArray(evidence) ? evidence : [], 4);
+  if (!items.length) return "";
+  const extraClass = className ? ` ${className}` : "";
+  return `
+    <div class="sample-list${extraClass}">
+      <strong>${escapeHtml(getUiText("evidenceTitle"))}</strong>
+      ${items.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}
+    </div>
   `;
 }
 

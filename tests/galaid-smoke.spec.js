@@ -12,6 +12,9 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".roadmap-summary h4")).toHaveText("4 个建议步骤");
   await expect(page.locator(".roadmap-step h4").filter({ hasText: "DirectX 旧组件" })).toBeVisible();
   await expect(page.locator(".roadmap-step h4").filter({ hasText: "VC++ 运行库" })).toBeVisible();
+  await page.locator('[data-tab="launch"]').click();
+  await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("判断依据");
+  await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("SakuraTrial/game.exe");
 
   const recipeCount = await page.evaluate(() => window.GALAID_ERROR_RECIPES.length);
   expect(recipeCount).toBeGreaterThanOrEqual(11);
