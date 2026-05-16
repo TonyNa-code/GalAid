@@ -213,6 +213,296 @@ const LAUNCH_FAILURE_SYMPTOMS = [
     },
   },
 ];
+const LAUNCH_FAILURE_TRIAGE = [
+  {
+    id: "visible-result",
+    title: {
+      "zh-CN": "点启动后看到了什么？",
+      en: "What did you see after launch?",
+      ja: "起動後に何が見えましたか？",
+    },
+    body: {
+      "zh-CN": "先用肉眼现象把方向缩小。",
+      en: "Start with the visible symptom.",
+      ja: "まず見えた症状で方向を絞ります。",
+    },
+    options: [
+      {
+        id: "nothing",
+        symptoms: ["nothing"],
+        diagnosticText: "triage answer: no visible window or dialog after launch",
+        label: {
+          "zh-CN": "什么都没出现",
+          en: "No window or dialog",
+          ja: "何も出ない",
+        },
+        hint: {
+          "zh-CN": "点了以后没有窗口，也没有报错。",
+          en: "Clicking the entry showed no window and no error.",
+          ja: "クリック後、ウィンドウもエラーも出ません。",
+        },
+      },
+      {
+        id: "crash",
+        symptoms: ["crash"],
+        diagnosticText: "triage answer: window appears and closes immediately",
+        label: {
+          "zh-CN": "窗口一闪就没了",
+          en: "Window closes immediately",
+          ja: "すぐ閉じる",
+        },
+        hint: {
+          "zh-CN": "出现窗口或任务栏图标，但马上退出。",
+          en: "A window or taskbar item appears, then exits.",
+          ja: "ウィンドウやタスクバー表示が出てすぐ終了します。",
+        },
+      },
+      {
+        id: "dialog-text",
+        diagnosticText: "triage answer: visible error dialog or log text is available",
+        label: {
+          "zh-CN": "有弹窗文字",
+          en: "There is dialog text",
+          ja: "エラー本文がある",
+        },
+        hint: {
+          "zh-CN": "能复制或手打弹窗/日志文字。",
+          en: "The dialog/log text can be copied or typed.",
+          ja: "ダイアログやログの本文をコピーまたは入力できます。",
+        },
+        step: {
+          "zh-CN": {
+            title: "先补充可复制报错",
+            detail: "问诊答案显示用户能看到弹窗或日志文字。",
+            action: "把完整报错贴到左侧错误信息框，再重新更新路线；DLL 名、日文乱码、RTP、DirectX、VC++ 字样都很关键。",
+          },
+          en: {
+            title: "Paste the copyable error first",
+            detail: "The triage answer says a dialog or log text is visible.",
+            action: "Paste the full error into the error box and update the route again. DLL names, mojibake, RTP, DirectX, and VC++ wording matter.",
+          },
+          ja: {
+            title: "コピーできるエラーを先に貼る",
+            detail: "問診ではダイアログまたはログ本文が見えている状態です。",
+            action: "エラー全文を左のエラー欄に貼り付け、手順を更新してください。DLL 名、文字化け、RTP、DirectX、VC++ の語が重要です。",
+          },
+        },
+      },
+      {
+        id: "mojibake",
+        symptoms: ["mojibake"],
+        diagnosticText: "triage answer: visible mojibake or garbled Japanese text",
+        label: {
+          "zh-CN": "文字乱码",
+          en: "Garbled text",
+          ja: "文字化け",
+        },
+        hint: {
+          "zh-CN": "弹窗、菜单或标题里有乱码。",
+          en: "Dialog, menus, or title text are garbled.",
+          ja: "ダイアログ、メニュー、タイトルが文字化けします。",
+        },
+      },
+      {
+        id: "black-screen",
+        symptoms: ["black-screen"],
+        diagnosticText: "triage answer: game opens to black screen or frozen display",
+        label: {
+          "zh-CN": "黑屏/白屏",
+          en: "Black or white screen",
+          ja: "黒画面/白画面",
+        },
+        hint: {
+          "zh-CN": "窗口在，但画面不正常。",
+          en: "A window exists, but the display is wrong.",
+          ja: "ウィンドウはあるが表示がおかしい状態です。",
+        },
+      },
+    ],
+  },
+  {
+    id: "source-state",
+    title: {
+      "zh-CN": "你是从哪里点的启动？",
+      en: "Where did you launch from?",
+      ja: "どこから起動しましたか？",
+    },
+    body: {
+      "zh-CN": "很多古早游戏其实卡在“还没完整准备好”。",
+      en: "Many old games fail before the folder is truly prepared.",
+      ja: "古いゲームは準備不足の段階で失敗しがちです。",
+    },
+    options: [
+      {
+        id: "from-package",
+        diagnosticText: "triage answer: user may have launched from archive preview or incomplete extraction",
+        label: {
+          "zh-CN": "压缩包/预览窗口里",
+          en: "Archive or preview window",
+          ja: "アーカイブ/プレビュー内",
+        },
+        hint: {
+          "zh-CN": "还没确认完整解压或分卷补齐。",
+          en: "Full extraction or split volumes were not confirmed.",
+          ja: "完全展開や分割ファイルの確認前です。",
+        },
+        step: {
+          "zh-CN": {
+            title: "先完整准备游戏目录",
+            detail: "问诊答案显示可能从压缩包预览或不完整目录里启动。",
+            action: "先补齐分卷并完整解压，或用包/镜像页的准备动作重扫；不要从压缩软件预览窗口直接运行。",
+          },
+          en: {
+            title: "Prepare the full game folder first",
+            detail: "The triage answer suggests launch may have happened from an archive preview or incomplete folder.",
+            action: "Collect all split volumes and fully extract, or use the package/image prepare action and rescan. Do not run from an archive preview window.",
+          },
+          ja: {
+            title: "まず完全なゲームフォルダを準備",
+            detail: "問診ではアーカイブ内プレビューまたは不完全なフォルダから起動した可能性があります。",
+            action: "分割ファイルを揃えて完全展開するか、パッケージ/イメージ準備で再スキャンします。アーカイブプレビュー内から直接起動しないでください。",
+          },
+        },
+      },
+      {
+        id: "mounted-disc",
+        diagnosticText: "triage answer: user launched from mounted disc image or install media",
+        label: {
+          "zh-CN": "镜像/安装盘里",
+          en: "Mounted image or install disc",
+          ja: "マウント済みイメージ/インストールディスク",
+        },
+        hint: {
+          "zh-CN": "像是从虚拟光驱、安装盘或特典盘启动。",
+          en: "Looks like a virtual drive, install disc, or bonus disc.",
+          ja: "仮想ドライブ、インストールディスク、特典ディスクのようです。",
+        },
+        step: {
+          "zh-CN": {
+            title: "确认安装盘和游戏目录",
+            detail: "问诊答案显示当前可能来自镜像、安装盘或特典盘。",
+            action: "如果是安装盘，先安装或复制完整游戏目录后再拖回 GalAid；如果是特典盘/补丁盘，确认它是否需要合并到主游戏目录。",
+          },
+          en: {
+            title: "Separate install media from the game folder",
+            detail: "The triage answer suggests the current source may be a disc image, install disc, or bonus disc.",
+            action: "If this is install media, install or copy the full game folder and scan that folder. If it is a bonus or patch disc, confirm whether it must be merged into the main game folder.",
+          },
+          ja: {
+            title: "インストール媒体とゲームフォルダを分ける",
+            detail: "問診ではディスクイメージ、インストールディスク、特典ディスクから起動している可能性があります。",
+            action: "インストール媒体なら、インストールまたは完全なゲームフォルダをコピーしてから再スキャンします。特典/修正ディスクなら、主ゲームフォルダへ統合が必要か確認してください。",
+          },
+        },
+      },
+      {
+        id: "extracted-folder",
+        diagnosticText: "triage answer: user launched from an extracted game folder",
+        label: {
+          "zh-CN": "已解压的游戏文件夹",
+          en: "Extracted game folder",
+          ja: "展開済みゲームフォルダ",
+        },
+        hint: {
+          "zh-CN": "看起来已经是完整目录。",
+          en: "This appears to be a prepared folder.",
+          ja: "準備済みフォルダに見えます。",
+        },
+      },
+    ],
+  },
+  {
+    id: "error-capture",
+    title: {
+      "zh-CN": "报错能怎么给 GalAid？",
+      en: "How can GalAid read the error?",
+      ja: "GalAid はエラーをどう読めますか？",
+    },
+    body: {
+      "zh-CN": "能复制文字最好，不能复制就走截图 OCR。",
+      en: "Copyable text is best; screenshots can go through OCR.",
+      ja: "文字をコピーできるのが最適で、できなければ画像 OCR を使います。",
+    },
+    options: [
+      {
+        id: "can-copy",
+        diagnosticText: "triage answer: exact error text can be copied into the error box",
+        label: {
+          "zh-CN": "能复制/手打",
+          en: "Can copy or type it",
+          ja: "コピー/入力できる",
+        },
+        hint: {
+          "zh-CN": "把完整文字贴到左侧错误信息。",
+          en: "Paste the full text into the error box.",
+          ja: "全文を左のエラー欄に貼り付けます。",
+        },
+        step: {
+          "zh-CN": {
+            title: "把完整报错贴进来",
+            detail: "问诊答案显示报错文字可复制或手打。",
+            action: "优先粘贴完整弹窗/日志，而不是只写“大概缺东西”；GalAid 会用本地配方重新匹配。",
+          },
+          en: {
+            title: "Paste the full error text",
+            detail: "The triage answer says the error can be copied or typed.",
+            action: "Paste the full dialog/log instead of a rough summary; GalAid will match it against local recipes.",
+          },
+          ja: {
+            title: "エラー全文を貼り付ける",
+            detail: "問診ではエラー本文をコピーまたは入力できます。",
+            action: "「何か足りない」だけでなく、ダイアログ/ログ全文を貼るとローカルレシピで再照合できます。",
+          },
+        },
+      },
+      {
+        id: "screenshot-only",
+        diagnosticText: "triage answer: error is screenshot-only and should use OCR",
+        label: {
+          "zh-CN": "只能截图",
+          en: "Screenshot only",
+          ja: "画像のみ",
+        },
+        hint: {
+          "zh-CN": "弹窗不能复制文字。",
+          en: "The dialog text cannot be copied.",
+          ja: "ダイアログ本文をコピーできません。",
+        },
+        step: {
+          "zh-CN": {
+            title: "用 OCR 读取报错截图",
+            detail: "问诊答案显示用户只能提供截图。",
+            action: "点左侧“识别报错截图”，把识别出来的文字带入错误诊断；识别不准时可手动修正关键 DLL/日文/RTP 字样。",
+          },
+          en: {
+            title: "Use OCR on the error screenshot",
+            detail: "The triage answer says only a screenshot is available.",
+            action: "Use Read screenshot, then correct important DLL/Japanese/RTP words if OCR is imperfect.",
+          },
+          ja: {
+            title: "エラー画像を OCR する",
+            detail: "問診では画像しか提供できません。",
+            action: "「画像から読む」を使い、認識された文字でエラー診断します。DLL/日本語/RTP など重要語は必要に応じて手動修正してください。",
+          },
+        },
+      },
+      {
+        id: "no-error",
+        diagnosticText: "triage answer: no error text or screenshot is available",
+        label: {
+          "zh-CN": "没有任何报错",
+          en: "No error available",
+          ja: "エラーなし",
+        },
+        hint: {
+          "zh-CN": "只能按现象和文件结构继续排查。",
+          en: "Diagnosis must continue from symptoms and file structure.",
+          ja: "症状とファイル構造から続けます。",
+        },
+      },
+    ],
+  },
+];
 const ASSISTANT_LANGUAGE_PACKS = {
   "zh-CN": {
     name: "中文",
@@ -312,6 +602,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       protonRunTemplateDescription: "给 Proton / Steam Deck 高阶环境参考；请把 compatdata 路径换成你自己的本机 Steam 前缀。",
       launchFailureTitle: "启动失败了吗？",
       launchFailureBody: "GalAid 不会监控游戏进程；这里只记录你手动选择或粘贴的现象，用来更新路线图和求助包。",
+      launchFailureTriageTitle: "快速问诊",
+      launchFailureTriageBody: "先回答三件小事，GalAid 会自动把答案折算进路线、报告和求助包。",
       launchFailureSymptomsTitle: "失败现象",
       launchFailureNoteLabel: "报错或补充说明",
       launchFailureNotePlaceholder: "粘贴弹窗/日志，或写下“点了没反应”“黑屏但有声音”等现象...",
@@ -491,6 +783,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchCandidates: "Launch candidates",
       launchProfiles: "Launch profiles",
       launchFailure: "启动失败跟进",
+      launchFailureTriage: "问诊答案",
       launchFailureSymptoms: "失败现象",
       launchFailureNote: "补充说明",
       nextRoadmap: "Next-step roadmap",
@@ -626,6 +919,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       protonRunTemplateDescription: "For advanced Proton setups; replace the compatdata path with your own local Steam prefix.",
       launchFailureTitle: "Did launch fail?",
       launchFailureBody: "GalAid does not monitor the game process. It only records symptoms you manually choose or paste, then updates the roadmap and support bundle.",
+      launchFailureTriageTitle: "Quick triage",
+      launchFailureTriageBody: "Answer three small questions and GalAid will fold them into the route, report, and support bundle.",
       launchFailureSymptomsTitle: "Failure symptoms",
       launchFailureNoteLabel: "Error or extra note",
       launchFailureNotePlaceholder: "Paste a dialog/log, or write notes like \"nothing happened\" or \"black screen with audio\"...",
@@ -805,6 +1100,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchCandidates: "Launch candidates",
       launchProfiles: "Launch profiles",
       launchFailure: "Launch failure follow-up",
+      launchFailureTriage: "Triage answers",
       launchFailureSymptoms: "Failure symptoms",
       launchFailureNote: "Extra note",
       nextRoadmap: "Next-step roadmap",
@@ -940,6 +1236,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       protonRunTemplateDescription: "Proton / Steam Deck の上級設定向けです。compatdata パスは自分の Steam prefix に置き換えてください。",
       launchFailureTitle: "起動に失敗しましたか？",
       launchFailureBody: "GalAid はゲームプロセスを監視しません。手動で選択または貼り付けた症状だけを記録し、手順とサポートバンドルに反映します。",
+      launchFailureTriageTitle: "クイック問診",
+      launchFailureTriageBody: "3 つの短い質問に答えると、手順、レポート、サポートバンドルへ反映します。",
       launchFailureSymptomsTitle: "失敗症状",
       launchFailureNoteLabel: "エラーまたは補足",
       launchFailureNotePlaceholder: "ダイアログ/ログ、または「反応なし」「音は出るが黒画面」などを貼り付けてください...",
@@ -1119,6 +1417,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchCandidates: "起動候補",
       launchProfiles: "起動プロファイル",
       launchFailure: "起動失敗フォロー",
+      launchFailureTriage: "問診回答",
       launchFailureSymptoms: "失敗症状",
       launchFailureNote: "補足",
       nextRoadmap: "次の手順",
@@ -1414,29 +1713,49 @@ function getEmptyStateHtml() {
 }
 
 function getEmptyLaunchFailureState() {
-  return { symptoms: [], note: "" };
+  return { symptoms: [], triageAnswers: {}, note: "" };
 }
 
 function normalizeLaunchFailureInput(input = {}) {
   const knownIds = new Set(LAUNCH_FAILURE_SYMPTOMS.map((symptom) => symptom.id));
+  const triageAnswers = normalizeLaunchFailureTriageAnswers(input.triageAnswers);
+  const triageSymptoms = getLaunchFailureTriageOptions(triageAnswers).flatMap((item) => item.option.symptoms || []);
   const symptoms = compactEvidence(
-    Array.isArray(input.symptoms) ? input.symptoms.filter((id) => knownIds.has(id)) : [],
+    [
+      ...(Array.isArray(input.symptoms) ? input.symptoms.filter((id) => knownIds.has(id)) : []),
+      ...triageSymptoms,
+    ],
     LAUNCH_FAILURE_SYMPTOMS.length,
   );
   const note = String(input.note || "").trim().slice(0, 4000);
+  const triageEvidence = getLaunchFailureTriageOptions(triageAnswers);
   return {
     schema: "galaid.launchFailure.v1",
-    hasEvidence: Boolean(symptoms.length || note),
+    hasEvidence: Boolean(symptoms.length || note || triageEvidence.length),
     symptoms,
+    triageAnswers,
     note,
-    diagnosticText: buildLaunchFailureDiagnosticText(symptoms, note),
+    diagnosticText: buildLaunchFailureDiagnosticText(symptoms, note, triageAnswers),
   };
 }
 
-function buildLaunchFailureDiagnosticText(symptoms, note) {
+function normalizeLaunchFailureTriageAnswers(input = {}) {
+  const raw = input && typeof input === "object" ? input : {};
+  const answers = {};
+  for (const question of LAUNCH_FAILURE_TRIAGE) {
+    const value = raw[question.id];
+    if (question.options.some((option) => option.id === value)) answers[question.id] = value;
+  }
+  return answers;
+}
+
+function buildLaunchFailureDiagnosticText(symptoms, note, triageAnswers = {}) {
   const lines = symptoms
     .map((id) => getLaunchFailureSymptomDefinition(id)?.diagnosticText)
     .filter(Boolean);
+  for (const { option } of getLaunchFailureTriageOptions(triageAnswers)) {
+    if (option.diagnosticText) lines.push(option.diagnosticText);
+  }
   if (note) lines.push(note);
   return lines.join("\n");
 }
@@ -1457,8 +1776,53 @@ function getLaunchFailureStep(id, language = getAssistantLanguage()) {
 
 function getLaunchFailureEvidence(launchFailure, language = getAssistantLanguage()) {
   const symptoms = (launchFailure?.symptoms || []).map((id) => getLaunchFailureSymptomText(id, "label", language));
+  const triage = getLaunchFailureTriageEvidence(launchFailure?.triageAnswers || {}, language);
   const note = launchFailure?.note ? [launchFailure.note] : [];
-  return compactEvidence([...symptoms, ...note], 6);
+  return compactEvidence([...symptoms, ...triage, ...note], 8);
+}
+
+function getLaunchFailureTriageQuestionText(question, field, language = getAssistantLanguage()) {
+  return question?.[field]?.[language] || question?.[field]?.["zh-CN"] || question?.id || "";
+}
+
+function getLaunchFailureTriageOptionText(option, field, language = getAssistantLanguage()) {
+  return option?.[field]?.[language] || option?.[field]?.["zh-CN"] || option?.id || "";
+}
+
+function getLaunchFailureTriageOption(questionId, optionId) {
+  const question = LAUNCH_FAILURE_TRIAGE.find((item) => item.id === questionId);
+  const option = question?.options.find((item) => item.id === optionId);
+  return question && option ? { question, option } : null;
+}
+
+function getLaunchFailureTriageOptions(triageAnswers = {}) {
+  return Object.entries(triageAnswers)
+    .map(([questionId, optionId]) => getLaunchFailureTriageOption(questionId, optionId))
+    .filter(Boolean);
+}
+
+function getLaunchFailureTriageEvidence(triageAnswers = {}, language = getAssistantLanguage()) {
+  return getLaunchFailureTriageOptions(triageAnswers).map(({ question, option }) => {
+    return `${getLaunchFailureTriageQuestionText(question, "title", language)}: ${getLaunchFailureTriageOptionText(option, "label", language)}`;
+  });
+}
+
+function getLaunchFailureTriageSteps(triageAnswers = {}, language = getAssistantLanguage()) {
+  return getLaunchFailureTriageOptions(triageAnswers)
+    .map(({ question, option }) => {
+      const step = option.step?.[language] || option.step?.["zh-CN"];
+      if (!step) return null;
+      return {
+        id: `triage-${question.id}-${option.id}`,
+        questionId: question.id,
+        optionId: option.id,
+        title: step.title,
+        detail: step.detail,
+        action: step.action,
+        evidence: [`${getLaunchFailureTriageQuestionText(question, "title", language)}: ${getLaunchFailureTriageOptionText(option, "label", language)}`],
+      };
+    })
+    .filter(Boolean);
 }
 
 function refreshCurrentReport() {
@@ -3246,6 +3610,18 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
         source: "launch-failure",
       });
     }
+    for (const triageStep of getLaunchFailureTriageSteps(launchFailure.triageAnswers, "zh-CN")) {
+      addStep({
+        id: `failure-${triageStep.id}`,
+        title: triageStep.title,
+        state: "todo",
+        priority: 39,
+        detail: triageStep.detail,
+        action: triageStep.action,
+        evidence: triageStep.evidence,
+        source: "launch-failure",
+      });
+    }
   }
 
   for (const checkId of ["commercial-engine", "path", "locale", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
@@ -4018,6 +4394,7 @@ function renderLaunchAttemptFollowup() {
 function renderLaunchFailureFollowUp(analysis) {
   const failure = analysis.launchFailure || normalizeLaunchFailureInput();
   const selected = new Set(failure.symptoms || []);
+  const triageAnswers = failure.triageAnswers || {};
   const symptomCards = LAUNCH_FAILURE_SYMPTOMS.map(
     (symptom) => `
       <label class="failure-symptom ${selected.has(symptom.id) ? "selected" : ""}">
@@ -4045,6 +4422,15 @@ function renderLaunchFailureFollowUp(analysis) {
         <p>${escapeHtml(getUiText("launchFailureBody"))}</p>
       </div>
       <div class="launch-failure-form">
+        <div class="failure-triage">
+          <div class="failure-triage-heading">
+            <strong>${escapeHtml(getUiText("launchFailureTriageTitle"))}</strong>
+            <p>${escapeHtml(getUiText("launchFailureTriageBody"))}</p>
+          </div>
+          <div class="failure-triage-grid">
+            ${LAUNCH_FAILURE_TRIAGE.map((question) => renderLaunchFailureTriageQuestion(question, triageAnswers[question.id])).join("")}
+          </div>
+        </div>
         <strong>${escapeHtml(getUiText("launchFailureSymptomsTitle"))}</strong>
         <div class="failure-symptom-grid">${symptomCards}</div>
         <label class="field-label" for="launchFailureNote">${escapeHtml(getUiText("launchFailureNoteLabel"))}</label>
@@ -4061,6 +4447,41 @@ function renderLaunchFailureFollowUp(analysis) {
       </div>
       ${evidence.length ? `<div class="sample-list failure-evidence">${evidence.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</div>` : ""}
     </article>
+  `;
+}
+
+function renderLaunchFailureTriageQuestion(question, selectedOptionId) {
+  return `
+    <fieldset class="failure-triage-question">
+      <legend>
+        <strong>${escapeHtml(getLaunchFailureTriageQuestionText(question, "title"))}</strong>
+        <span>${escapeHtml(getLaunchFailureTriageQuestionText(question, "body"))}</span>
+      </legend>
+      <div class="failure-triage-options">
+        ${question.options.map((option) => renderLaunchFailureTriageOption(question, option, selectedOptionId)).join("")}
+      </div>
+    </fieldset>
+  `;
+}
+
+function renderLaunchFailureTriageOption(question, option, selectedOptionId) {
+  const checked = selectedOptionId === option.id;
+  return `
+    <label class="failure-triage-option ${checked ? "selected" : ""}">
+      <input
+        type="radio"
+        name="triage-${escapeHtml(question.id)}"
+        value="${escapeHtml(option.id)}"
+        data-failure-triage
+        data-failure-triage-question="${escapeHtml(question.id)}"
+        data-failure-triage-option="${escapeHtml(option.id)}"
+        ${checked ? "checked" : ""}
+      />
+      <span>
+        <strong>${escapeHtml(getLaunchFailureTriageOptionText(option, "label"))}</strong>
+        <small>${escapeHtml(getLaunchFailureTriageOptionText(option, "hint"))}</small>
+      </span>
+    </label>
   `;
 }
 
@@ -4838,6 +5259,8 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
   lines.push("");
   lines.push(`## ${labels.launchFailure}`);
   if (analysis.launchFailure?.hasEvidence) {
+    const triageEvidence = getLaunchFailureTriageEvidence(analysis.launchFailure.triageAnswers || {}, language);
+    if (triageEvidence.length) lines.push(`- ${labels.launchFailureTriage}: ${triageEvidence.join("; ")}`);
     const symptoms = (analysis.launchFailure.symptoms || []).map((id) => getLaunchFailureSymptomText(id, "label", language));
     lines.push(`- ${labels.launchFailureSymptoms}: ${symptoms.join(", ") || "none"}`);
     if (analysis.launchFailure.note) lines.push(`- ${labels.launchFailureNote}: ${analysis.launchFailure.note}`);
@@ -4957,6 +5380,13 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
   const launchFailureReport = {
     schema: "galaid.launchFailure.v1",
     hasEvidence: Boolean(analysis.launchFailure?.hasEvidence),
+    triageAnswers: getLaunchFailureTriageOptions(analysis.launchFailure?.triageAnswers || {}).map(({ question, option }) => ({
+      questionId: question.id,
+      question: getLaunchFailureTriageQuestionText(question, "title", language),
+      optionId: option.id,
+      answer: getLaunchFailureTriageOptionText(option, "label", language),
+      hint: getLaunchFailureTriageOptionText(option, "hint", language),
+    })),
     symptoms: (analysis.launchFailure?.symptoms || []).map((id) => ({
       id,
       label: getLaunchFailureSymptomText(id, "label", language),
@@ -5575,6 +6005,7 @@ function markLaunchAttemptSymptom(symptomId) {
   if (!knownIds.has(symptomId)) return;
   launchFailureState = normalizeLaunchFailureInput({
     symptoms: [...new Set([...(launchFailureState.symptoms || []), symptomId])],
+    triageAnswers: launchFailureState.triageAnswers || {},
     note: launchFailureState.note || "",
   });
   pendingLaunchFollowup = null;
@@ -5737,8 +6168,13 @@ function activateTab(tabName) {
 }
 
 function readLaunchFailureForm() {
+  const triageAnswers = {};
+  launchPanel.querySelectorAll("[data-failure-triage]:checked").forEach((input) => {
+    triageAnswers[input.dataset.failureTriageQuestion] = input.dataset.failureTriageOption || input.value;
+  });
   return {
     symptoms: [...launchPanel.querySelectorAll("[data-failure-symptom]:checked")].map((input) => input.dataset.failureSymptom),
+    triageAnswers,
     note: launchPanel.querySelector("[data-failure-note]")?.value || "",
   };
 }

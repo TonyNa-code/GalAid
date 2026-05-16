@@ -7,7 +7,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator("#launchPanel .empty-flow")).toContainText("拖进来");
   await expect(page.locator("#launchPanel .empty-flow")).toContainText("一键启动");
   await page.getByRole("button", { name: "游戏样例" }).click();
-  await page.getByLabel("错误信息").fill("The program cannot start because d3dx9_43.dll is missing. VCRUNTIME140.dll was not found.");
+  await page.locator("#errorInput").fill("The program cannot start because d3dx9_43.dll is missing. VCRUNTIME140.dll was not found.");
   await page.locator('[data-tab="roadmap"]').click();
 
   await expect(page.locator("#projectTitle")).toHaveText("SakuraTrial");
@@ -144,23 +144,31 @@ test("launch failure follow-up updates roadmap and support bundle", async ({ pag
 
   await page.getByRole("button", { name: "游戏样例" }).click();
   await expect(page.getByRole("heading", { name: "启动失败了吗？" }).first()).toBeVisible();
+  await expect(page.locator(".failure-triage")).toContainText("快速问诊");
 
+  await page.locator('[data-failure-triage-question="visible-result"][data-failure-triage-option="dialog-text"]').check();
+  await page.locator('[data-failure-triage-question="source-state"][data-failure-triage-option="from-package"]').check();
+  await page.locator('[data-failure-triage-question="error-capture"][data-failure-triage-option="can-copy"]').check();
   await page.locator('[data-failure-symptom="missing-dll"]').check();
   await page.locator("[data-failure-note]").fill("VCRUNTIME140.dll was not found");
   await page.getByRole("button", { name: "更新路线" }).click();
 
-  await expect(page.locator("#launchPanel")).toContainText("已记录 2 条现象");
+  await expect(page.locator("#launchPanel")).toContainText("已记录 5 条现象");
   await page.locator('[data-tab="roadmap"]').click();
+  await expect(page.locator(".roadmap-list")).toContainText("先补充可复制报错");
+  await expect(page.locator(".roadmap-list")).toContainText("先完整准备游戏目录");
   await expect(page.locator(".roadmap-list")).toContainText("缺 DLL/运行库");
   await expect(page.locator(".roadmap-list")).toContainText("VC++ 运行库");
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.locator(".support-file-list")).toContainText("launch-failure.json");
   await expect(page.locator(".support-preview")).toContainText("启动失败跟进");
+  await expect(page.locator(".support-preview")).toContainText("有弹窗文字");
   await expect(page.locator(".support-preview")).toContainText("VCRUNTIME140.dll was not found");
 
   await page.locator('[data-tab="report"]').click();
   await expect(page.locator("#reportPanel")).toContainText("## 启动失败跟进");
+  await expect(page.locator("#reportPanel")).toContainText("问诊答案");
   await expect(page.locator("#reportPanel")).toContainText("缺 DLL/运行库");
 });
 

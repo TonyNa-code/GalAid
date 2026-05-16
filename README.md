@@ -123,7 +123,7 @@ Profiles do not auto-run games by themselves. In the web app, commands use relat
 
 The launch page now starts with a one-stop guide: import, prepare, launch, then collect failure evidence if the game still does not open. The `路线` tab combines the same archive/image state, launch candidates, runtime checks, error recipes, and engine clues into an ordered checklist. It can be copied as Markdown and is also included in support bundles as `roadmap.json` and `roadmap-checklist.md`.
 
-After a launch attempt fails, the `启动` tab can record manual symptoms such as no response, immediate crash, mojibake, black screen, or missing DLL/runtime. GalAid does not monitor the process; those user-entered notes simply feed the roadmap, reports, and support bundle.
+After a launch attempt fails, the `启动` tab can walk the user through a quick triage tree: what appeared, where the launch came from, and whether the error can be copied or needs screenshot OCR. The answers become structured evidence in the roadmap, reports, and support bundle alongside manual symptoms such as no response, immediate crash, mojibake, black screen, or missing DLL/runtime.
 
 ## Environment Checks
 
