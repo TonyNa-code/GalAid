@@ -28,7 +28,7 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Sharing cracks, serials, patches, or bypass instructions
 - Decrypting protected archives without permission
 - Uploading user game files to a third-party server
-- Installing system runtimes, changing locale settings, mounting/extracting images without user confirmation, extracting archives without user confirmation, or running executables automatically
+- Installing system runtimes, changing locale settings, mounting/extracting images without a user launch/prepare click, extracting archives without a user launch/prepare click, or running executables outside the allowlisted launch flow
 - Monitoring or inspecting a running game process
 
 ## Default Privacy Model
@@ -48,7 +48,7 @@ Support bundles follow the same privacy model. They contain reports, matched rul
 
 Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z can be listed through the bundled or local 7z-compatible command when available, and disc images are treated as media/descriptor files.
 
-Desktop package preparation is separate from preflight. It only starts after a user click, uses a user-selected output folder when extraction is needed, accepts a password the user already knows, and immediately rescans the prepared folder or mounted image. GalAid does not save package passwords, crack passwords, upload package contents, silently mount disc images, or run extracted executables automatically.
+Desktop package preparation is separate from preflight. It only starts after a user launch/prepare click, uses an automatic sibling `*-prepared` folder for the one-stop flow or a user-selected output folder for the manual prepare flow, accepts a password the user already knows, and immediately rescans the prepared folder or mounted image. GalAid does not save package passwords, crack passwords, upload package contents, silently mount disc images, or run executables outside the allowlisted launch flow.
 
 Desktop ISO cleanup is also allowlisted. GalAid can only request `Dismount-DiskImage` for an image it mounted during the current app session. Launch follow-up remains manual: the user marks symptoms after trying a launcher, and GalAid uses those choices only to update local diagnosis output.
 

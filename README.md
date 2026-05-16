@@ -7,7 +7,7 @@
 
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
-    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
     <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
@@ -32,7 +32,7 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
   <tr>
     <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z`, split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
     <td width="25%" valign="top"><strong>02 Prepare</strong><br>GalAid groups packages, asks for a password when needed, extracts or mounts, then rescans the prepared folder.</td>
-    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta ranks launch candidates and can start the selected Windows `.exe/.com` with the right working directory.</td>
+    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start the Windows `.exe/.com` with the right working directory.</td>
     <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, VC++, locale, RTP, path, or package route.</td>
   </tr>
 </table>
@@ -51,7 +51,7 @@ download.zip / game.iso / extracted-folder
         v
    GalAid reads the layout
         |
-        +--> prepare package or image
+        +--> prepare package or image automatically
         +--> find the likely launcher
         +--> launch from the right folder
         +--> read screenshots or logs when it fails
@@ -103,7 +103,7 @@ GalAid turns that mess into a guided launch route.
 | Surface | Start here | Best for |
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
-| Windows beta | [v0.1.8-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta) | Drag, prepare, rescan, launch, OCR error screenshots, and export support context. |
+| Windows beta | [v0.1.9-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta) | Drag a folder/archive/image, enter a password if needed, press one launch button, OCR error screenshots, and export support context. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
@@ -121,7 +121,7 @@ Profiles do not auto-run games by themselves. In the web app, commands use relat
 
 ## Next-Step Roadmap
 
-The launch page now starts with a one-stop guide: import, prepare, launch, then collect failure evidence if the game still does not open. The `路线` tab combines the same archive/image state, launch candidates, runtime checks, error recipes, and engine clues into an ordered checklist. It can be copied as Markdown and is also included in support bundles as `roadmap.json` and `roadmap-checklist.md`.
+The launch page now starts with a one-stop guide: import, prepare, launch, then collect failure evidence if the game still does not open. In the desktop beta, the primary button can prepare a trusted archive/image into a fresh `*-prepared` folder beside the package, rescan it, and launch the top entry without sending the user through the package tab. The `路线` tab combines the same archive/image state, launch candidates, runtime checks, error recipes, and engine clues into an ordered checklist. It can be copied as Markdown and is also included in support bundles as `roadmap.json` and `roadmap-checklist.md`.
 
 After a launch attempt fails, the `启动` tab can walk the user through a quick triage tree: what appeared, where the launch came from, and whether the error can be copied or needs screenshot OCR. The answers become structured evidence in the roadmap, reports, and support bundle alongside manual symptoms such as no response, immediate crash, mojibake, black screen, or missing DLL/runtime.
 
@@ -231,7 +231,7 @@ The main limit is file count, not total bytes:
 
 Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
 
-When the user explicitly clicks `Extract and rescan` or `Mount/extract and rescan`, the desktop beta uses a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It can extract ZIP/RAR/7z packages into a new output folder, ask for a known password when needed, mount Windows `.iso` images through the system mount command, or best-effort extract common disc-image files before automatically rescanning the prepared folder. After preparation, the launch tab highlights the recommended next entry so the user does not have to hunt for it again. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
+When the user clicks the one-stop launch button, the desktop beta can use a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It extracts ZIP/RAR/7z packages into a new sibling `*-prepared` folder, asks for a known password when needed, mounts Windows `.iso` images through the system mount command, or best-effort extracts common disc-image files before automatically rescanning the prepared folder and launching the top entry. The manual `Extract and rescan` and `Mount/extract and rescan` actions remain available when the user wants to choose the output parent folder first. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 
 ## Archive and Disc Image Guidance
 
@@ -242,7 +242,7 @@ The web MVP can recognize common package stages and tell the user what to do nex
 - ISO/NRG/ISZ/CDI images: mount or unpack the image first
 - CUE/BIN, MDS/MDF, CCD/IMG/SUB sets: keep paired files together before mounting
 
-The desktop prepare action asks for an output folder when extraction is needed, uses the entered password for that attempt, and returns to scanning after extraction or image preparation finishes.
+The one-stop launch action prepares beside the package automatically. The manual prepare action still asks for an output folder, uses the entered password for that attempt, and returns to scanning after extraction or image preparation finishes.
 
 ## Run
 
@@ -279,14 +279,14 @@ npm run build:pages
 
 ### Desktop Beta
 
-Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta), or run the Electron shell locally:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta), or run the Electron shell locally:
 
 ```bash
 npm install
 npm start
 ```
 
-The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations. It can also launch scanned Windows `.exe/.com` entries after the user clicks `Launch`; GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for the same entry and shows a recent-launch history.
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker and drag/drop path scan are native and can recursively scan local folders without browser directory limitations. It can launch scanned Windows `.exe/.com` entries after the user clicks `Launch`; when the current input is a trusted package/image, that same launch flow can prepare, rescan, and launch the top entry. GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for the same entry and shows a recent-launch history.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
 

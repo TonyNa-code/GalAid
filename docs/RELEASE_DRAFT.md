@@ -1,8 +1,8 @@
 # Release Draft
 
-## v0.1.8 beta
+## v0.1.9 beta
 
-GalAid v0.1.8 is a launch doctor for visual novel and galgame folders. It helps players answer: "Which file do I run, and why is this game not starting?"
+GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps players answer: "Which file do I run, and why is this game not starting?"
 
 ## Highlights
 
@@ -19,7 +19,7 @@ GalAid v0.1.8 is a launch doctor for visual novel and galgame folders. It helps 
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages
 - Desktop package preflight for ZIP metadata, bundled/local 7z-compatible RAR/7z listings, and disc-image media/descriptor clues
-- Bundled archive extraction handoff: choose an output folder, enter a known password if needed, extract locally, then automatically rescan the prepared folder
+- Bundled archive extraction handoff: enter a known password if needed, extract locally into a fresh prepared folder, automatically rescan, then launch the top entry from the one-stop flow
 - Disc-image preparation handoff: mount Windows `.iso` images when available, or best-effort extract supported image files before rescanning
 - English default README with Chinese/Japanese translations and Chinese/English/Japanese diagnosis output language
 - Community-editable startup error recipes in `data/error-recipes.json`
@@ -66,5 +66,5 @@ npm start
 - Disc-image extraction depends on what the bundled 7z-compatible helper can read; some older or damaged images may still need manual mounting outside GalAid.
 - Web OCR may need the browser text-detection API or a Tesseract.js page load.
 - Desktop OCR may download language data on first use.
-- Launch profiles are hints only; GalAid does not run games automatically.
+- Launch profiles are hints only; actual desktop launching still requires a user click on a scanned or prepared entry.
 - Error recipes are advisory and should be improved through community reports.

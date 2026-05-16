@@ -51,21 +51,42 @@ app.on("window-all-closed", () => {
 });
 
 ipcMain.handle("desktop:select-folder", async (event) => {
-  const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
-    title: "Choose a visual novel folder",
-    properties: ["openDirectory"],
-  });
-  if (result.canceled || !result.filePaths.length) return { canceled: true, files: [] };
-  return scanForRenderer(result.filePaths, event.sender);
+  try {
+    const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
+      title: "Choose a visual novel folder",
+      properties: ["openDirectory"],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true, files: [] };
+    return scanForRenderer(result.filePaths, event.sender);
+  } catch (error) {
+    return makeScanError(error);
+  }
 });
 
 ipcMain.handle("desktop:select-files", async (event) => {
-  const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
-    title: "Choose visual novel files",
-    properties: ["openFile", "multiSelections"],
-  });
-  if (result.canceled || !result.filePaths.length) return { canceled: true, files: [] };
-  return scanForRenderer(result.filePaths, event.sender);
+  try {
+    const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
+      title: "Choose visual novel files",
+      properties: ["openFile", "multiSelections"],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true, files: [] };
+    return scanForRenderer(result.filePaths, event.sender);
+  } catch (error) {
+    return makeScanError(error);
+  }
+});
+
+ipcMain.handle("desktop:scan-paths", async (event, payload = {}) => {
+  try {
+    const selectedPaths = getSelectedPaths(payload.paths);
+    if (!selectedPaths.length) return { canceled: true, files: [] };
+    return scanForRenderer(selectedPaths, event.sender, {
+      selectedCount: selectedPaths.length,
+      source: "drop",
+    });
+  } catch (error) {
+    return makeScanError(error);
+  }
 });
 
 ipcMain.handle("desktop:launch-entry", async (event, payload = {}) => {
@@ -129,17 +150,21 @@ ipcMain.handle("desktop:prepare-package", async (event, payload = {}) => {
   if (!packageFile) return { ok: false, errorCode: "not-allowed", message: "Package was not part of the trusted scan." };
 
   const window = BrowserWindow.fromWebContents(event.sender);
-  const outputParentResult = await dialog.showOpenDialog(window, {
-    title: "Choose where GalAid should prepare this package",
-    defaultPath: path.dirname(packageFullPath),
-    properties: ["openDirectory", "createDirectory"],
-  });
-  if (outputParentResult.canceled || !outputParentResult.filePaths.length) {
-    return { ok: false, errorCode: "canceled" };
+  let outputParentDirectory = path.dirname(packageFullPath);
+  if (payload.outputMode !== "auto") {
+    const outputParentResult = await dialog.showOpenDialog(window, {
+      title: "Choose where GalAid should prepare this package",
+      defaultPath: path.dirname(packageFullPath),
+      properties: ["openDirectory", "createDirectory"],
+    });
+    if (outputParentResult.canceled || !outputParentResult.filePaths.length) {
+      return { ok: false, errorCode: "canceled" };
+    }
+    outputParentDirectory = outputParentResult.filePaths[0];
   }
 
   try {
-    const outputDirectory = await makeUniqueOutputDirectory(outputParentResult.filePaths[0], packageFile.name);
+    const outputDirectory = await makeUniqueOutputDirectory(outputParentDirectory, packageFile.name);
     const prepareResult = await prepareLocalPackage({
       packagePath: packageFullPath,
       outputDirectory,
@@ -253,6 +278,15 @@ async function scanForRenderer(selectedPaths, webContents, metaOverrides = {}) {
   };
 }
 
+function makeScanError(error) {
+  return {
+    ok: false,
+    errorCode: "scan-failed",
+    message: error?.message || "Desktop scan failed.",
+    files: [],
+  };
+}
+
 function rememberScanAllowlists(webContents, files) {
   launchAllowlists.set(webContents.id, buildLaunchAllowlist(files));
   packageAllowlists.set(webContents.id, buildPackageAllowlist(files));
@@ -276,6 +310,22 @@ function rememberMountedImage(webContents, mounted) {
     mountPath: mounted.mountPath,
   });
   mountedImageAllowlists.set(webContents.id, allowlist);
+}
+
+function getSelectedPaths(paths) {
+  if (!Array.isArray(paths)) return [];
+  const seen = new Set();
+  const selected = [];
+  for (const rawPath of paths) {
+    const value = String(rawPath || "").trim();
+    if (!value) continue;
+    const resolved = path.resolve(value);
+    if (seen.has(resolved)) continue;
+    seen.add(resolved);
+    selected.push(resolved);
+    if (selected.length >= 1000) break;
+  }
+  return selected;
 }
 
 function getMountedImageKey(value) {
@@ -371,7 +421,7 @@ function stripPackageExt(filename) {
     .replace(/\.(zip|rar|7z)$/i, "")
     .replace(/\.(zip|7z)\.001$/i, "")
     .replace(/\.part0*1\.rar$/i, "")
-    .replace(/\.(iso|cue|bin|mdf|mds|ccd|img|nrg|isz|cdi)$/i, "");
+    .replace(/\.(iso|cue|bin|mdf|mds|ccd|img|nrg|sub|isz|cdi|bwt|bwi|bws|bwa|b5t|b5i|b6t|b6i|mdx|daa|uif|pdi)$/i, "");
 }
 
 function stripShortcutExt(filename) {

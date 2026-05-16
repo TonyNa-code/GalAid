@@ -85,6 +85,201 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(page.getByRole("heading", { name: "No launch candidate" })).toBeVisible();
 });
 
+test("desktop one-click flow prepares a package automatically before launch", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__preparePayloads = [];
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async (payload) => {
+        window.__preparePayloads.push(payload);
+        return {
+          ok: true,
+          files: [
+            {
+              name: "Game.exe",
+              path: "SnowTrial/Game.exe",
+              lowerPath: "snowtrial/game.exe",
+              ext: "exe",
+              size: 1422000,
+              depth: 1,
+              fullPath: "C:\\Downloads\\SnowTrial-prepared\\SnowTrial\\Game.exe",
+            },
+            {
+              name: "data.xp3",
+              path: "SnowTrial/data.xp3",
+              lowerPath: "snowtrial/data.xp3",
+              ext: "xp3",
+              size: 423000000,
+              depth: 1,
+              fullPath: "C:\\Downloads\\SnowTrial-prepared\\SnowTrial\\data.xp3",
+            },
+          ],
+          meta: {
+            platform: "win32",
+            selectedCount: 1,
+            skipped: 0,
+            preparedFrom: "SnowTrial.zip",
+            preparedOutputName: "SnowTrial-prepared",
+            preparedKind: "extracted-archive",
+          },
+        };
+      },
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return {
+          ok: true,
+          pid: 1234,
+          entryName: "Game.exe",
+          relativePath: "SnowTrial/Game.exe",
+          workingDirectory: "C:\\Downloads\\SnowTrial-prepared\\SnowTrial",
+        };
+      },
+      createShortcut: async () => ({ ok: true }),
+      unmountImage: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      recognizeErrorImage: async () => ({ canceled: true }),
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    const files = [fileFromSample(PACKAGE_SAMPLE_FILES[0])].map((file) => ({
+      ...file,
+      fullPath: `C:\\Downloads\\${file.path}`,
+    }));
+    await setFiles(files);
+  });
+
+  await expect(page.locator(".one-stop-wizard")).toContainText("一键准备并启动");
+  await page.getByRole("button", { name: "一键准备并启动" }).click();
+  await page.waitForFunction(() => window.__launchPayloads?.length === 1);
+
+  const result = await page.evaluate(() => ({
+    prepare: window.__preparePayloads[0],
+    launch: window.__launchPayloads[0],
+    pending: Boolean(pendingLaunchFollowup),
+    entry: currentAnalysis.launchCandidates[0]?.file.path,
+    droppedPaths: getDroppedDesktopPaths({
+      files: [
+        { path: "C:\\Downloads\\SnowTrial.zip" },
+        { path: "C:\\Downloads\\SnowTrial.zip" },
+        { name: "browser-only.zip" },
+      ],
+    }),
+  }));
+
+  expect(result.prepare.packageFullPath).toBe("C:\\Downloads\\SnowTrial.zip");
+  expect(result.prepare.outputMode).toBe("auto");
+  expect(result.launch.entryFullPath).toBe("C:\\Downloads\\SnowTrial-prepared\\SnowTrial\\Game.exe");
+  expect(result.entry).toBe("SnowTrial/Game.exe");
+  expect(result.pending).toBe(true);
+  expect(result.droppedPaths).toEqual(["C:\\Downloads\\SnowTrial.zip"]);
+});
+
+test("desktop one-click flow retries password-protected packages", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__preparePayloads = [];
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async (payload) => {
+        window.__preparePayloads.push(payload);
+        if (payload.password !== "correct-password") {
+          return { ok: false, errorCode: "password-failed", message: "This package needs the correct extraction password." };
+        }
+        return {
+          ok: true,
+          files: [
+            {
+              name: "Game.exe",
+              path: "MoonlightCafe/Game.exe",
+              lowerPath: "moonlightcafe/game.exe",
+              ext: "exe",
+              size: 1680000,
+              depth: 1,
+              fullPath: "C:\\Downloads\\MoonlightCafe-prepared\\MoonlightCafe\\Game.exe",
+            },
+            {
+              name: "data00.arc",
+              path: "MoonlightCafe/data00.arc",
+              lowerPath: "moonlightcafe/data00.arc",
+              ext: "arc",
+              size: 1380000000,
+              depth: 1,
+              fullPath: "C:\\Downloads\\MoonlightCafe-prepared\\MoonlightCafe\\data00.arc",
+            },
+          ],
+          meta: {
+            platform: "win32",
+            selectedCount: 1,
+            skipped: 0,
+            preparedFrom: "MoonlightCafe.part1.rar",
+            preparedOutputName: "MoonlightCafe-prepared",
+            preparedKind: "extracted-archive",
+          },
+        };
+      },
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return {
+          ok: true,
+          pid: 2345,
+          entryName: "Game.exe",
+          relativePath: "MoonlightCafe/Game.exe",
+          workingDirectory: "C:\\Downloads\\MoonlightCafe-prepared\\MoonlightCafe",
+        };
+      },
+      createShortcut: async () => ({ ok: true }),
+      unmountImage: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      recognizeErrorImage: async () => ({ canceled: true }),
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  const dialogAnswers = ["wrong-password", "correct-password"];
+  page.on("dialog", async (dialog) => {
+    await dialog.accept(dialogAnswers.shift() || "correct-password");
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    const raw = JSON.parse(JSON.stringify(PACKAGE_SAMPLE_FILES[1]));
+    raw[2].archivePreview.encryptedEntries = 12;
+    const files = [fileFromSample(raw)].map((file) => ({
+      ...file,
+      fullPath: `C:\\Downloads\\${file.path}`,
+    }));
+    await setFiles(files);
+  });
+
+  await page.getByRole("button", { name: "一键准备并启动" }).click();
+  await page.waitForFunction(() => window.__launchPayloads?.length === 1);
+
+  const result = await page.evaluate(() => ({
+    passwords: window.__preparePayloads.map((payload) => payload.password),
+    outputModes: window.__preparePayloads.map((payload) => payload.outputMode),
+    launch: window.__launchPayloads[0],
+    pending: Boolean(pendingLaunchFollowup),
+  }));
+
+  expect(result.passwords).toEqual(["wrong-password", "correct-password"]);
+  expect(result.outputModes).toEqual(["auto", "auto"]);
+  expect(result.launch.entryFullPath).toBe("C:\\Downloads\\MoonlightCafe-prepared\\MoonlightCafe\\Game.exe");
+  expect(result.pending).toBe(true);
+});
+
 test("prepared desktop handoff highlights the next launch entry", async ({ page }) => {
   await page.goto("/");
 

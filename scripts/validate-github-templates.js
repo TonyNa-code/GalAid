@@ -464,7 +464,7 @@ function checkDesktopLauncher(errors) {
     assert(launcherText.includes(phrase), `${launcherFile} is missing phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["desktop:launch-entry", "desktop:create-shortcut", "desktop:prepare-package", "desktop:unmount-image", "launchEntry", "createShortcut", "preparePackage", "unmountImage"]) {
+  for (const phrase of ["desktop:scan-paths", "desktop:launch-entry", "desktop:create-shortcut", "desktop:prepare-package", "desktop:unmount-image", "scanPaths", "launchEntry", "createShortcut", "preparePackage", "unmountImage"]) {
     assert(preloadText.includes(phrase) || mainText.includes(phrase), `desktop launch bridge is missing phrase: ${phrase}`, errors);
   }
 

@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("galaidDesktop", {
   platform: process.platform,
   selectFolder: () => ipcRenderer.invoke("desktop:select-folder"),
   selectFiles: () => ipcRenderer.invoke("desktop:select-files"),
+  scanPaths: (payload) => ipcRenderer.invoke("desktop:scan-paths", payload),
   launchEntry: (payload) => ipcRenderer.invoke("desktop:launch-entry", payload),
   createShortcut: (payload) => ipcRenderer.invoke("desktop:create-shortcut", payload),
   preparePackage: (payload) => ipcRenderer.invoke("desktop:prepare-package", payload),

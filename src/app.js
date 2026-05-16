@@ -559,7 +559,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabSupport: "求助",
       tabReport: "报告",
       oneStopTitle: "一站式启动向导",
-      oneStopBody: "新手按这条主线走就够了：先准备包/镜像，再启动推荐入口，失败后补截图或报错，最后复制求助信息。",
+      oneStopBody: "新手只要拖进来，再点一次主按钮；GalAid 会自动准备包/镜像、选择推荐入口并启动。",
       wizardImportTitle: "导入",
       wizardImportBody: "已读取 {count} 个文件，合计 {size}。",
       wizardPrepareTitle: "准备",
@@ -576,6 +576,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardStateTodo: "可检查",
       wizardStateWaiting: "等待",
       wizardGoPackages: "去处理包/镜像",
+      wizardOneClickLaunch: "一键启动",
+      wizardOneClickLaunchPackage: "一键准备并启动",
+      wizardOneClickUnavailable: "桌面版可一键启动",
       wizardLaunchTop: "启动推荐入口",
       wizardGoRoadmap: "查看路线",
       wizardRecordFailure: "记录失败/截图报错",
@@ -693,6 +696,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       prepareImage: "挂载/解包并重扫",
       preparingPackage: "解压中...",
       preparingImage: "镜像处理中...",
+      oneClickPreparing: "自动准备中...",
       preparePasswordPrompt: "这个包可能需要解压密码。请输入你已经知道的密码；留空会取消。",
       preparePasswordRetryPrompt: "密码不正确或缺少密码。请重新输入解压密码；留空会取消。",
       metadataOnly: "预检",
@@ -753,6 +757,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "已启动 {name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
       toastLaunchFailed: "启动失败",
+      toastOneClickNoPackage: "没有可自动准备的压缩包或镜像",
+      toastOneClickNoCandidate: "准备完成，但还没找到可启动入口",
+      toastOneClickPreparing: "正在自动准备：{name}",
       toastImageUnmounted: "已卸载镜像：{name}",
       toastImageUnmountFailed: "镜像卸载失败",
       toastShortcutCreated: "快捷方式已创建：{name}",
@@ -876,7 +883,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabSupport: "Support",
       tabReport: "Report",
       oneStopTitle: "One-stop launch guide",
-      oneStopBody: "Follow this main path: prepare packages/images, launch the recommended entry, add screenshot or error evidence if it fails, then copy help context.",
+      oneStopBody: "Drop it in, then press the main button once. GalAid prepares packages/images, chooses the recommended entry, and launches it.",
       wizardImportTitle: "Import",
       wizardImportBody: "{count} files scanned, {size} total.",
       wizardPrepareTitle: "Prepare",
@@ -893,6 +900,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardStateTodo: "check",
       wizardStateWaiting: "waiting",
       wizardGoPackages: "Handle packages/images",
+      wizardOneClickLaunch: "One-click launch",
+      wizardOneClickLaunchPackage: "Prepare and launch",
+      wizardOneClickUnavailable: "Desktop one-click launch",
       wizardLaunchTop: "Launch recommended entry",
       wizardGoRoadmap: "View roadmap",
       wizardRecordFailure: "Record failure/OCR",
@@ -1010,6 +1020,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       prepareImage: "Mount/extract and rescan",
       preparingPackage: "Extracting...",
       preparingImage: "Preparing image...",
+      oneClickPreparing: "Preparing automatically...",
       preparePasswordPrompt: "This package may need an extraction password. Enter the password you already have; leave blank to cancel.",
       preparePasswordRetryPrompt: "The password is missing or incorrect. Enter the extraction password again; leave blank to cancel.",
       metadataOnly: "preflight",
@@ -1070,6 +1081,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "Launched {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
       toastLaunchFailed: "Launch failed",
+      toastOneClickNoPackage: "No package or image can be prepared automatically",
+      toastOneClickNoCandidate: "Prepared, but no launch entry was found yet",
+      toastOneClickPreparing: "Preparing automatically: {name}",
       toastImageUnmounted: "Unmounted image: {name}",
       toastImageUnmountFailed: "Image unmount failed",
       toastShortcutCreated: "Shortcut created: {name}",
@@ -1193,7 +1207,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabSupport: "サポート",
       tabReport: "レポート",
       oneStopTitle: "一括起動ガイド",
-      oneStopBody: "この流れに沿えば大丈夫です。パッケージ/イメージを準備し、推奨入口を起動し、失敗時は画像やエラーを追加して相談文をコピーします。",
+      oneStopBody: "投入後、メインボタンを一度押すだけです。GalAid がパッケージ/イメージを準備し、推奨入口を選んで起動します。",
       wizardImportTitle: "投入",
       wizardImportBody: "{count} 件、合計 {size} を読み取りました。",
       wizardPrepareTitle: "準備",
@@ -1210,6 +1224,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardStateTodo: "確認",
       wizardStateWaiting: "待機",
       wizardGoPackages: "パッケージ処理へ",
+      wizardOneClickLaunch: "一括起動",
+      wizardOneClickLaunchPackage: "準備して起動",
+      wizardOneClickUnavailable: "デスクトップ版で一括起動",
       wizardLaunchTop: "推奨入口を起動",
       wizardGoRoadmap: "手順を見る",
       wizardRecordFailure: "失敗/OCR を記録",
@@ -1327,6 +1344,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       prepareImage: "マウント/展開して再スキャン",
       preparingPackage: "展開中...",
       preparingImage: "イメージ処理中...",
+      oneClickPreparing: "自動準備中...",
       preparePasswordPrompt: "このパッケージは展開パスワードが必要な可能性があります。既に知っているパスワードを入力してください。空欄ならキャンセルします。",
       preparePasswordRetryPrompt: "パスワードが不足しているか正しくありません。展開パスワードをもう一度入力してください。空欄ならキャンセルします。",
       metadataOnly: "事前チェック",
@@ -1387,6 +1405,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastLaunchStarted: "{name} を起動しました",
       toastLaunchUnavailable: "ここでは直接起動できません",
       toastLaunchFailed: "起動に失敗しました",
+      toastOneClickNoPackage: "自動準備できるパッケージ/イメージがありません",
+      toastOneClickNoCandidate: "準備は完了しましたが、起動入口はまだ見つかりません",
+      toastOneClickPreparing: "自動準備中: {name}",
       toastImageUnmounted: "イメージをアンマウントしました: {name}",
       toastImageUnmountFailed: "イメージのアンマウントに失敗しました",
       toastShortcutCreated: "ショートカットを作成しました: {name}",
@@ -1880,7 +1901,8 @@ function yieldToBrowser() {
 function fileFromNative(file) {
   const path = normalizePath(file.webkitRelativePath || file.relativePath || file.name);
   const name = getBaseName(path);
-  return {
+  const nativePath = typeof file.path === "string" ? file.path : "";
+  const record = {
     name,
     path,
     lowerPath: path.toLowerCase(),
@@ -1888,6 +1910,8 @@ function fileFromNative(file) {
     size: file.size || 0,
     depth: getDepth(path),
   };
+  if (nativePath) record.fullPath = nativePath;
+  return record;
 }
 
 function fileFromSample([path, size, extra = {}]) {
@@ -4071,6 +4095,10 @@ async function importDesktopSelection(kind) {
       });
       return;
     }
+    if (result?.ok === false) {
+      showToast(`${getUiText("toastDesktopScanFailed")}: ${result.message || result.errorCode}`);
+      return;
+    }
     await setFiles(result.files || [], { runId, desktopMeta: result.meta });
   } catch (error) {
     showToast(`${getUiText("toastDesktopScanFailed")}: ${error.message || error}`);
@@ -4222,6 +4250,7 @@ function renderOneStopWizard(analysis) {
   const packageBlocker = analysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
   const needsPreparation = analysis.packages.hasPackages && (!topCandidate || packageBlocker);
   const hasExtraPackages = analysis.packages.hasPackages && !needsPreparation;
+  const prepareTarget = getOneClickPrepareTarget(analysis);
   const launchState = topCandidate && !needsPreparation ? "current" : "waiting";
   const prepareState = needsPreparation ? "current" : hasExtraPackages ? "todo" : "done";
   const fixState = analysis.launchFailure?.hasEvidence || analysis.errorDiagnostics.matches.length ? "current" : "waiting";
@@ -4254,7 +4283,7 @@ function renderOneStopWizard(analysis) {
     },
   ];
   const primaryAction = needsPreparation
-    ? `<button type="button" data-wizard-action="packages">${escapeHtml(getUiText("wizardGoPackages"))}</button>`
+    ? renderWizardOneClickAction(prepareTarget, true)
     : topCandidate
       ? renderWizardLaunchAction(topCandidate)
       : `<button type="button" data-wizard-action="roadmap">${escapeHtml(getUiText("wizardGoRoadmap"))}</button>`;
@@ -4277,6 +4306,16 @@ function renderOneStopWizard(analysis) {
       </div>
     </article>
   `;
+}
+
+function renderWizardOneClickAction(prepareTarget, needsPreparation) {
+  if (!needsPreparation) {
+    return `<button type="button" data-wizard-action="smart-launch">${escapeHtml(getUiText("wizardOneClickLaunch"))}</button>`;
+  }
+  if (desktopApi?.preparePackage && prepareTarget?.file?.fullPath) {
+    return `<button type="button" data-wizard-action="smart-launch">${escapeHtml(getUiText("wizardOneClickLaunchPackage"))}</button>`;
+  }
+  return `<button type="button" data-wizard-action="packages" title="${escapeHtml(getUiText("wizardOneClickUnavailable"))}">${escapeHtml(getUiText("wizardGoPackages"))}</button>`;
 }
 
 function renderOneStopStep(step, index) {
@@ -4302,7 +4341,7 @@ function renderWizardLaunchAction(candidate) {
       ${canLaunch ? "" : "disabled"}
       title="${escapeHtml(canLaunch ? getUiText("wizardLaunchTop") : getUiText("launchUnavailable"))}"
     >
-      ${escapeHtml(canLaunch ? getUiText("wizardLaunchTop") : getUiText("launchUnavailable"))}
+      ${escapeHtml(canLaunch ? getUiText("wizardOneClickLaunch") : getUiText("launchUnavailable"))}
     </button>
   `;
 }
@@ -5035,6 +5074,25 @@ function renderPreparePackageAction(set) {
       </button>
     </div>
   `;
+}
+
+function getOneClickPrepareTarget(analysis) {
+  const sets = [...(analysis?.packages?.archiveSets || []), ...(analysis?.packages?.discSets || [])]
+    .map((set) => ({ set, file: getPackagePrepareFile(set), score: getPackagePrepareScore(set) }))
+    .filter((item) => item.file?.fullPath && !item.set.missing?.length && item.set.level !== "warning");
+  return sets.sort((a, b) => b.score - a.score || a.file.path.localeCompare(b.file.path))[0] || null;
+}
+
+function getPackagePrepareScore(set) {
+  const signals = set?.archivePreview?.signals || {};
+  let score = 0;
+  score += (signals.launchCandidateCount || 0) * 100;
+  score += (signals.engineHints?.length || 0) * 20;
+  score += (signals.installerCount || 0) * 10;
+  if (set?.type === "archive") score += 6;
+  if (set?.type === "disc") score += 4;
+  if (set?.archivePreview?.status === "ok") score += 3;
+  return score;
 }
 
 function getPackagePrepareFile(set) {
@@ -5994,6 +6052,30 @@ async function launchDesktopFile(file, button) {
   }
 }
 
+async function runOneClickLaunch(button) {
+  if (!currentAnalysis) return;
+  const topCandidate = currentAnalysis.launchCandidates[0] || null;
+  const packageBlocker = currentAnalysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
+  const needsPreparation = currentAnalysis.packages.hasPackages && (!topCandidate || packageBlocker);
+
+  if (!needsPreparation && topCandidate?.file) {
+    await launchDesktopFile(topCandidate.file, button);
+    return;
+  }
+
+  const target = getOneClickPrepareTarget(currentAnalysis);
+  if (!target?.file) {
+    showToast(getUiText("toastOneClickNoPackage"));
+    activateTab("packages");
+    return;
+  }
+
+  await prepareDesktopPackage(target.file, target.set, button, {
+    autoOutput: true,
+    autoLaunch: true,
+  });
+}
+
 function markLaunchAttemptOk() {
   pendingLaunchFollowup = null;
   if (currentAnalysis) render();
@@ -6080,21 +6162,25 @@ async function createDesktopShortcut(file, button) {
   }
 }
 
-async function prepareDesktopPackage(packageFile, packageSet, button) {
+async function prepareDesktopPackage(packageFile, packageSet, button, options = {}) {
   if (!desktopApi?.preparePackage || !packageFile?.fullPath) {
     showToast(getUiText("toastLaunchUnavailable"));
-    return;
+    return { ok: false, errorCode: "unavailable" };
   }
 
   let password = "";
   if ((packageSet?.archivePreview?.encryptedEntries || 0) > 0) {
     const entered = window.prompt(getUiText("preparePasswordPrompt"), "");
-    if (!entered) return;
+    if (!entered) return { ok: false, errorCode: "canceled" };
     password = entered;
   }
 
   const originalLabel = button?.textContent || "";
-  const preparingLabel = packageSet?.type === "disc" ? getUiText("preparingImage") : getUiText("preparingPackage");
+  const preparingLabel = options.autoLaunch
+    ? getUiText("oneClickPreparing")
+    : packageSet?.type === "disc"
+      ? getUiText("preparingImage")
+      : getUiText("preparingPackage");
   const runId = ++scanRunId;
   setControlsBusy(true);
   if (button) {
@@ -6104,6 +6190,7 @@ async function prepareDesktopPackage(packageFile, packageSet, button) {
 
   try {
     for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (options.autoLaunch) showToast(getUiText("toastOneClickPreparing", { name: packageFile.name }));
       updateScanState({
         title: preparingLabel,
         detail: packageFile.name,
@@ -6114,29 +6201,40 @@ async function prepareDesktopPackage(packageFile, packageSet, button) {
       const result = await desktopApi.preparePackage({
         packageFullPath: packageFile.fullPath,
         password,
+        outputMode: options.autoOutput ? "auto" : "ask",
       });
 
       if (runId !== scanRunId) return;
       if (result?.ok) {
         await setFiles(result.files || [], { runId, desktopMeta: result.meta });
         showToast(getUiText("toastPackagePrepared", { name: result.meta?.preparedOutputName || packageFile.name }));
-        if (currentAnalysis?.launchCandidates?.length) activateTab("launch");
-        return;
+        activateTab("launch");
+        const preparedCandidate = currentAnalysis?.launchCandidates?.[0] || null;
+        if (options.autoLaunch) {
+          if (preparedCandidate?.file && canDesktopLaunchFile(preparedCandidate.file)) {
+            await launchDesktopFile(preparedCandidate.file, null);
+            return { ok: true, launched: true };
+          }
+          showToast(getUiText("toastOneClickNoCandidate"));
+          return { ok: true, launched: false, errorCode: "no-launch-candidate" };
+        }
+        return { ok: true };
       }
 
-      if (result?.errorCode === "canceled") return;
+      if (result?.errorCode === "canceled") return result;
       if (result?.errorCode === "password-required" || result?.errorCode === "password-failed") {
         const entered = window.prompt(getUiText("preparePasswordRetryPrompt"), "");
-        if (!entered) return;
+        if (!entered) return { ok: false, errorCode: "canceled" };
         password = entered;
         continue;
       }
 
       showToast(getPrepareFailureMessage(result));
-      return;
+      return result;
     }
   } catch {
     showToast(getUiText("toastPrepareFailed"));
+    return { ok: false, errorCode: "prepare-failed" };
   } finally {
     if (button) {
       button.disabled = false;
@@ -6144,6 +6242,7 @@ async function prepareDesktopPackage(packageFile, packageSet, button) {
     }
     if (runId === scanRunId) setControlsBusy(false);
   }
+  return { ok: false, errorCode: "password-failed" };
 }
 
 function getPrepareFailureMessage(result) {
@@ -6200,6 +6299,8 @@ launchPanel.addEventListener("click", (event) => {
     const action = wizardButton.dataset.wizardAction;
     if (action === "packages") {
       activateTab("packages");
+    } else if (action === "smart-launch") {
+      void runOneClickLaunch(wizardButton);
     } else if (action === "roadmap") {
       activateTab("roadmap");
     } else if (action === "fix") {
@@ -6404,6 +6505,17 @@ dropZone.addEventListener("drop", async (event) => {
     phase: "scanning",
   });
   try {
+    const desktopDropPaths = getDroppedDesktopPaths(event.dataTransfer);
+    if (desktopApi?.scanPaths && desktopDropPaths.length) {
+      const result = await desktopApi.scanPaths({ paths: desktopDropPaths });
+      if (result?.ok === false) {
+        showToast(`${getUiText("toastDesktopScanFailed")}: ${result.message || result.errorCode}`);
+        return;
+      }
+      if (runId === scanRunId && !result?.canceled) await setFiles(result.files || [], { runId, desktopMeta: result.meta });
+      return;
+    }
+
     const files = await collectDroppedFiles(event.dataTransfer, (done, total) => {
       if (runId !== scanRunId) return;
       updateScanState({
@@ -6420,6 +6532,14 @@ dropZone.addEventListener("drop", async (event) => {
     if (runId === scanRunId) setControlsBusy(false);
   }
 });
+
+function getDroppedDesktopPaths(dataTransfer) {
+  const files = [...(dataTransfer?.files || [])];
+  const paths = files
+    .map((file) => (typeof file.path === "string" ? file.path.trim() : ""))
+    .filter(Boolean);
+  return [...new Set(paths)];
+}
 
 dropZone.addEventListener("keydown", (event) => {
   if (event.key === "Enter" || event.key === " ") {
