@@ -82,6 +82,18 @@ async function main() {
   assert.equal(isoPreview.fileCount, 1);
   assert.match(isoPreview.warnings[0], /metadata only/);
 
+  const blindWritePath = path.join(tempDir, "AsterOld.b6t");
+  await fs.writeFile(blindWritePath, Buffer.alloc(32));
+  const blindWritePreview = await previewDiscImageFile(blindWritePath, "b6t");
+  assert.equal(blindWritePreview.packageKind, "disc-image");
+  assert.match(blindWritePreview.warnings[0], /Descriptor metadata/);
+
+  const neroPath = path.join(tempDir, "Tokuten.nrg");
+  await fs.writeFile(neroPath, Buffer.alloc(32));
+  const neroPreview = await previewDiscImageFile(neroPath, "nrg");
+  assert.equal(neroPreview.packageKind, "disc-image");
+  assert.match(neroPreview.warnings[0], /Legacy disc image/);
+
   await fs.rm(tempDir, { recursive: true, force: true });
   console.log("Archive preview smoke passed.");
 }

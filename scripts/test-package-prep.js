@@ -24,7 +24,11 @@ async function main() {
   assert.equal(isPrepareSupportedArchive("Game.part2.rar"), false);
   assert.equal(getArchivePrepareSupport("Disc.iso").errorCode, "unsupported-package");
   assert.equal(getDiscImagePrepareSupport("Disc.iso").kind, "disc-image");
+  assert.equal(getDiscImagePrepareSupport("OldDisc.b6t").kind, "disc-image");
+  assert.equal(getDiscImagePrepareSupport("Bonus.nrg").kind, "disc-image");
+  assert.equal(getDiscImagePrepareSupport("PowerIso.daa").kind, "disc-image");
   assert.equal(isPrepareSupportedPackage("Disc.iso"), true);
+  assert.equal(isPrepareSupportedPackage("OldDisc.b6t"), true);
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "galaid-package-prep-"));
   const archivePath = path.join(tempDir, "MoonlightCafe.part1.rar");

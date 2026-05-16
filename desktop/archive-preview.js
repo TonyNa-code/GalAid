@@ -26,7 +26,7 @@ const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
 const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf", "ypf", "int", "gxp", "noa", "med", "wsm"]));
-const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
+const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
 
 async function previewArchiveFile(filePath, ext) {
   const previewKind = getPreviewKind(filePath, ext);
@@ -428,14 +428,14 @@ function pushLimited(items, value) {
 }
 
 function isSetupLike(lowerPath) {
-  return /(setup|install|unins|uninstall|config|update|patch|redist|vcredist|directx|dxsetup)/i.test(lowerPath);
+  return /(setup|install|unins|uninstall|config|update|patch|redist|vcredist|directx|dxsetup|append|bonus|extra|tokuten|特典|追加|免dvd|免cd|no.?dvd|no.?cd|crack|keygen|serial)/i.test(lowerPath);
 }
 
 function isInstallerLike(lowerPath, ext) {
   return (
     INSTALLER_EXTS.has(ext) ||
-    /(^|\/)(setup|install|installer|autorun|dxsetup|vcredist|vc_redist|directx)(\.[a-z0-9]+)?$/i.test(lowerPath) ||
-    /(\/redist\/|\/support\/|\/directx\/|data\d+\.cab$|autorun\.inf$)/i.test(lowerPath)
+    /(^|\/)(setup|install|installer|autorun|dxsetup|vcredist|vc_redist|directx|patch|update|append|bonus|extra|tokuten|serial|keygen|crack|no.?dvd|no.?cd)(\.[a-z0-9]+)?$/i.test(lowerPath) ||
+    /(\/redist\/|\/support\/|\/directx\/|\/patch\/|\/update\/|\/bonus\/|\/extra\/|\/tokuten\/|\/特典\/|\/追加\/|data\d+\.cab$|autorun\.inf$|免dvd|免cd|no.?dvd|no.?cd)/i.test(lowerPath)
   );
 }
 
@@ -480,11 +480,14 @@ function normalizeZipPath(value) {
 
 function getDiscImageWarnings(ext) {
   const normalizedExt = String(ext || "").toLowerCase();
-  if (["cue", "mds", "ccd"].includes(normalizedExt)) {
+  if (["cue", "mds", "ccd", "bwt", "b5t", "b6t"].includes(normalizedExt)) {
     return ["Descriptor metadata only; keep the paired image/data files in the same folder."];
   }
-  if (["bin", "mdf", "img", "sub"].includes(normalizedExt)) {
+  if (["bin", "mdf", "img", "sub", "bwi", "bws", "bwa", "b5i", "b6i"].includes(normalizedExt)) {
     return ["Image data file metadata only; keep the matching descriptor files together."];
+  }
+  if (["nrg", "isz", "cdi", "mdx", "daa", "uif", "pdi"].includes(normalizedExt)) {
+    return ["Legacy disc image metadata only; extraction or mounting support depends on the local 7z-compatible tool or image driver."];
   }
   return ["Disc image metadata only; use the desktop prepare action to mount or extract and rescan when available."];
 }

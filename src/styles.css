@@ -527,7 +527,8 @@ textarea {
 .support-summary-card,
 .support-card,
 .package-card,
-.package-roadmap article {
+.package-roadmap article,
+.one-stop-wizard {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
@@ -583,6 +584,11 @@ textarea {
   font-size: 16px;
 }
 
+.one-stop-heading h4,
+.one-stop-step h5 {
+  margin: 0;
+}
+
 .finding p,
 .candidate p,
 .engine-card p,
@@ -601,6 +607,8 @@ textarea {
 .support-card p,
 .package-card p,
 .package-roadmap p,
+.one-stop-heading p,
+.one-stop-step p,
 .empty-state p {
   color: var(--muted);
   line-height: 1.55;
@@ -1377,6 +1385,112 @@ textarea {
   background: rgba(217, 90, 72, 0.1);
 }
 
+.one-stop-wizard {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+  border-color: rgba(64, 125, 163, 0.28);
+  background: linear-gradient(180deg, #ffffff, #f8fbf9);
+}
+
+.one-stop-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.one-stop-heading h4 {
+  font-size: 18px;
+}
+
+.one-stop-heading p {
+  margin: 6px 0 0;
+}
+
+.wizard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.wizard-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.one-stop-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.one-stop-step {
+  display: grid;
+  grid-template-rows: auto minmax(92px, 1fr) auto;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.one-stop-step > span,
+.one-stop-step > strong {
+  width: max-content;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.one-stop-step > span {
+  border: 1px solid rgba(64, 125, 163, 0.22);
+  background: rgba(64, 125, 163, 0.1);
+  color: var(--sky-dark);
+}
+
+.one-stop-step > strong {
+  align-self: end;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+.one-stop-step.current {
+  border-color: rgba(217, 154, 43, 0.46);
+  background: rgba(217, 154, 43, 0.08);
+}
+
+.one-stop-step.current > strong {
+  border-color: rgba(217, 154, 43, 0.38);
+  background: rgba(217, 154, 43, 0.14);
+  color: #744c00;
+}
+
+.one-stop-step.done > strong {
+  border-color: rgba(54, 167, 121, 0.35);
+  background: rgba(54, 167, 121, 0.1);
+  color: var(--mint-dark);
+}
+
+.one-stop-step.waiting > strong {
+  border-color: rgba(64, 125, 163, 0.24);
+  background: rgba(64, 125, 163, 0.08);
+  color: var(--sky-dark);
+}
+
+.one-stop-step h5 {
+  font-size: 14px;
+}
+
+.one-stop-step p {
+  margin: 5px 0 0;
+  font-size: 12px;
+}
+
 .grid-two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1614,6 +1728,8 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .one-stop-heading,
+  .one-stop-steps,
   .grid-two,
   .environment-grid,
   .failure-symptom-grid,
@@ -1663,6 +1779,7 @@ textarea {
   .launch-history-item,
   .roadmap-summary,
   .roadmap-step-header,
+  .one-stop-heading,
   .support-summary-card {
     grid-template-columns: 1fr;
   }
@@ -1681,7 +1798,9 @@ textarea {
   }
 
   .support-actions,
-  .support-actions button {
+  .support-actions button,
+  .wizard-actions,
+  .wizard-actions button {
     width: 100%;
   }
 

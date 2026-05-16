@@ -15,6 +15,8 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".roadmap-step h4").filter({ hasText: "DirectX 旧组件" })).toBeVisible();
   await expect(page.locator(".roadmap-step h4").filter({ hasText: "VC++ 运行库" })).toBeVisible();
   await page.locator('[data-tab="launch"]').click();
+  await expect(page.getByRole("heading", { name: "一站式启动向导" })).toBeVisible();
+  await expect(page.locator(".one-stop-wizard")).toContainText("推荐优先尝试");
   await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("判断依据");
   await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("SakuraTrial/game.exe");
   await page.locator('[data-tab="profiles"]').click();
@@ -59,7 +61,12 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(packagesPanel).toContainText("RAR 包/镜像预检");
   await expect(packagesPanel).toContainText("MoonlightCafe/Game.exe");
   await expect(packagesPanel).toContainText("ISO disc image 包/镜像预检");
+  await expect(packagesPanel).toContainText("CCD/IMG disc image");
+  await expect(packagesPanel).toContainText("MDS/MDF disc image");
+  await expect(packagesPanel).toContainText("BlindWrite 6 disc image");
+  await expect(packagesPanel).toContainText("古早镜像已识别");
   await expect(page.locator(".package-roadmap")).toContainText("包里看到启动线索");
+  await expect(page.locator(".package-roadmap")).toContainText("识别到古早镜像格式");
   await expect(page.locator("main")).toContainText("Blocked");
 
   await page.locator('[data-tab="roadmap"]').click();
@@ -74,6 +81,7 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(page.locator("#reportPanel")).toContainText("## Next-step roadmap");
 
   await page.locator('[data-tab="launch"]').click();
+  await expect(page.locator(".one-stop-wizard")).toContainText("Handle packages/images");
   await expect(page.getByRole("heading", { name: "No launch candidate" })).toBeVisible();
 });
 

@@ -79,7 +79,7 @@ GalAid turns that mess into a guided launch route.
 
 | Surface | Use it for | What you get |
 | --- | --- | --- |
-| Windows desktop beta | Real player use | Native folder selection, recursive scan, archive/image preparation, one-click launch, shortcuts, launch history, Screenshot OCR. |
+| Windows desktop beta | Real player use | Native folder selection, recursive scan, one-stop launch guide, archive/image preparation, one-click launch, shortcuts, launch history, Screenshot OCR. |
 | Web demo | Quick preview | File-list diagnosis, engine clues, package stage hints, error recipe matching, report export. |
 | Rule data | Community contribution | Engine fingerprints, startup error recipes, package patterns, and smoke-tested examples. |
 
@@ -87,7 +87,7 @@ GalAid turns that mess into a guided launch route.
 
 <table>
   <tr>
-    <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, disc-image pairs, and password prompts are folded into one prepare-and-rescan flow.</td>
+    <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, disc-image pairs, legacy image formats, and password prompts are folded into one prepare-and-rescan flow.</td>
     <td width="33%" valign="top"><strong>Folder to launcher</strong><br>Launch candidates are ranked against installers, redists, config tools, engine files, working directories, and commercial/self-developed layouts.</td>
     <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs or screenshot OCR feed local recipes for DirectX, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
   </tr>
@@ -121,7 +121,7 @@ Profiles do not auto-run games by themselves. In the web app, commands use relat
 
 ## Next-Step Roadmap
 
-The `路线` tab combines archive/image state, launch candidates, runtime checks, error recipes, and engine clues into an ordered checklist. It can be copied as Markdown and is also included in support bundles as `roadmap.json` and `roadmap-checklist.md`.
+The launch page now starts with a one-stop guide: import, prepare, launch, then collect failure evidence if the game still does not open. The `路线` tab combines the same archive/image state, launch candidates, runtime checks, error recipes, and engine clues into an ordered checklist. It can be copied as Markdown and is also included in support bundles as `roadmap.json` and `roadmap-checklist.md`.
 
 After a launch attempt fails, the `启动` tab can record manual symptoms such as no response, immediate crash, mojibake, black screen, or missing DLL/runtime. GalAid does not monitor the process; those user-entered notes simply feed the roadmap, reports, and support bundle.
 
@@ -229,7 +229,7 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, and engine clues before extraction.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
 
 When the user explicitly clicks `Extract and rescan` or `Mount/extract and rescan`, the desktop beta uses a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It can extract ZIP/RAR/7z packages into a new output folder, ask for a known password when needed, mount Windows `.iso` images through the system mount command, or best-effort extract common disc-image files before automatically rescanning the prepared folder. After preparation, the launch tab highlights the recommended next entry so the user does not have to hunt for it again. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 

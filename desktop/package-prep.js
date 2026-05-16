@@ -9,7 +9,7 @@ const OLD_RAR_VOLUME_RE = /\.r\d{2}$/i;
 const MAX_OUTPUT_BYTES = 512 * 1024;
 const EXTRACTION_TIMEOUT_MS = 30 * 60 * 1000;
 const ISO_MOUNT_TIMEOUT_MS = 90 * 1000;
-const DISC_IMAGE_EXTS = new Set(["iso", "cue", "bin", "mdf", "mds", "ccd", "img", "nrg", "isz", "cdi"]);
+const DISC_IMAGE_EXTS = new Set(["iso", "cue", "bin", "mdf", "mds", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
 
 async function prepareLocalPackage(options = {}) {
   const support = getPackagePrepareSupport(options.packagePath);

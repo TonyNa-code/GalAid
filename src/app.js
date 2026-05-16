@@ -42,7 +42,7 @@ const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
-const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi"]);
+const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
 const ENGINE_RULES = Array.isArray(window.GALAID_ENGINE_RULES) ? window.GALAID_ENGINE_RULES : [];
@@ -268,6 +268,28 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabAssets: "素材",
       tabSupport: "求助",
       tabReport: "报告",
+      oneStopTitle: "一站式启动向导",
+      oneStopBody: "新手按这条主线走就够了：先准备包/镜像，再启动推荐入口，失败后补截图或报错，最后复制求助信息。",
+      wizardImportTitle: "导入",
+      wizardImportBody: "已读取 {count} 个文件，合计 {size}。",
+      wizardPrepareTitle: "准备",
+      wizardPrepareCurrentBody: "当前还在压缩包、分卷或镜像阶段，先解压、挂载或重扫。",
+      wizardPrepareTodoBody: "目录里还有附加包、补丁包或特典盘，必要时先确认它们是否已处理。",
+      wizardPrepareDoneBody: "当前更像已解压目录，可以直接看启动入口。",
+      wizardLaunchTitle: "启动",
+      wizardLaunchReadyBody: "推荐优先尝试 {entry}，GalAid 会用正确工作目录启动。",
+      wizardLaunchWaitingBody: "还没有可靠启动入口，先处理包/镜像或换成完整游戏根目录。",
+      wizardFixTitle: "失败后",
+      wizardFixBody: "没打开就勾选现象、粘贴报错或识别截图，再让路线自动收敛。",
+      wizardStateDone: "完成",
+      wizardStateCurrent: "当前",
+      wizardStateTodo: "可检查",
+      wizardStateWaiting: "等待",
+      wizardGoPackages: "去处理包/镜像",
+      wizardLaunchTop: "启动推荐入口",
+      wizardGoRoadmap: "查看路线",
+      wizardRecordFailure: "记录失败/截图报错",
+      wizardCopyChatHelp: "复制群聊求助",
       emptyTitle: "先丢一个游戏文件夹进来",
       emptyBody: "GalAid 会在本地分析启动文件、引擎/结构线索、镜像/压缩包、路径风险和素材分布。",
       emptyStepDropTitle: "拖进来",
@@ -560,6 +582,28 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabAssets: "Assets",
       tabSupport: "Support",
       tabReport: "Report",
+      oneStopTitle: "One-stop launch guide",
+      oneStopBody: "Follow this main path: prepare packages/images, launch the recommended entry, add screenshot or error evidence if it fails, then copy help context.",
+      wizardImportTitle: "Import",
+      wizardImportBody: "{count} files scanned, {size} total.",
+      wizardPrepareTitle: "Prepare",
+      wizardPrepareCurrentBody: "This still looks like an archive, split volume, or disc image stage. Extract, mount, or rescan first.",
+      wizardPrepareTodoBody: "Extra packages, patches, or bonus discs are still present; confirm whether they need to be handled.",
+      wizardPrepareDoneBody: "This looks like an extracted folder, so you can move to the launch entry.",
+      wizardLaunchTitle: "Launch",
+      wizardLaunchReadyBody: "Try {entry} first. GalAid will use the right working folder in the desktop app.",
+      wizardLaunchWaitingBody: "No reliable launch entry yet. Prepare the package/image or retry with the full game root.",
+      wizardFixTitle: "After failure",
+      wizardFixBody: "If it does not open, mark the symptom, paste an error, or OCR a screenshot to narrow the route.",
+      wizardStateDone: "done",
+      wizardStateCurrent: "current",
+      wizardStateTodo: "check",
+      wizardStateWaiting: "waiting",
+      wizardGoPackages: "Handle packages/images",
+      wizardLaunchTop: "Launch recommended entry",
+      wizardGoRoadmap: "View roadmap",
+      wizardRecordFailure: "Record failure/OCR",
+      wizardCopyChatHelp: "Copy chat help",
       emptyTitle: "Drop a game folder first",
       emptyBody: "GalAid analyzes launch files, engine/structure clues, archives/images, path risks, and asset categories locally.",
       emptyStepDropTitle: "Drop",
@@ -852,6 +896,28 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabAssets: "アセット",
       tabSupport: "サポート",
       tabReport: "レポート",
+      oneStopTitle: "一括起動ガイド",
+      oneStopBody: "この流れに沿えば大丈夫です。パッケージ/イメージを準備し、推奨入口を起動し、失敗時は画像やエラーを追加して相談文をコピーします。",
+      wizardImportTitle: "投入",
+      wizardImportBody: "{count} 件、合計 {size} を読み取りました。",
+      wizardPrepareTitle: "準備",
+      wizardPrepareCurrentBody: "まだアーカイブ、分割ファイル、ディスクイメージ段階に見えます。先に展開、マウント、再スキャンします。",
+      wizardPrepareTodoBody: "追加パッケージ、修正パッチ、特典ディスクが残っています。必要に応じて処理済みか確認します。",
+      wizardPrepareDoneBody: "展開済みフォルダに見えるため、起動入口へ進めます。",
+      wizardLaunchTitle: "起動",
+      wizardLaunchReadyBody: "まず {entry} を試してください。デスクトップ版では正しい作業フォルダで起動します。",
+      wizardLaunchWaitingBody: "信頼できる起動入口はまだありません。パッケージ/イメージを処理するか、完全なゲームルートで再試行してください。",
+      wizardFixTitle: "失敗後",
+      wizardFixBody: "起動しない場合は症状を選び、エラー貼り付けや画像 OCR で次の手順を絞ります。",
+      wizardStateDone: "完了",
+      wizardStateCurrent: "現在",
+      wizardStateTodo: "確認",
+      wizardStateWaiting: "待機",
+      wizardGoPackages: "パッケージ処理へ",
+      wizardLaunchTop: "推奨入口を起動",
+      wizardGoRoadmap: "手順を見る",
+      wizardRecordFailure: "失敗/OCR を記録",
+      wizardCopyChatHelp: "相談文をコピー",
       emptyTitle: "まずゲームフォルダを入れてください",
       emptyBody: "GalAid は起動ファイル、エンジン/構造の手がかり、アーカイブ/イメージ、パスのリスク、アセット分類をローカルで分析します。",
       emptyStepDropTitle: "投入",
@@ -1219,6 +1285,14 @@ const PACKAGE_SAMPLE_FILES = [
   ["MoonlightCafe.part2.rar", 2147483648],
   ["MoonlightCafe.part3.rar", 913000000],
   ["MoonlightCafe_readme.txt", 2400],
+  ["AsterOldDisc.ccd", 1800],
+  ["AsterOldDisc.img", 3620000000],
+  ["AsterOldDisc.sub", 42000000],
+  ["AsterInstall.mds", 2200],
+  ["AsterInstall.mdf", 4120000000],
+  ["BlindWriteTrial.b6t", 2600],
+  ["BlindWriteTrial.b6i", 2980000000],
+  ["BonusTokuten.nrg", 1280000000],
   [
     "MoonlightCafe_Bonus.iso",
     4810000000,
@@ -1729,6 +1803,18 @@ function getDiscInfo(file) {
     nrg: "standalone Nero image",
     isz: "compressed image",
     cdi: "DiscJuggler image",
+    bwt: "BlindWrite descriptor, expects .bwi",
+    bwi: "BlindWrite image data, often needs .bwt",
+    bws: "BlindWrite subchannel data",
+    bwa: "BlindWrite physical media data",
+    b5t: "BlindWrite 5 descriptor, expects .b5i",
+    b5i: "BlindWrite 5 image data, often needs .b5t",
+    b6t: "BlindWrite 6 descriptor, expects .b6i",
+    b6i: "BlindWrite 6 image data, often needs .b6t",
+    mdx: "Media Descriptor image",
+    daa: "PowerISO image",
+    uif: "MagicISO image",
+    pdi: "InstantCopy image",
   };
   const family = stripLastExtension(file.lowerPath);
   return {
@@ -1857,6 +1943,12 @@ function buildDiscSets(discs) {
         format = "MDS/MDF disc image";
       } else if (exts.has("ccd") && exts.has("img")) {
         format = "CCD/IMG disc image";
+      } else if (exts.has("bwt") && exts.has("bwi")) {
+        format = "BlindWrite disc image";
+      } else if (exts.has("b5t") && exts.has("b5i")) {
+        format = "BlindWrite 5 disc image";
+      } else if (exts.has("b6t") && exts.has("b6i")) {
+        format = "BlindWrite 6 disc image";
       }
 
       if (exts.has("cue") && !exts.has("bin")) {
@@ -1875,8 +1967,23 @@ function buildDiscSets(discs) {
         level = "warning";
         summary = "有 .ccd 但没看到同名 .img";
         nextStep = "把 .ccd/.img/.sub 放在同一目录后再挂载或解包";
+      } else if (exts.has("bwt") && !exts.has("bwi")) {
+        level = "warning";
+        summary = "有 .bwt 但没看到同名 .bwi";
+        nextStep = "把 BlindWrite 的 .bwt/.bwi/.bws/.bwa 放在同一目录后再挂载或解包";
+      } else if (exts.has("b5t") && !exts.has("b5i")) {
+        level = "warning";
+        summary = "有 .b5t 但没看到同名 .b5i";
+        nextStep = "把 BlindWrite 5 的 .b5t/.b5i 放在同一目录后再挂载或解包";
+      } else if (exts.has("b6t") && !exts.has("b6i")) {
+        level = "warning";
+        summary = "有 .b6t 但没看到同名 .b6i";
+        nextStep = "把 BlindWrite 6 的 .b6t/.b6i 放在同一目录后再挂载或解包";
       } else if (exts.has("iso")) {
         summary = archivePreview ? summarizeArchivePreview(archivePreview) : "ISO 通常可以直接挂载";
+      } else if (["nrg", "isz", "cdi", "mdx", "daa", "uif", "pdi"].some((ext) => exts.has(ext))) {
+        summary = archivePreview ? summarizeArchivePreview(archivePreview) : "古早镜像已识别，通常需要挂载或用 7z/专用工具解包";
+        nextStep = "桌面版会先尝试 7z 兼容解包；如果失败，再用对应镜像工具挂载后重扫安装目录";
       }
 
       return {
@@ -1941,6 +2048,18 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
     steps.push({
       title: "压缩包可能包含加密条目",
       body: "这个包可能需要密码。你可以在准备时输入已知解压密码，GalAid 会继续解压并重扫。",
+    });
+  }
+
+  const oldDiscSets = discSets.filter((set) =>
+    set.files.some((item) => ["ccd", "img", "sub", "nrg", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"].includes(item.file.ext)),
+  );
+
+  if (oldDiscSets.length) {
+    const formats = compactEvidence(oldDiscSets.map((set) => set.format), 3).join(" / ");
+    steps.push({
+      title: "识别到古早镜像格式",
+      body: `${formats} 这类文件一般不是直接运行入口。先保持配套文件同名同目录，再挂载或解包，最后用处理后的安装/游戏目录重扫。`,
     });
   }
 
@@ -2736,7 +2855,7 @@ function toWindowsPath(pathValue) {
 }
 
 function isSetupLike(lowerPath) {
-  return /(setup|install|installer|autorun|inst|修正|patch)/i.test(lowerPath);
+  return /(setup|install|installer|autorun|inst|修正|patch|update|append|bonus|extra|tokuten|特典|追加|免dvd|免cd|no.?dvd|no.?cd|crack|keygen|serial)/i.test(lowerPath);
 }
 
 function buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
@@ -3707,6 +3826,7 @@ function renderLaunch(analysis) {
     ${renderModeCard(analysis)}
     ${renderPreparedHandoff(analysis)}
     ${renderLaunchAttemptFollowup()}
+    ${renderOneStopWizard(analysis)}
     <div class="section-title">
       <h3>${escapeHtml(getUiText("launchCandidates"))}</h3>
       <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
@@ -3719,6 +3839,106 @@ function renderLaunch(analysis) {
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
   `;
+}
+
+function renderOneStopWizard(analysis) {
+  const topCandidate = analysis.launchCandidates[0] || null;
+  const packageBlocker = analysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
+  const needsPreparation = analysis.packages.hasPackages && (!topCandidate || packageBlocker);
+  const hasExtraPackages = analysis.packages.hasPackages && !needsPreparation;
+  const launchState = topCandidate && !needsPreparation ? "current" : "waiting";
+  const prepareState = needsPreparation ? "current" : hasExtraPackages ? "todo" : "done";
+  const fixState = analysis.launchFailure?.hasEvidence || analysis.errorDiagnostics.matches.length ? "current" : "waiting";
+  const steps = [
+    {
+      state: "done",
+      title: getUiText("wizardImportTitle"),
+      body: getUiText("wizardImportBody", { count: formatNumber(analysis.files.length), size: formatBytes(analysis.totalSize) }),
+    },
+    {
+      state: prepareState,
+      title: getUiText("wizardPrepareTitle"),
+      body: needsPreparation
+        ? getUiText("wizardPrepareCurrentBody")
+        : hasExtraPackages
+          ? getUiText("wizardPrepareTodoBody")
+          : getUiText("wizardPrepareDoneBody"),
+    },
+    {
+      state: launchState,
+      title: getUiText("wizardLaunchTitle"),
+      body: topCandidate && !needsPreparation
+        ? getUiText("wizardLaunchReadyBody", { entry: topCandidate.file.path })
+        : getUiText("wizardLaunchWaitingBody"),
+    },
+    {
+      state: fixState,
+      title: getUiText("wizardFixTitle"),
+      body: getUiText("wizardFixBody"),
+    },
+  ];
+  const primaryAction = needsPreparation
+    ? `<button type="button" data-wizard-action="packages">${escapeHtml(getUiText("wizardGoPackages"))}</button>`
+    : topCandidate
+      ? renderWizardLaunchAction(topCandidate)
+      : `<button type="button" data-wizard-action="roadmap">${escapeHtml(getUiText("wizardGoRoadmap"))}</button>`;
+
+  return `
+    <article class="one-stop-wizard">
+      <div class="one-stop-heading">
+        <div>
+          <h4>${escapeHtml(getUiText("oneStopTitle"))}</h4>
+          <p>${escapeHtml(getUiText("oneStopBody"))}</p>
+        </div>
+        <div class="wizard-actions">
+          ${primaryAction}
+          <button type="button" data-wizard-action="fix">${escapeHtml(getUiText("wizardRecordFailure"))}</button>
+          <button type="button" data-wizard-action="copy-chat-help">${escapeHtml(getUiText("wizardCopyChatHelp"))}</button>
+        </div>
+      </div>
+      <div class="one-stop-steps">
+        ${steps.map((step, index) => renderOneStopStep(step, index)).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderOneStopStep(step, index) {
+  return `
+    <article class="one-stop-step ${step.state}">
+      <span>${String(index + 1).padStart(2, "0")}</span>
+      <div>
+        <h5>${escapeHtml(step.title)}</h5>
+        <p>${escapeHtml(step.body)}</p>
+      </div>
+      <strong>${escapeHtml(getWizardStateLabel(step.state))}</strong>
+    </article>
+  `;
+}
+
+function renderWizardLaunchAction(candidate) {
+  const canLaunch = canDesktopLaunchFile(candidate.file);
+  return `
+    <button
+      type="button"
+      data-launch-action="candidate"
+      data-candidate-index="0"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("wizardLaunchTop") : getUiText("launchUnavailable"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("wizardLaunchTop") : getUiText("launchUnavailable"))}
+    </button>
+  `;
+}
+
+function getWizardStateLabel(state) {
+  const labels = {
+    done: getUiText("wizardStateDone"),
+    current: getUiText("wizardStateCurrent"),
+    todo: getUiText("wizardStateTodo"),
+    waiting: getUiText("wizardStateWaiting"),
+  };
+  return labels[state] || labels.waiting;
 }
 
 function renderPreparedHandoff(analysis) {
@@ -5539,6 +5759,24 @@ function rerunCurrentAnalysis() {
 }
 
 launchPanel.addEventListener("click", (event) => {
+  const wizardButton = event.target.closest("[data-wizard-action]");
+  if (wizardButton && currentAnalysis) {
+    const action = wizardButton.dataset.wizardAction;
+    if (action === "packages") {
+      activateTab("packages");
+    } else if (action === "roadmap") {
+      activateTab("roadmap");
+    } else if (action === "fix") {
+      const target = launchPanel.querySelector(".launch-failure-card") || errorInput;
+      target?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      launchPanel.querySelector("[data-failure-note]")?.focus();
+      if (!launchPanel.querySelector("[data-failure-note]")) errorInput.focus();
+    } else if (action === "copy-chat-help") {
+      void copyText(buildChatHelpText(currentAnalysis, getAssistantLanguage()), getUiText("toastChatHelpCopied"));
+    }
+    return;
+  }
+
   const button = event.target.closest("[data-launch-action]");
   if (!button || !currentAnalysis) return;
 
