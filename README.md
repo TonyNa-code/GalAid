@@ -2,8 +2,8 @@
 
 <div align="center">
   <h1>GalAid</h1>
-  <p><strong>A launch doctor for visual novel and galgame folders.</strong></p>
-  <p><sub>Archive chaos in. Launch-ready evidence out.</sub></p>
+  <p><strong>Drop a VN package. Get a launch route.</strong></p>
+  <p><sub>A launch assistant for visual novels, galgame folders, archives, disc images, and stubborn startup errors.</sub></p>
 
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
@@ -17,6 +17,11 @@
     <img alt="Screenshot OCR" src="https://img.shields.io/badge/error_screenshot-OCR-7762a6">
     <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-d95a48">
   </p>
+
+  <p>
+    <strong>Drag in a folder, archive, or old disc image.</strong><br>
+    GalAid prepares the package, finds the likely launcher, starts the desktop route, and turns failures into concrete next steps.
+  </p>
 </div>
 
 Languages: English / [简体中文](README.zh-CN.md) / [日本語](README.ja.md)
@@ -25,9 +30,10 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
 
 <table>
   <tr>
-    <td width="33%" valign="top"><strong>1. Read the package</strong><br>Drop a folder, archive, or disc-image file list. GalAid turns the file layout into launch evidence.</td>
-    <td width="33%" valign="top"><strong>2. Find the route</strong><br>Get launch candidates, engine clues, runtime checks, archive guidance, and an ordered next-step roadmap.</td>
-    <td width="33%" valign="top"><strong>3. Launch or ask</strong><br>Use the desktop beta to launch entries, read error screenshots, or export a support bundle for help.</td>
+    <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z`, split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
+    <td width="25%" valign="top"><strong>02 Prepare</strong><br>GalAid groups packages, asks for a password when needed, extracts or mounts, then rescans the prepared folder.</td>
+    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta ranks launch candidates and can start the selected Windows `.exe/.com` with the right working directory.</td>
+    <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, VC++, locale, RTP, path, or package route.</td>
   </tr>
 </table>
 
@@ -35,9 +41,26 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
   <img alt="GalAid roadmap demo" src="docs/assets/galaid-roadmap-demo.png">
 </p>
 
-The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes the file list in your browser. A desktop shell is also available for native folder selection, full local path scanning, package preparation, and screenshot OCR.
+## What It Feels Like
 
-## Why It Exists
+```text
+download.zip / game.iso / extracted-folder
+        |
+        v
+   GalAid reads the layout
+        |
+        +--> prepare package or image
+        +--> find the likely launcher
+        +--> launch from the right folder
+        +--> read screenshots or logs when it fails
+        |
+        v
+  one clear next action instead of guesswork
+```
+
+The web app is still useful for quick file-list diagnosis. The desktop beta is the main path for real users because it adds native scanning, package preparation, one-click launch, shortcuts, launch history, and Screenshot OCR.
+
+## Who It Helps
 
 Many visual novel players get stuck before the game even opens:
 
@@ -46,29 +69,30 @@ Many visual novel players get stuck before the game even opens:
 - Japanese locale, fonts, and path encoding cause mojibake or crashes
 - old DirectX / VC++ / RPG Maker RTP dependencies are missing
 - folders contain many `.exe` files and it is unclear which one starts the game
+- a startup dialog appears, but the user cannot copy the text
 
-GalAid turns that mess into a small diagnosis report.
+GalAid turns that mess into a guided launch route.
+
+## Current Beta
+
+| Surface | Use it for | What you get |
+| --- | --- | --- |
+| Windows desktop beta | Real player use | Native folder selection, recursive scan, archive/image preparation, one-click launch, shortcuts, launch history, Screenshot OCR. |
+| Web demo | Quick preview | File-list diagnosis, engine clues, package stage hints, error recipe matching, report export. |
+| Rule data | Community contribution | Engine fingerprints, startup error recipes, package patterns, and smoke-tested examples. |
 
 ## Feature Map
 
-| Area | What GalAid does | Useful when |
-| --- | --- | --- |
-| Launch route | Ranks `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html` candidates, while flagging installers and support tools. | A folder has many executables and no obvious start button. |
-| Package diagnosis | Identifies archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, and `.mds/.mdf`. | The download still looks like a pile of compressed parts or old disc files. |
-| Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts with evidence explanations and next steps. | The game uses a private or company-specific structure instead of a famous public engine. |
-| Error screenshot OCR | Reads text from a startup dialog screenshot and feeds it into the same recipe matcher as pasted logs. | A player can see an error dialog but cannot copy the text. |
-| Runtime checks | Checks extraction state, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, web VN local-server needs, and manual launch-failure follow-up evidence. | The right launcher exists, but the game crashes, shows mojibake, or complains about missing DLLs. |
-| Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, launch-failure notes, environment checks, and a compact file manifest. | A player needs to ask for help with enough context. |
-| Desktop beta | Adds native folder selection, recursive local scanning, ZIP/RAR/7z package preflight with a bundled 7z-compatible extractor, archive extraction handoff, disc-image mount/extract handoff, Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
-
-## Product Shape
-
 <table>
   <tr>
-    <td width="25%" valign="top"><strong>One drop</strong><br>Folders, archives, and disc images all enter the same diagnosis flow.</td>
-    <td width="25%" valign="top"><strong>Evidence-based</strong><br>Every engine, launch, package, and error result shows the exact clue that triggered it.</td>
-    <td width="25%" valign="top"><strong>Beginner-readable</strong><br>The output is an ordered route: extract this, mount that, try this launcher, check this runtime.</td>
-    <td width="25%" valign="top"><strong>Contributor-friendly</strong><br>Most improvements are small data rules, redacted evidence, docs, or focused tests around real user flows.</td>
+    <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, disc-image pairs, and password prompts are folded into one prepare-and-rescan flow.</td>
+    <td width="33%" valign="top"><strong>Folder to launcher</strong><br>Launch candidates are ranked against installers, redists, config tools, engine files, working directories, and commercial/self-developed layouts.</td>
+    <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs or screenshot OCR feed local recipes for DirectX, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top"><strong>Engine clues</strong><br>Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and private commercial structures get evidence explanations.</td>
+    <td width="33%" valign="top"><strong>Support bundle</strong><br>Reports, roadmaps, profiles, recipe matches, launch-failure notes, environment checks, and file-list summaries are exportable.</td>
+    <td width="33%" valign="top"><strong>Contributor loop</strong><br>Most improvements are small JSON rules, reproducible examples, documentation polish, and Playwright smoke tests.</td>
   </tr>
 </table>
 
@@ -77,10 +101,12 @@ GalAid turns that mess into a small diagnosis report.
 | Surface | Start here | Best for |
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
-| Windows beta | [v0.1.8-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta) | Native folder picking, recursive scans, bundled package/image preparation, one-click launch, shortcuts, launch history, locale launch templates, screenshot OCR, and launch-failure follow-up. |
+| Windows beta | [v0.1.8-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta) | Drag, prepare, rescan, launch, OCR error screenshots, and export support context. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
+
+The launch button is the user-facing goal. The diagnosis engine is the part that decides which button should exist, what folder it should run from, and what to do when that button does not work.
 
 GalAid can generate a launch profile from the best executable candidate. A profile includes:
 
