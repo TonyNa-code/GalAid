@@ -13,7 +13,7 @@ GalAid 是一个本地优先的视觉小说 / galgame 启动诊断工具。
 
 演示地址：`https://TonyNa-code.github.io/GalAid/`
 
-![GalAid roadmap demo](docs/assets/galaid-roadmap-demo.png)
+![GalAid flow demo](docs/assets/galaid-flow-demo.gif)
 
 ## 为什么做这个
 

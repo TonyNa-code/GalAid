@@ -1541,6 +1541,47 @@ textarea {
   box-shadow: 8px 8px 0 rgba(54, 167, 121, 0.18);
 }
 
+.empty-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 820px);
+  margin-top: 10px;
+}
+
+.empty-flow-step {
+  display: grid;
+  gap: 6px;
+  min-height: 132px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+  text-align: left;
+}
+
+.empty-flow-step span {
+  width: max-content;
+  border: 1px solid rgba(64, 125, 163, 0.24);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgba(64, 125, 163, 0.1);
+  color: var(--sky-dark);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.empty-flow-step h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.empty-flow-step p {
+  margin: 0;
+  font-size: 12px;
+}
+
 .toast {
   position: fixed;
   right: 24px;
@@ -1576,6 +1617,7 @@ textarea {
   .grid-two,
   .environment-grid,
   .failure-symptom-grid,
+  .empty-flow,
   .support-grid {
     grid-template-columns: 1fr;
   }

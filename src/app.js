@@ -270,6 +270,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabReport: "报告",
       emptyTitle: "先丢一个游戏文件夹进来",
       emptyBody: "GalAid 会在本地分析启动文件、引擎/结构线索、镜像/压缩包、路径风险和素材分布。",
+      emptyStepDropTitle: "拖进来",
+      emptyStepDropBody: "文件夹、压缩包、分卷包和镜像都可以先交给 GalAid。",
+      emptyStepPrepareTitle: "自动准备",
+      emptyStepPrepareBody: "需要密码就提示输入，然后解压、挂载或重扫。",
+      emptyStepLaunchTitle: "一键启动",
+      emptyStepLaunchBody: "按候选入口和工作目录生成可点击启动路线。",
+      emptyStepFixTitle: "失败再诊断",
+      emptyStepFixBody: "截图 OCR 或粘贴报错后给出下一步。",
       launchCandidates: "启动候选",
       diagnosisFindings: "诊断结论",
       evidenceTitle: "判断依据",
@@ -388,6 +396,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       supportBundle: "求助包",
       supportSummaryBody: "适合发 issue、论坛或聊天求助，包含路线、环境检查、配方命中和文件清单摘要。",
       copySupportSummary: "复制求助摘要",
+      copyChatHelp: "复制 QQ 求助文案",
       copyManifest: "复制清单 JSON",
       downloadSupportBundle: "下载求助包",
       diagnosisSummary: "诊断摘要",
@@ -443,6 +452,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareDamaged: "压缩包可能损坏或不完整",
       toastRoadmapCopied: "路线清单已复制",
       toastSummaryCopied: "求助摘要已复制",
+      toastChatHelpCopied: "QQ 求助文案已复制",
       toastManifestCopied: "求助包清单已复制",
     },
     labels: {
@@ -552,6 +562,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabReport: "Report",
       emptyTitle: "Drop a game folder first",
       emptyBody: "GalAid analyzes launch files, engine/structure clues, archives/images, path risks, and asset categories locally.",
+      emptyStepDropTitle: "Drop",
+      emptyStepDropBody: "Folders, archives, split volumes, and disc images can enter the same flow.",
+      emptyStepPrepareTitle: "Prepare",
+      emptyStepPrepareBody: "Ask for a password when needed, then extract, mount, or rescan.",
+      emptyStepLaunchTitle: "Launch",
+      emptyStepLaunchBody: "Rank entries and build a clickable route with the right working folder.",
+      emptyStepFixTitle: "Fix",
+      emptyStepFixBody: "Use screenshot OCR or pasted logs to get the next concrete step.",
       launchCandidates: "Launch candidates",
       diagnosisFindings: "Diagnosis findings",
       evidenceTitle: "Evidence",
@@ -670,6 +688,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       supportBundle: "Support bundle",
       supportSummaryBody: "Good for GitHub issues, forums, or chat support, with the route, environment checks, recipe matches, and file-list summary.",
       copySupportSummary: "Copy support summary",
+      copyChatHelp: "Copy chat help",
       copyManifest: "Copy manifest JSON",
       downloadSupportBundle: "Download support bundle",
       diagnosisSummary: "Diagnosis summary",
@@ -725,6 +744,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareDamaged: "The package may be damaged or incomplete",
       toastRoadmapCopied: "Roadmap checklist copied",
       toastSummaryCopied: "Support summary copied",
+      toastChatHelpCopied: "Chat help copied",
       toastManifestCopied: "Support manifest copied",
     },
     labels: {
@@ -834,6 +854,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       tabReport: "レポート",
       emptyTitle: "まずゲームフォルダを入れてください",
       emptyBody: "GalAid は起動ファイル、エンジン/構造の手がかり、アーカイブ/イメージ、パスのリスク、アセット分類をローカルで分析します。",
+      emptyStepDropTitle: "投入",
+      emptyStepDropBody: "フォルダ、アーカイブ、分割ファイル、ディスクイメージを同じ流れで扱います。",
+      emptyStepPrepareTitle: "準備",
+      emptyStepPrepareBody: "必要ならパスワードを入力し、展開、マウント、再スキャンします。",
+      emptyStepLaunchTitle: "起動",
+      emptyStepLaunchBody: "候補と作業フォルダを整理し、クリックできる起動ルートを作ります。",
+      emptyStepFixTitle: "診断",
+      emptyStepFixBody: "画像 OCR や貼り付けたログから次の手順を出します。",
       launchCandidates: "起動候補",
       diagnosisFindings: "診断結果",
       evidenceTitle: "根拠",
@@ -952,6 +980,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       supportBundle: "サポートバンドル",
       supportSummaryBody: "issue、フォーラム、チャット相談向けに、手順、環境チェック、レシピ一致、ファイル一覧概要をまとめます。",
       copySupportSummary: "サポート概要をコピー",
+      copyChatHelp: "チャット用文面をコピー",
       copyManifest: "マニフェスト JSON をコピー",
       downloadSupportBundle: "サポートバンドルを保存",
       diagnosisSummary: "診断概要",
@@ -1007,6 +1036,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareDamaged: "パッケージが破損または不完全な可能性があります",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
       toastSummaryCopied: "サポート概要をコピーしました",
+      toastChatHelpCopied: "チャット用文面をコピーしました",
       toastManifestCopied: "サポートマニフェストをコピーしました",
     },
     labels: {
@@ -1283,11 +1313,28 @@ function applyStaticUiLanguage() {
 }
 
 function getEmptyStateHtml() {
+  const steps = [
+    ["emptyStepDropTitle", "emptyStepDropBody"],
+    ["emptyStepPrepareTitle", "emptyStepPrepareBody"],
+    ["emptyStepLaunchTitle", "emptyStepLaunchBody"],
+    ["emptyStepFixTitle", "emptyStepFixBody"],
+  ]
+    .map(
+      ([titleKey, bodyKey], index) => `
+        <article class="empty-flow-step">
+          <span>${String(index + 1).padStart(2, "0")}</span>
+          <h4>${escapeHtml(getUiText(titleKey))}</h4>
+          <p>${escapeHtml(getUiText(bodyKey))}</p>
+        </article>
+      `,
+    )
+    .join("");
   return `
     <div class="empty-state">
       <div class="empty-glyph" aria-hidden="true"></div>
       <h3>${escapeHtml(getUiText("emptyTitle"))}</h3>
       <p>${escapeHtml(getUiText("emptyBody"))}</p>
+      <div class="empty-flow">${steps}</div>
     </div>
   `;
 }
@@ -4464,6 +4511,7 @@ function renderSupport(analysis) {
       </div>
       <div class="support-actions">
         <button type="button" data-support-action="copy-summary">${escapeHtml(getUiText("copySupportSummary"))}</button>
+        <button type="button" data-support-action="copy-chat-help">${escapeHtml(getUiText("copyChatHelp"))}</button>
         <button type="button" data-support-action="copy-manifest">${escapeHtml(getUiText("copyManifest"))}</button>
         <button type="button" data-support-action="download-bundle">${escapeHtml(getUiText("downloadSupportBundle"))}</button>
       </div>
@@ -4890,6 +4938,90 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   for (const [index, step] of analysis.roadmap.steps.slice(0, 6).entries()) {
     lines.push(`- ${index + 1}. ${step.title}: ${step.action}`);
   }
+  return lines.join("\n");
+}
+
+function buildChatHelpText(analysis, language = getAssistantLanguage()) {
+  const copies = {
+    "zh-CN": {
+      title: "我在 GalAid 里扫了一下这个 galgame，求助信息如下：",
+      project: "游戏/目录",
+      status: "状态",
+      files: "文件规模",
+      packageState: "包/镜像",
+      launch: "推荐启动",
+      engine: "结构线索",
+      recipes: "报错匹配",
+      failure: "启动现象",
+      firstStep: "现在最该做",
+      noLaunch: "还没有找到明确启动入口",
+      noEngine: "没有明显引擎/结构线索",
+      noRecipes: "没有命中已知报错配方",
+      noPackages: "当前更像已经解压后的目录",
+      ask: "想请大家帮我看一下这个判断对不对，下一步应该先处理哪一项。",
+    },
+    en: {
+      title: "I scanned this visual novel with GalAid. Here is the short help context:",
+      project: "Game/folder",
+      status: "Status",
+      files: "File scale",
+      packageState: "Package/image",
+      launch: "Recommended launch",
+      engine: "Structure clues",
+      recipes: "Error matches",
+      failure: "Launch symptom",
+      firstStep: "Best next step",
+      noLaunch: "No clear launch entry yet",
+      noEngine: "No obvious engine/structure clues",
+      noRecipes: "No known error recipe matched",
+      noPackages: "This looks like an already extracted folder",
+      ask: "Could someone help me check whether this diagnosis looks right and what I should try first?",
+    },
+    ja: {
+      title: "GalAid でこの VN をスキャンしました。相談用の短い情報です:",
+      project: "ゲーム/フォルダ",
+      status: "状態",
+      files: "ファイル規模",
+      packageState: "パッケージ/イメージ",
+      launch: "推奨起動",
+      engine: "構造の手がかり",
+      recipes: "エラー一致",
+      failure: "起動症状",
+      firstStep: "次に試すこと",
+      noLaunch: "明確な起動ファイルはまだ見つかっていません",
+      noEngine: "明確なエンジン/構造の手がかりはありません",
+      noRecipes: "既知のエラーレシピには一致していません",
+      noPackages: "展開済みフォルダのように見えます",
+      ask: "この診断が合っているか、最初にどこを見るべきか教えてください。",
+    },
+  };
+  const copy = copies[language] || copies["zh-CN"];
+  const lines = [copy.title];
+  const topLaunch = analysis.launchCandidates[0];
+  const engineNames = analysis.engines.slice(0, 3).map((engine) => engine.name);
+  const recipeNames = analysis.errorDiagnostics.matches.slice(0, 3).map((match) => match.title);
+  const packageSets = [...analysis.packages.archiveSets, ...analysis.packages.discSets];
+  const packageText = packageSets.length
+    ? packageSets.slice(0, 3).map((set) => `${set.format}: ${set.summary}`).join("; ")
+    : copy.noPackages;
+  const firstActionStep = analysis.roadmap.steps.find((step) => step.state !== "info") || analysis.roadmap.steps[0];
+  const fileUnit = getUiText("summaryFiles", {}, language);
+
+  lines.push(`${copy.project}: ${getDisplayTitle(analysis)}`);
+  lines.push(`${copy.status}: ${analysis.status.label} / ${analysis.roadmap.summary.label}`);
+  lines.push(`${copy.files}: ${formatNumber(analysis.files.length)} ${fileUnit} / ${formatBytes(analysis.totalSize)}`);
+  lines.push(`${copy.packageState}: ${packageText}`);
+  lines.push(`${copy.launch}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : copy.noLaunch}`);
+  lines.push(`${copy.engine}: ${engineNames.length ? engineNames.join(", ") : copy.noEngine}`);
+  lines.push(`${copy.recipes}: ${recipeNames.length ? recipeNames.join(", ") : copy.noRecipes}`);
+  if (analysis.launchFailure?.hasEvidence) {
+    lines.push(`${copy.failure}: ${getLaunchFailureEvidence(analysis.launchFailure, language).join(", ")}`);
+  }
+  if (firstActionStep) {
+    lines.push(`${copy.firstStep}: ${firstActionStep.title} - ${firstActionStep.action}`);
+  }
+  lines.push(copy.ask);
+
   return lines.join("\n");
 }
 
@@ -5493,6 +5625,8 @@ supportPanel.addEventListener("click", (event) => {
 
   if (action === "copy-summary") {
     void copyText(buildSupportSummaryText(currentAnalysis, manifest, bundle.filename, language), getUiText("toastSummaryCopied"));
+  } else if (action === "copy-chat-help") {
+    void copyText(buildChatHelpText(currentAnalysis, language), getUiText("toastChatHelpCopied"));
   } else if (action === "copy-manifest") {
     void copyText(manifestEntry.content, getUiText("toastManifestCopied"));
   } else if (action === "download-bundle") {

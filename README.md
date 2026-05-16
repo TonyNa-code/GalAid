@@ -38,7 +38,9 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
 </table>
 
 <p align="center">
-  <img alt="GalAid roadmap demo" src="docs/assets/galaid-roadmap-demo.png">
+  <img alt="GalAid flow demo" src="docs/assets/galaid-flow-demo.gif">
+  <br>
+  <sub>One intake flow for packages, disc images, launch candidates, and startup errors.</sub>
 </p>
 
 ## What It Feels Like

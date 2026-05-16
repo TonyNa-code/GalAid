@@ -4,6 +4,8 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await page.goto("/");
 
   await expect(page).toHaveTitle(/GalAid/);
+  await expect(page.locator("#launchPanel .empty-flow")).toContainText("拖进来");
+  await expect(page.locator("#launchPanel .empty-flow")).toContainText("一键启动");
   await page.getByRole("button", { name: "游戏样例" }).click();
   await page.getByLabel("错误信息").fill("The program cannot start because d3dx9_43.dll is missing. VCRUNTIME140.dll was not found.");
   await page.locator('[data-tab="roadmap"]').click();
@@ -27,6 +29,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.getByRole("heading", { name: "求助包" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "复制 QQ 求助文案" })).toBeVisible();
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
@@ -36,6 +39,11 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(supportPreview).toContainText("## GalAid 求助摘要");
   await expect(supportPreview).toContainText("SakuraTrial");
   await expect(supportPreview).toContainText("DirectX 旧组件");
+
+  const chatHelp = await page.evaluate(() => buildChatHelpText(currentAnalysis, "zh-CN"));
+  expect(chatHelp).toContain("我在 GalAid 里扫了一下这个 galgame");
+  expect(chatHelp).toContain("SakuraTrial/game.exe");
+  expect(chatHelp).toContain("DirectX 旧组件");
 });
 
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
@@ -200,6 +208,7 @@ test("interface and assistant output language can switch to English and Japanese
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.getByRole("heading", { name: "Support bundle" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy chat help" })).toBeVisible();
   await expect(page.locator(".support-preview")).toContainText("## GalAid support summary");
   await expect(page.locator(".support-preview")).toContainText("Recommended entry");
 
@@ -213,6 +222,7 @@ test("interface and assistant output language can switch to English and Japanese
   await expect(page.locator("#enginePanel")).toContainText("まずルートフォルダの起動ファイル");
   await page.locator('[data-tab="support"]').click();
   await expect(page.getByRole("heading", { name: "サポートバンドル" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "チャット用文面をコピー" })).toBeVisible();
   await expect(page.locator(".support-preview")).toContainText("## GalAid サポート概要");
   await expect(page.locator(".support-preview")).toContainText("診断言語: 日本語");
 });
