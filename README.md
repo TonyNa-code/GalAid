@@ -2,33 +2,32 @@
 
 <div align="center">
   <h1>GalAid</h1>
-  <p><strong>A local-first launch doctor for visual novel and galgame folders.</strong></p>
-  <p><sub>Archive chaos in. Launch-ready evidence out. No game files uploaded.</sub></p>
+  <p><strong>A launch doctor for visual novel and galgame folders.</strong></p>
+  <p><sub>Archive chaos in. Launch-ready evidence out.</sub></p>
 
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
-    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.7-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
     <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
   <p>
-    <img alt="Local-first" src="https://img.shields.io/badge/local--first-no_upload-36a779">
-    <img alt="Metadata only" src="https://img.shields.io/badge/metadata-only-5b5f97">
     <img alt="Static web app" src="https://img.shields.io/badge/web-static_app-20252b">
     <img alt="Desktop beta" src="https://img.shields.io/badge/desktop-Windows_beta-407da3">
+    <img alt="Screenshot OCR" src="https://img.shields.io/badge/error_screenshot-OCR-7762a6">
     <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-d95a48">
   </p>
 </div>
 
 Languages: English / [简体中文](README.zh-CN.md) / [日本語](README.ja.md)
 
-GalAid is a local-first launch doctor for visual novel and galgame folders. It helps players answer the first painful question: "Which file do I run, and why is this game not starting?"
+GalAid is a launch doctor for visual novel and galgame folders. It helps players answer the first painful question: "Which file do I run, and why is this game not starting?"
 
 <table>
   <tr>
-    <td width="33%" valign="top"><strong>1. Read the package</strong><br>Drop a folder, archive, or disc-image file list. GalAid looks at names, paths, sizes, and extensions only.</td>
+    <td width="33%" valign="top"><strong>1. Read the package</strong><br>Drop a folder, archive, or disc-image file list. GalAid turns the file layout into launch evidence.</td>
     <td width="33%" valign="top"><strong>2. Find the route</strong><br>Get launch candidates, engine clues, runtime checks, archive guidance, and an ordered next-step roadmap.</td>
-    <td width="33%" valign="top"><strong>3. Launch or ask</strong><br>Use the desktop beta to launch trusted entries, or export a metadata-only support bundle for help.</td>
+    <td width="33%" valign="top"><strong>3. Launch or ask</strong><br>Use the desktop beta to launch entries, read error screenshots, or export a support bundle for help.</td>
   </tr>
 </table>
 
@@ -36,7 +35,7 @@ GalAid is a local-first launch doctor for visual novel and galgame folders. It h
   <img alt="GalAid roadmap demo" src="docs/assets/galaid-roadmap-demo.png">
 </p>
 
-The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes only file names, paths, sizes, and extensions in your browser. A desktop shell is also available for native folder selection and full local path scanning.
+The first version is a static web app. Open `index.html`, drop in a folder or select files, and GalAid analyzes the file list in your browser. A desktop shell is also available for native folder selection, full local path scanning, package preparation, and screenshot OCR.
 
 ## Why It Exists
 
@@ -57,16 +56,17 @@ GalAid turns that mess into a small diagnosis report.
 | Launch route | Ranks `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html` candidates, while flagging installers and support tools. | A folder has many executables and no obvious start button. |
 | Package diagnosis | Identifies archives, split archives, and disc images such as `.part1.rar`, `.7z.001`, `.iso`, `.cue/.bin`, and `.mds/.mdf`. | The download still looks like a pile of compressed parts or old disc files. |
 | Engine clues | Detects Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed VN layouts with evidence explanations and next steps. | The game uses a private or company-specific structure instead of a famous public engine. |
+| Error screenshot OCR | Reads text from a startup dialog screenshot and feeds it into the same recipe matcher as pasted logs. | A player can see an error dialog but cannot copy the text. |
 | Runtime checks | Checks extraction state, locale, paths, DirectX, VC++ runtime, RPG Maker RTP, permissions, web VN local-server needs, and manual launch-failure follow-up evidence. | The right launcher exists, but the game crashes, shows mojibake, or complains about missing DLLs. |
-| Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, launch-failure notes, environment checks, and sanitized file metadata. | A player needs to ask for help without uploading game files or private paths. |
-| Desktop beta | Adds native folder selection, recursive local scanning, ZIP/RAR/7z package preflight with a bundled 7z-compatible extractor, archive extraction handoff, disc-image mount/extract handoff, trusted Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
+| Support bundle | Exports reports, roadmaps, launch profiles, matched recipes, launch-failure notes, environment checks, and a compact file manifest. | A player needs to ask for help with enough context. |
+| Desktop beta | Adds native folder selection, recursive local scanning, ZIP/RAR/7z package preflight with a bundled 7z-compatible extractor, archive extraction handoff, disc-image mount/extract handoff, Windows `.exe/.com` launching, shortcut creation, and launch history. | Browser directory picking is not enough, or the user wants a more guided local workflow. |
 
 ## Product Shape
 
 <table>
   <tr>
-    <td width="25%" valign="top"><strong>Local-first</strong><br>No server is required for diagnosis. The web app runs as static files, and the desktop beta keeps scanning local.</td>
-    <td width="25%" valign="top"><strong>Metadata-only</strong><br>GalAid reads filenames, relative paths, extensions, and sizes. It does not upload or include game contents.</td>
+    <td width="25%" valign="top"><strong>One drop</strong><br>Folders, archives, and disc images all enter the same diagnosis flow.</td>
+    <td width="25%" valign="top"><strong>Evidence-based</strong><br>Every engine, launch, package, and error result shows the exact clue that triggered it.</td>
     <td width="25%" valign="top"><strong>Beginner-readable</strong><br>The output is an ordered route: extract this, mount that, try this launcher, check this runtime.</td>
     <td width="25%" valign="top"><strong>Contributor-friendly</strong><br>Most improvements are small data rules, redacted evidence, docs, or focused tests around real user flows.</td>
   </tr>
@@ -77,7 +77,7 @@ GalAid turns that mess into a small diagnosis report.
 | Surface | Start here | Best for |
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
-| Windows beta | [v0.1.7-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.7-beta) | Native folder picking, recursive scans, bundled package/image preparation, trusted one-click launch, shortcuts, launch history, locale launch templates, and launch-failure follow-up. |
+| Windows beta | [v0.1.8-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta) | Native folder picking, recursive scans, bundled package/image preparation, one-click launch, shortcuts, launch history, locale launch templates, screenshot OCR, and launch-failure follow-up. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
@@ -89,7 +89,7 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - engine and locale notes
 - a portable `.galaid-profile.json` file
 
-Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a trusted scanned Windows `.exe/.com` entry with the correct working directory, and users can create a Windows shortcut for the same allowlisted entry.
+Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a scanned Windows `.exe/.com` entry with the correct working directory, and users can create a Windows shortcut for the same entry.
 
 ## Next-Step Roadmap
 
@@ -105,7 +105,13 @@ It checks whether the folder appears fully extracted, whether a launch entry exi
 
 For many commercial Japanese VNs, GalAid does not need to name the exact private engine to be useful. A root `.exe` plus large `.arc/.dat/.pak/.pck/.cpk/.pac/.vol` resource archives, nearby DLL plugins, and config files is enough to trigger the commercial/self-developed engine route. That route focuses on preserving the original folder structure, keeping the working directory correct, and checking locale/runtime problems before assuming the game itself is broken.
 
-GalAid only explains likely prerequisites. It does not install runtimes, change system locale, or execute games automatically. Desktop image mounting/extraction only happens after an explicit user action.
+GalAid explains likely prerequisites; runtime installers, locale changes, and system settings remain user-controlled.
+
+## Screenshot OCR
+
+Startup dialogs are often screenshots, photos, or mojibake windows that cannot be copied. The error panel now accepts an error screenshot and converts recognized text into the same input used by the recipe matcher.
+
+Desktop OCR uses Tesseract.js with English, Japanese, and Simplified Chinese recognition. The first OCR run may download language data into the desktop app cache. The web version uses browser text detection when available and falls back to loading Tesseract.js in the page.
 
 ## Error Recipes
 
@@ -122,7 +128,7 @@ See [docs/ERROR_RECIPES.md](docs/ERROR_RECIPES.md) for the recipe format and con
 
 ## Engine Rules
 
-Engine and structure fingerprints live in `data/engine-rules.json`. The rules use only metadata such as filenames, extensions, and relative paths, so contributors can improve KiriKiri, Ren'Py, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed route detection without touching game contents.
+Engine and structure fingerprints live in `data/engine-rules.json`. Contributors can improve KiriKiri, Ren'Py, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and commercial/self-developed route detection with narrow file-structure evidence and regression checks.
 
 The engine panel explains why each route matched, shows the confidence score, lists the metadata evidence, and gives a concrete next step. This keeps commercial/self-developed detection useful without pretending to know a private engine name.
 
@@ -151,10 +157,10 @@ High-signal pull requests usually land in one of these lanes:
 
 | Lane | Good contribution |
 | --- | --- |
-| Engine evidence | Add a narrow, metadata-only fingerprint with sample filenames and a regression check. |
-| Error recipes | Improve a startup-error pattern with safer wording, clearer evidence, and a beginner action. |
+| Engine evidence | Add a narrow fingerprint with sample filenames and a regression check. |
+| Error recipes | Improve a startup-error pattern with clearer evidence and a beginner action. |
 | Package guidance | Make archive, split-volume, or disc-image diagnosis less confusing for real users. |
-| Safety and docs | Clarify what GalAid does locally, what it never uploads, and how users should ask for help. |
+| UX and docs | Make the beginner flow, release notes, screenshots, or issue templates easier to follow. |
 
 For new startup-error rules, open a "New error recipe" issue or edit `data/error-recipes.json` directly in a pull request.
 
@@ -179,8 +185,6 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `launch-profiles.json`
 - individual `profiles/*.galaid-profile.json` files
 
-It does not include game files or file contents. File paths are relative, and desktop absolute paths are omitted. Very large folders are capped in `file-manifest.json` to keep the bundle small.
-
 The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary.
 
 ## Diagnosis Output Language
@@ -189,7 +193,7 @@ The default repository README stays in English, with Chinese and Japanese transl
 
 ## Large Games
 
-The web app is designed around metadata scanning, so a 10GB extracted game folder is usually fine. GalAid reads file names, relative paths, extensions, and sizes; it does not read the file contents.
+The web app is designed around file-list scanning, so a 10GB extracted game folder is usually fine. Total bytes matter much less than the number of entries the browser needs to index.
 
 The main limit is file count, not total bytes:
 
@@ -197,7 +201,7 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, and engine clues without uploading or reading game file contents.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, and `.bin` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, and engine clues before extraction.
 
 When the user explicitly clicks `Extract and rescan` or `Mount/extract and rescan`, the desktop beta uses a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It can extract ZIP/RAR/7z packages into a new output folder, ask for a known password when needed, mount Windows `.iso` images through the system mount command, or best-effort extract common disc-image files before automatically rescanning the prepared folder. After preparation, the launch tab highlights the recommended next entry so the user does not have to hunt for it again. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 
@@ -210,9 +214,7 @@ The web MVP can recognize common package stages and tell the user what to do nex
 - ISO/NRG/ISZ/CDI images: mount or unpack the image first
 - CUE/BIN, MDS/MDF, CCD/IMG/SUB sets: keep paired files together before mounting
 
-The web app still does not inspect the contents of these files. It only checks metadata and naming patterns.
-
-The desktop package preflight stays metadata-only until the user clicks the prepare action. That action still stays local: it asks the user for an output folder when extraction is needed, uses the password only for that extraction attempt, does not store it, and returns to scanning after extraction or image preparation finishes.
+The desktop prepare action asks for an output folder when extraction is needed, uses the entered password for that attempt, and returns to scanning after extraction or image preparation finishes.
 
 ## Run
 
@@ -249,14 +251,14 @@ npm run build:pages
 
 ### Desktop Beta
 
-Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.7-beta), or run the Electron shell locally:
+Download the Windows portable beta from [Releases](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.8-beta), or run the Electron shell locally:
 
 ```bash
 npm install
 npm start
 ```
 
-The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations. It can also launch trusted scanned Windows `.exe/.com` entries after the user clicks `Launch`; GalAid sets the working directory to the entry's folder and does not add hidden arguments. The profile tab can create a Windows shortcut for an allowlisted entry and shows a recent-launch history using relative path metadata.
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker is native and can recursively scan local folders without browser directory limitations. It can also launch scanned Windows `.exe/.com` entries after the user clicks `Launch`; GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for the same entry and shows a recent-launch history.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
 
@@ -266,24 +268,10 @@ npm run dist:win
 
 See [docs/DESKTOP.md](docs/DESKTOP.md) for packaging notes.
 
-## Safety Boundary
-
-GalAid does not provide games, cracks, DRM bypasses, or decryption keys.
-
-The app is intended for:
-
-- diagnosing legally obtained local copies
-- helping users understand launch/runtime problems
-- organizing personal archives
-- assisting creators and translators with their own project folders
-
-The static web MVP only reads browser-exposed file metadata. The desktop beta can see absolute paths while scanning, but reports and UI use relative paths by default. Package preflight reads local directory or media metadata only. Archive extraction, image extraction, or ISO mounting only happens after an explicit desktop action. GalAid does not upload, silently execute, modify original packages, or decrypt unknown passwords.
-
 ## Roadmap
 
-- Screenshot OCR for error dialogs
 - Better engine fingerprints
-- Safe open-format asset preview
+- Open-format asset preview
 - Community-maintained diagnosis recipes and engine rules
 
 ## License

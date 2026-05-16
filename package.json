@@ -1,6 +1,6 @@
 {
   "name": "galaid",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Local-first launch doctor for visual novel and galgame folders.",
   "main": "desktop/main.js",
   "private": true,
@@ -24,7 +24,7 @@
     "test:prepare": "node scripts/test-package-prep.js",
     "test:launcher": "node scripts/test-desktop-launcher.js",
     "test:smoke": "playwright test",
-    "check": "node --check playwright.config.js && node --check tests/galaid-smoke.spec.js && node --check scripts/build-error-recipes.js && node --check scripts/build-engine-rules.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/test-archive-preview.js && node --check scripts/test-package-prep.js && node --check scripts/test-desktop-launcher.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && node scripts/build-engine-rules.js --check && npm run check:pages && npm run check:templates && npm run test:archive && npm run test:prepare && npm run test:launcher && npm run audit:release && node --check src/error-recipes.js && node --check src/engine-rules.js && node --check src/app.js && node --check desktop/archive-preview.js && node --check desktop/package-prep.js && node --check desktop/launcher.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/scanner.js"
+    "check": "node --check playwright.config.js && node --check tests/galaid-smoke.spec.js && node --check scripts/build-error-recipes.js && node --check scripts/build-engine-rules.js && node --check scripts/build-pages.js && node --check scripts/release-audit.js && node --check scripts/test-archive-preview.js && node --check scripts/test-package-prep.js && node --check scripts/test-desktop-launcher.js && node --check scripts/validate-github-templates.js && node scripts/build-error-recipes.js --check && node scripts/build-engine-rules.js --check && npm run check:pages && npm run check:templates && npm run test:archive && npm run test:prepare && npm run test:launcher && npm run audit:release && node --check src/error-recipes.js && node --check src/engine-rules.js && node --check src/app.js && node --check desktop/archive-preview.js && node --check desktop/package-prep.js && node --check desktop/launcher.js && node --check desktop/main.js && node --check desktop/ocr.js && node --check desktop/preload.js && node --check desktop/scanner.js"
   },
   "build": {
     "appId": "io.github.tonyna.galaid",
@@ -38,12 +38,27 @@
       "desktop/**/*",
       "data/**/*",
       "node_modules/7zip-bin/**/*",
+      "node_modules/tesseract.js/**/*",
+      "node_modules/tesseract.js-core/**/*",
+      "node_modules/bmp-js/**/*",
+      "node_modules/idb-keyval/**/*",
+      "node_modules/is-url/**/*",
+      "node_modules/node-fetch/**/*",
+      "node_modules/opencollective-postinstall/**/*",
+      "node_modules/regenerator-runtime/**/*",
+      "node_modules/wasm-feature-detect/**/*",
+      "node_modules/whatwg-url/**/*",
+      "node_modules/tr46/**/*",
+      "node_modules/webidl-conversions/**/*",
+      "node_modules/zlibjs/**/*",
       "package.json",
       "LICENSE",
       "README.md"
     ],
     "asarUnpack": [
-      "node_modules/7zip-bin/**/*"
+      "node_modules/7zip-bin/**/*",
+      "node_modules/tesseract.js/dist/worker.min.js",
+      "node_modules/tesseract.js-core/**/*"
     ],
     "asar": true,
     "npmRebuild": false,
@@ -66,6 +81,7 @@
     "electron-builder": "^26.8.1"
   },
   "dependencies": {
-    "7zip-bin": "^5.2.0"
+    "7zip-bin": "^5.2.0",
+    "tesseract.js": "^7.0.0"
   }
 }

@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GalAid - VN launch doctor</title>
-    <meta
-      name="description"
-      content="Local-first visual novel folder diagnostics for launch issues, engine clues, and asset maps."
-    />
+    <meta name="description" content="Visual novel folder diagnostics for launch issues, engine clues, and asset maps." />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f4f7f2'/%3E%3Cpath d='M12 16h40v32H12z' fill='%23fff' stroke='%2320252b' stroke-width='4'/%3E%3Cpath d='M20 26h24M20 36h14' stroke='%2336a779' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M44 42l8 8' stroke='%23d95a48' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
@@ -60,6 +57,11 @@
             data-i18n-placeholder="errorPlaceholder"
             placeholder="粘贴报错文本，例如 d3dx9_43.dll、乱码、RTP、VCRUNTIME..."
           ></textarea>
+          <input id="ocrImageInput" type="file" accept="image/*" hidden />
+          <div class="ocr-row">
+            <button id="ocrImageButton" type="button" data-i18n="ocrImage">识别报错截图</button>
+            <span id="ocrStatus" data-i18n="ocrHint">截图会转成文本并填入上方</span>
+          </div>
 
           <div class="button-grid compact">
             <button id="copyReportButton" type="button" data-i18n="copyReport">复制报告</button>
@@ -74,10 +76,6 @@
             <option value="ja">日本語</option>
           </select>
 
-          <div class="privacy-note">
-            <strong data-i18n="privacyTitle">Local only.</strong>
-            <span data-i18n="privacyBody">浏览器只读取文件名、路径和大小，不上传游戏内容。</span>
-          </div>
         </aside>
 
         <section class="result-pane">

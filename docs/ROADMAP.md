@@ -19,7 +19,7 @@
 
 ## 0.3 Asset Explorer
 
-- Safe file manifest view
+- File manifest view
 - Open-format image/audio preview
 - Ren'Py project structure helper
 - Creator-owned project export report
@@ -30,11 +30,12 @@
 - Package and disc-image metadata preflight before extraction or mounting
 - Bundled archive extraction handoff with password prompt and automatic rescan
 - Disc-image mount/extract handoff with automatic rescan
-- One-click launch for trusted scanned `.exe/.com` entries
+- One-click launch for scanned `.exe/.com` entries
 - Launch history
 - Create shortcuts
 - Portable Windows release workflow
 - Create launch profiles
+- Error screenshot OCR
 - Optional Locale Emulator command template
 - Optional Wine/Proton notes for advanced users
 - Launch-failure follow-up flow
@@ -45,4 +46,4 @@
 - GitHub Pages demo
 - Beginner documentation
 - Issue templates for engine detection requests
-- Privacy and safety review
+- Release polish review

@@ -12,6 +12,9 @@ const downloadBundleButton = document.querySelector("#downloadBundleButton");
 const assistantLanguageSelect = document.querySelector("#assistantLanguageSelect");
 const dropZone = document.querySelector("#dropZone");
 const errorInput = document.querySelector("#errorInput");
+const ocrImageInput = document.querySelector("#ocrImageInput");
+const ocrImageButton = document.querySelector("#ocrImageButton");
+const ocrStatus = document.querySelector("#ocrStatus");
 const projectTitle = document.querySelector("#projectTitle");
 const statusPill = document.querySelector("#statusPill");
 const fileCount = document.querySelector("#fileCount");
@@ -51,6 +54,8 @@ const MAX_SORTED_FILES = 50000;
 const SUPPORT_BUNDLE_FILE_LIMIT = 5000;
 const ERROR_RECIPES = Array.isArray(window.GALAID_ERROR_RECIPES) ? window.GALAID_ERROR_RECIPES : [];
 const ASSISTANT_LANGUAGE_STORAGE_KEY = "GalAid.assistantLanguage.v1";
+const BROWSER_TESSERACT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
+let browserTesseractPromise = null;
 const LAUNCH_FAILURE_SYMPTOMS = [
   {
     id: "nothing",
@@ -228,12 +233,18 @@ const ASSISTANT_LANGUAGE_PACKS = {
       clear: "清空",
       errorLabel: "错误信息",
       errorPlaceholder: "粘贴报错文本，例如 d3dx9_43.dll、乱码、RTP、VCRUNTIME...",
+      ocrImage: "识别报错截图",
+      ocrHint: "截图会转成文本并填入上方",
+      ocrChooseImage: "请选择一张报错截图",
+      ocrStarting: "正在准备 OCR...",
+      ocrProgress: "正在识别 {percent}%",
+      ocrDone: "已填入截图文字",
+      ocrNoText: "没有识别到文字",
+      ocrFailed: "截图识别失败",
       copyReport: "复制报告",
       downloadReport: "下载报告",
       downloadBundle: "下载求助包",
       languageLabel: "界面/诊断语言",
-      privacyTitle: "Local only.",
-      privacyBody: "浏览器只读取文件名、路径和大小，不上传游戏内容。",
       eyebrow: "诊断",
       waitingTitle: "等待导入",
       importedFiles: "已导入文件",
@@ -266,7 +277,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       nextStepLabel: "下一步",
       launchTemplatesTitle: "可选启动模板",
       copyTemplate: "复制模板",
-      localeEmulatorTemplateDescription: "仅在本机已安装可信 Locale Emulator 时使用；如果需要，请把 LEProc.exe 换成你的本机启动器路径。",
+      localeEmulatorTemplateDescription: "如果本机已安装 Locale Emulator，可以把 LEProc.exe 换成你的本机启动器路径。",
       wineJaTemplateDescription: "给已配置 Wine 和日文 locale 的 Linux 高阶用户参考。",
       protonRunTemplateDescription: "给 Proton / Steam Deck 高阶环境参考；请把 compatdata 路径换成你自己的本机 Steam 前缀。",
       launchFailureTitle: "启动失败了吗？",
@@ -289,7 +300,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       mountedImageUnmounted: "镜像已卸载",
       preparedHandoffTitle: "准备完成",
       preparedHandoffReadyBody: "已从 {source} 准备并重扫 {target}。下一步优先尝试 {entry}。",
-      preparedHandoffNoLaunchBody: "已从 {source} 准备并重扫 {target}，但还没有找到可信启动入口。请查看下面的诊断结论，或把安装后的完整游戏目录拖回来。",
+      preparedHandoffNoLaunchBody: "已从 {source} 准备并重扫 {target}，但还没有找到可用启动入口。请查看下面的诊断结论，或把安装后的完整游戏目录拖回来。",
       preparedRecommendedEntry: "推荐入口",
       noLaunchTitle: "没有候选入口",
       noLaunchBody: "请换成完整解压后的游戏根目录再试。",
@@ -306,9 +317,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       profilesTitle: "启动配置",
       profiles: "配置",
       noProfilesTitle: "还不能生成启动配置",
-      noProfilesBody: "当前没有可信启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。",
-      safeModeTitle: "安全模式",
-      safeModeBody: "GalAid 默认只生成配置和命令；桌面版可以在你点击后用正确工作目录启动本地 .exe/.com。报告和页面默认保留相对路径。",
+      noProfilesBody: "当前没有可用启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。",
+      safeModeTitle: "启动方式",
+      safeModeBody: "网页里会生成可检查的命令；桌面版可以在你点击后用正确工作目录启动本地 .exe/.com。",
       entryLabel: "entry",
       workdirLabel: "workdir",
       desktopPathReady: "desktop path ready",
@@ -321,7 +332,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       creatingShortcut: "创建中...",
       launchHistoryTitle: "最近启动",
       noLaunchHistoryTitle: "还没有启动历史",
-      noLaunchHistoryBody: "用桌面版启动一次可信入口后，这里会记录最近启动过的文件。",
+      noLaunchHistoryBody: "用桌面版启动一次入口后，这里会记录最近启动过的文件。",
       launchedAt: "启动时间",
       copyCommand: "复制命令",
       copyJson: "复制 JSON",
@@ -362,7 +373,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       preparingImage: "镜像处理中...",
       preparePasswordPrompt: "这个包可能需要解压密码。请输入你已经知道的密码；留空会取消。",
       preparePasswordRetryPrompt: "密码不正确或缺少密码。请重新输入解压密码；留空会取消。",
-      metadataOnly: "仅元数据",
+      metadataOnly: "预检",
       unavailable: "不可用",
       internalFiles: "内部文件",
       imageFiles: "镜像文件",
@@ -375,16 +386,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noAssetsTitle: "没有素材线索",
       noAssetsBody: "可能只导入了启动器或压缩包。",
       supportBundle: "求助包",
-      supportSummaryBody: "适合发 issue、论坛或聊天求助。只包含诊断元数据，不包含游戏文件。",
+      supportSummaryBody: "适合发 issue、论坛或聊天求助，包含路线、环境检查、配方命中和文件清单摘要。",
       copySupportSummary: "复制求助摘要",
       copyManifest: "复制清单 JSON",
       downloadSupportBundle: "下载求助包",
-      privacyBoundary: "隐私边界",
-      noGameFiles: "不包含游戏文件",
-      noFileContents: "不读取文件内容",
-      zipMetadataOnly: "包/镜像只预检元数据",
-      relativePaths: "只保留相对路径",
-      noUpload: "不上传任何内容",
       diagnosisSummary: "诊断摘要",
       includedFiles: "会包含的文件",
       exportLimitNote: "文件清单最多导出 {count} 条相对路径；超出时会在 file-manifest.json 标记 truncated。",
@@ -510,12 +515,18 @@ const ASSISTANT_LANGUAGE_PACKS = {
       clear: "Clear",
       errorLabel: "Error text",
       errorPlaceholder: "Paste an error such as d3dx9_43.dll, mojibake, RTP, VCRUNTIME...",
+      ocrImage: "Read screenshot",
+      ocrHint: "Screenshot text will be added above",
+      ocrChooseImage: "Choose an error screenshot",
+      ocrStarting: "Preparing OCR...",
+      ocrProgress: "Recognizing {percent}%",
+      ocrDone: "Screenshot text added",
+      ocrNoText: "No text was recognized",
+      ocrFailed: "Screenshot OCR failed",
       copyReport: "Copy report",
       downloadReport: "Download report",
       downloadBundle: "Download support bundle",
       languageLabel: "Interface / diagnosis language",
-      privacyTitle: "Local only.",
-      privacyBody: "The browser reads file names, paths, and sizes only. It never uploads game content.",
       eyebrow: "Diagnosis",
       waitingTitle: "Waiting for input",
       importedFiles: "Imported files",
@@ -548,7 +559,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       nextStepLabel: "Next step",
       launchTemplatesTitle: "Optional launch templates",
       copyTemplate: "Copy template",
-      localeEmulatorTemplateDescription: "Use only with a trusted local Locale Emulator install; replace LEProc.exe with your own launcher path if needed.",
+      localeEmulatorTemplateDescription: "If Locale Emulator is installed locally, replace LEProc.exe with your launcher path when needed.",
       wineJaTemplateDescription: "For advanced Linux users with Wine and Japanese locale support already installed.",
       protonRunTemplateDescription: "For advanced Proton setups; replace the compatdata path with your own local Steam prefix.",
       launchFailureTitle: "Did launch fail?",
@@ -571,7 +582,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       mountedImageUnmounted: "Image unmounted",
       preparedHandoffTitle: "Prepared and rescanned",
       preparedHandoffReadyBody: "GalAid prepared {target} from {source}. Try {entry} first.",
-      preparedHandoffNoLaunchBody: "GalAid prepared {target} from {source}, but no trusted launch entry was found yet. Review the findings below or drop the installed game folder back into GalAid.",
+      preparedHandoffNoLaunchBody: "GalAid prepared {target} from {source}, but no usable launch entry was found yet. Review the findings below or drop the installed game folder back into GalAid.",
       preparedRecommendedEntry: "Recommended entry",
       noLaunchTitle: "No launch candidate",
       noLaunchBody: "Try again with the fully extracted game root folder.",
@@ -588,9 +599,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       profilesTitle: "Launch profiles",
       profiles: "profiles",
       noProfilesTitle: "No launch profile yet",
-      noProfilesBody: "There is no trusted launcher yet. Handle archives/images first, or retry with the fully extracted game folder.",
-      safeModeTitle: "Safe mode",
-      safeModeBody: "GalAid generates profiles and commands by default. In the desktop app, a deliberate click can launch local .exe/.com entries with the correct working directory. Reports and the page keep relative paths by default.",
+      noProfilesBody: "There is no usable launcher yet. Handle archives/images first, or retry with the fully extracted game folder.",
+      safeModeTitle: "Launch method",
+      safeModeBody: "The web app generates inspectable commands. In the desktop app, a deliberate click can launch local .exe/.com entries with the correct working directory.",
       entryLabel: "entry",
       workdirLabel: "workdir",
       desktopPathReady: "desktop path ready",
@@ -603,7 +614,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       creatingShortcut: "Creating...",
       launchHistoryTitle: "Recent launches",
       noLaunchHistoryTitle: "No launch history yet",
-      noLaunchHistoryBody: "After the desktop app launches a trusted entry, recent files will appear here.",
+      noLaunchHistoryBody: "After the desktop app launches an entry, recent files will appear here.",
       launchedAt: "Launched",
       copyCommand: "Copy command",
       copyJson: "Copy JSON",
@@ -644,7 +655,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       preparingImage: "Preparing image...",
       preparePasswordPrompt: "This package may need an extraction password. Enter the password you already have; leave blank to cancel.",
       preparePasswordRetryPrompt: "The password is missing or incorrect. Enter the extraction password again; leave blank to cancel.",
-      metadataOnly: "metadata only",
+      metadataOnly: "preflight",
       unavailable: "unavailable",
       internalFiles: "internal files",
       imageFiles: "image files",
@@ -657,16 +668,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noAssetsTitle: "No asset clues",
       noAssetsBody: "Only a launcher or archive may have been imported.",
       supportBundle: "Support bundle",
-      supportSummaryBody: "Good for GitHub issues, forums, or chat support. It contains diagnosis metadata only, never game files.",
+      supportSummaryBody: "Good for GitHub issues, forums, or chat support, with the route, environment checks, recipe matches, and file-list summary.",
       copySupportSummary: "Copy support summary",
       copyManifest: "Copy manifest JSON",
       downloadSupportBundle: "Download support bundle",
-      privacyBoundary: "Privacy boundary",
-      noGameFiles: "No game files",
-      noFileContents: "No file contents",
-      zipMetadataOnly: "Package/image metadata only",
-      relativePaths: "Relative paths only",
-      noUpload: "No uploads",
       diagnosisSummary: "Diagnosis summary",
       includedFiles: "Included files",
       exportLimitNote: "The file manifest exports up to {count} relative paths; if exceeded, file-manifest.json is marked truncated.",
@@ -792,12 +797,18 @@ const ASSISTANT_LANGUAGE_PACKS = {
       clear: "クリア",
       errorLabel: "エラー本文",
       errorPlaceholder: "d3dx9_43.dll、文字化け、RTP、VCRUNTIME などのエラーを貼り付けます...",
+      ocrImage: "画像から読む",
+      ocrHint: "画像内の文字を上へ追加します",
+      ocrChooseImage: "エラー画像を選択してください",
+      ocrStarting: "OCR を準備中...",
+      ocrProgress: "認識中 {percent}%",
+      ocrDone: "画像の文字を追加しました",
+      ocrNoText: "文字を認識できませんでした",
+      ocrFailed: "画像 OCR に失敗しました",
       copyReport: "レポートをコピー",
       downloadReport: "レポートを保存",
       downloadBundle: "サポートバンドルを保存",
       languageLabel: "UI / 診断言語",
-      privacyTitle: "Local only.",
-      privacyBody: "ブラウザはファイル名、パス、サイズだけを読み取り、ゲーム内容はアップロードしません。",
       eyebrow: "診断",
       waitingTitle: "入力待ち",
       importedFiles: "インポート済みファイル",
@@ -830,7 +841,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       nextStepLabel: "次の手順",
       launchTemplatesTitle: "任意の起動テンプレート",
       copyTemplate: "テンプレートをコピー",
-      localeEmulatorTemplateDescription: "信頼できるローカルの Locale Emulator がある場合のみ使用します。必要に応じて LEProc.exe を自分のランチャーパスに置き換えてください。",
+      localeEmulatorTemplateDescription: "Locale Emulator をローカルに入れている場合は、必要に応じて LEProc.exe を自分のランチャーパスに置き換えてください。",
       wineJaTemplateDescription: "Wine と日本語 locale を設定済みの Linux 上級者向けの参考テンプレートです。",
       protonRunTemplateDescription: "Proton / Steam Deck の上級設定向けです。compatdata パスは自分の Steam prefix に置き換えてください。",
       launchFailureTitle: "起動に失敗しましたか？",
@@ -853,7 +864,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       mountedImageUnmounted: "イメージをアンマウントしました",
       preparedHandoffTitle: "準備と再スキャンが完了",
       preparedHandoffReadyBody: "{source} から {target} を準備して再スキャンしました。まず {entry} を試してください。",
-      preparedHandoffNoLaunchBody: "{source} から {target} を準備して再スキャンしましたが、信頼できる起動入口はまだ見つかっていません。下の診断結果を確認するか、インストール後の完全なゲームフォルダをもう一度投入してください。",
+      preparedHandoffNoLaunchBody: "{source} から {target} を準備して再スキャンしましたが、使える起動入口はまだ見つかっていません。下の診断結果を確認するか、インストール後の完全なゲームフォルダをもう一度投入してください。",
       preparedRecommendedEntry: "推奨起動ファイル",
       noLaunchTitle: "起動候補なし",
       noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
@@ -870,9 +881,9 @@ const ASSISTANT_LANGUAGE_PACKS = {
       profilesTitle: "起動設定",
       profiles: "設定",
       noProfilesTitle: "起動設定はまだ生成できません",
-      noProfilesBody: "信頼できる起動ファイルがありません。先にアーカイブ/イメージを処理するか、展開済みゲームフォルダで再試行してください。",
-      safeModeTitle: "安全モード",
-      safeModeBody: "GalAid は既定では設定とコマンドを生成します。デスクトップ版では、明示的にクリックした場合だけ、正しい作業フォルダでローカルの .exe/.com を起動できます。レポートと画面は既定で相対パスを保持します。",
+      noProfilesBody: "使える起動ファイルがありません。先にアーカイブ/イメージを処理するか、展開済みゲームフォルダで再試行してください。",
+      safeModeTitle: "起動方法",
+      safeModeBody: "Web 版では確認できるコマンドを生成します。デスクトップ版では、クリックした場合に正しい作業フォルダでローカルの .exe/.com を起動できます。",
       entryLabel: "入口",
       workdirLabel: "作業フォルダ",
       desktopPathReady: "デスクトップパスあり",
@@ -885,7 +896,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       creatingShortcut: "作成中...",
       launchHistoryTitle: "最近の起動",
       noLaunchHistoryTitle: "起動履歴はまだありません",
-      noLaunchHistoryBody: "デスクトップ版で信頼済みの入口を起動すると、最近使ったファイルがここに表示されます。",
+      noLaunchHistoryBody: "デスクトップ版で入口を起動すると、最近使ったファイルがここに表示されます。",
       launchedAt: "起動日時",
       copyCommand: "コマンドをコピー",
       copyJson: "JSON をコピー",
@@ -926,7 +937,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       preparingImage: "イメージ処理中...",
       preparePasswordPrompt: "このパッケージは展開パスワードが必要な可能性があります。既に知っているパスワードを入力してください。空欄ならキャンセルします。",
       preparePasswordRetryPrompt: "パスワードが不足しているか正しくありません。展開パスワードをもう一度入力してください。空欄ならキャンセルします。",
-      metadataOnly: "メタデータのみ",
+      metadataOnly: "事前チェック",
       unavailable: "利用不可",
       internalFiles: "内部ファイル",
       imageFiles: "イメージファイル",
@@ -939,16 +950,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noAssetsTitle: "アセットの手がかりなし",
       noAssetsBody: "起動ファイルまたはアーカイブだけがインポートされた可能性があります。",
       supportBundle: "サポートバンドル",
-      supportSummaryBody: "issue、フォーラム、チャット相談向けです。診断メタデータだけを含み、ゲームファイルは含みません。",
+      supportSummaryBody: "issue、フォーラム、チャット相談向けに、手順、環境チェック、レシピ一致、ファイル一覧概要をまとめます。",
       copySupportSummary: "サポート概要をコピー",
       copyManifest: "マニフェスト JSON をコピー",
       downloadSupportBundle: "サポートバンドルを保存",
-      privacyBoundary: "プライバシー範囲",
-      noGameFiles: "ゲームファイルなし",
-      noFileContents: "ファイル内容なし",
-      zipMetadataOnly: "パッケージ/イメージはメタデータのみ",
-      relativePaths: "相対パスのみ",
-      noUpload: "アップロードなし",
       diagnosisSummary: "診断概要",
       includedFiles: "含まれるファイル",
       exportLimitNote: "ファイル一覧は最大 {count} 件の相対パスを出力します。超過時は file-manifest.json に truncated と記録されます。",
@@ -1199,7 +1204,7 @@ const PACKAGE_SAMPLE_FILES = [
         directoryCount: 0,
         encryptedEntries: 0,
         truncated: false,
-        warnings: ["Disc image metadata only; use the desktop prepare action to mount or extract and rescan when available."],
+        warnings: ["Disc image preflight; use the desktop prepare action to mount or extract and rescan when available."],
         sampleFiles: [{ path: "MoonlightCafe_Bonus.iso", name: "MoonlightCafe_Bonus.iso", ext: "iso", size: 4810000000, compressedSize: 4810000000, depth: 0 }],
         signals: {
           launchCandidateCount: 0,
@@ -1568,7 +1573,7 @@ function getAnalysisMode(fileTotal, totalSize) {
   return {
     id: "normal",
     label: "Full metadata scan",
-    detail: `${formatNumber(fileTotal)} files, ${formatBytes(totalSize)}. File contents were not read or uploaded.`,
+    detail: `${formatNumber(fileTotal)} files, ${formatBytes(totalSize)}. Full file-list diagnosis is ready.`,
     findingLevel: "good",
   };
 }
@@ -1888,7 +1893,7 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
   if (packageSets.some((set) => set.archivePreview?.encryptedEntries)) {
     steps.push({
       title: "压缩包可能包含加密条目",
-      body: "GalAid 只做目录预检，不破解密码也不绕过保护。你可以在准备时输入自己已经知道的解压密码，密码不会写入报告或求助包。",
+      body: "这个包可能需要密码。你可以在准备时输入已知解压密码，GalAid 会继续解压并重扫。",
     });
   }
 
@@ -2066,7 +2071,7 @@ function getEngineNextStep(engine, language = getAssistantLanguage()) {
       unity: "优先运行与 _Data/UnityPlayer.dll 同级的 exe；缺 DLL 或黑屏时先检查文件完整性和运行库。",
       rpgmaker: "优先运行 Game.exe；如果提示 RTP 或 RGSS DLL，安装对应 RPG Maker RTP/运行库后再试。",
       siglus: "优先尝试 SiglusEngine.exe 或根目录启动器；乱码/闪退时先检查日区、字体、英文路径和旧运行库。",
-      tyrano: "优先用本地服务器打开 index.html；直接 file:// 运行可能被浏览器安全策略阻止。",
+      tyrano: "优先用本地服务器打开 index.html；直接 file:// 运行可能被浏览器本地文件策略阻止。",
       "commercial-proprietary": "不要只拷贝 exe；保持 exe、DLL、资源封包和配置文件的原始相对位置，再按工作目录、日区和运行库顺序排查。",
       fallback,
     },
@@ -2088,7 +2093,7 @@ function getEngineNextStep(engine, language = getAssistantLanguage()) {
       unity: "_Data/UnityPlayer.dll と同じ階層の exe を実行します。DLL エラーや黒画面が出る場合は、ファイル完全性とランタイムを確認してください。",
       rpgmaker: "まず Game.exe を実行します。RTP や RGSS DLL のエラーが出る場合は、対応する RPG Maker RTP/ランタイムを入れてから再試行してください。",
       siglus: "SiglusEngine.exe またはルートのランチャーを先に試します。文字化けやクラッシュでは、日本語 locale、フォント、英数字パス、古いランタイムを確認してください。",
-      tyrano: "index.html はローカルサーバー経由で開いてください。file:// 直開きはブラウザの安全制限で止まることがあります。",
+      tyrano: "index.html はローカルサーバー経由で開いてください。file:// 直開きはブラウザのローカルファイル制限で止まることがあります。",
       "commercial-proprietary": "exe だけをコピーしないでください。exe、DLL、リソースアーカイブ、設定ファイルの相対配置を保ち、作業ディレクトリ、日本語 locale、ランタイムの順に確認してください。",
       fallback: "一致した起動構造を先に確認し、実際のエラー文に沿って次の診断へ進んでください。",
     },
@@ -2455,7 +2460,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       status: launchCandidates.length ? "good" : "blocker",
       detail: launchCandidates.length
         ? `最高置信度入口是 ${topLaunch.path}。`
-        : "没有发现可信的 exe、bat、cmd、lnk 或 index.html 启动入口。",
+        : "没有发现可用的 exe、bat、cmd、lnk 或 index.html 启动入口。",
       action: launchCandidates.length
         ? "优先使用配置页的推荐命令；如果失败，再尝试候选列表里的备用入口。"
         : "换成完整解压或安装后的游戏根目录再扫描。",
@@ -2591,7 +2596,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
         status: webLaunch || engineIds.has("tyrano") || webFileError ? "warning" : "info",
         detail: webFileError
           ? "报错文本指向浏览器本地文件读取限制。"
-          : "检测到 index.html 或 TyranoScript/web VN 结构。直接 file:// 打开可能被浏览器安全限制挡住。",
+          : "检测到 index.html 或 TyranoScript/web VN 结构。直接 file:// 打开可能被浏览器本地文件限制挡住。",
         action: "用本地服务器打开游戏目录，再访问 index.html；打包版可后续生成一键本地服务配置。",
         evidence: compactEvidence([webEntry?.path, ...(engineIds.has("tyrano") ? ["TyranoScript / web VN"] : [])], 4),
       }),
@@ -2707,7 +2712,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     findings.push({
       level: mode.findingLevel,
       title: "已启用大文件夹模式",
-      body: `${mode.detail} 这不会读取 10GB 级游戏文件内容，只会分析文件清单。`,
+      body: `${mode.detail} 10GB 级目录也会按文件清单路线诊断。`,
       evidence: [`${formatNumber(files.length)} files`, mode.label],
     });
   }
@@ -2842,7 +2847,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     findings.push({
       level: "info",
       title: "发现资源封包",
-      body: "检测到 rpa/xp3/nsa/arc/pck 等资源封包。GalAid 当前只做识别和清单，不绕过加密或 DRM。",
+      body: "检测到 rpa/xp3/nsa/arc/pck 等资源封包。当前会把它们作为结构和完整性线索。",
       evidence: samplePaths(files, (file) => RESOURCE_ARCHIVES.has(file.ext), 4),
     });
   }
@@ -3042,7 +3047,7 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
       title: "换成完整游戏根目录",
       state: "blocked",
       priority: 30,
-      detail: launcher?.detail || "还没有发现可信启动入口。",
+      detail: launcher?.detail || "还没有发现可用启动入口。",
       action: launcher?.action || "选择包含主程序、资源封包和脚本的完整目录后重新扫描。",
       source: "launch",
     });
@@ -3301,6 +3306,7 @@ function setControlsBusy(isBusy) {
     sampleButton,
     commercialSampleButton,
     packageSampleButton,
+    ocrImageButton,
     copyReportButton,
     downloadReportButton,
     downloadBundleButton,
@@ -3330,6 +3336,10 @@ if (desktopApi) {
       phase: "scanning",
     });
   });
+  desktopApi.onOcrProgress?.((progress) => {
+    const percent = Math.max(0, Math.min(99, Math.round((progress?.progress || 0) * 100)));
+    setOcrStatus(getUiText("ocrProgress", { percent: formatNumber(percent) }), "working");
+  });
   void refreshDesktopLaunchHistory();
 }
 
@@ -3344,6 +3354,126 @@ function updateScanState({ title, detail, progress = 0, visible = true, phase = 
     statusPill.textContent = getUiText("scanning");
     statusPill.className = "status-pill scanning";
   }
+}
+
+function setOcrStatus(message, state = "idle") {
+  if (!ocrStatus) return;
+  ocrStatus.textContent = message;
+  ocrStatus.className = `ocr-status ${state}`;
+}
+
+async function chooseErrorScreenshot() {
+  if (!ocrImageButton) return;
+  if (desktopApi?.recognizeErrorImage) {
+    await recognizeDesktopErrorScreenshot(ocrImageButton);
+    return;
+  }
+  ocrImageInput?.click();
+}
+
+async function recognizeDesktopErrorScreenshot(button) {
+  const originalLabel = button?.textContent || "";
+  setOcrBusy(true, getUiText("ocrStarting"));
+  if (button) button.textContent = getUiText("ocrStarting");
+
+  try {
+    const result = await desktopApi.recognizeErrorImage();
+    if (result?.canceled) {
+      setOcrBusy(false, getUiText("ocrHint"));
+      return;
+    }
+    if (result?.ok) {
+      applyRecognizedErrorText(result.text, result.imageName || getUiText("ocrChooseImage"));
+      return;
+    }
+    throw new Error(result?.message || getUiText("ocrFailed"));
+  } catch (error) {
+    setOcrStatus(`${getUiText("ocrFailed")}: ${error.message || error}`, "error");
+  } finally {
+    if (button) button.textContent = originalLabel;
+    if (ocrImageButton) ocrImageButton.disabled = false;
+  }
+}
+
+async function recognizeBrowserErrorScreenshot(file) {
+  if (!file) return;
+  setOcrBusy(true, getUiText("ocrStarting"));
+  try {
+    const text = await recognizeImageTextInBrowser(file);
+    applyRecognizedErrorText(text, file.name || getUiText("ocrChooseImage"));
+  } catch (error) {
+    setOcrStatus(`${getUiText("ocrFailed")}: ${error.message || error}`, "error");
+  } finally {
+    if (ocrImageButton) ocrImageButton.disabled = false;
+    if (ocrImageInput) ocrImageInput.value = "";
+  }
+}
+
+function setOcrBusy(isBusy, message) {
+  if (ocrImageButton) ocrImageButton.disabled = isBusy;
+  setOcrStatus(message || getUiText("ocrHint"), isBusy ? "working" : "idle");
+}
+
+function applyRecognizedErrorText(text, sourceName) {
+  const clean = normalizeOcrResultText(text);
+  if (!clean) {
+    setOcrStatus(getUiText("ocrNoText"), "error");
+    return;
+  }
+
+  const current = errorInput.value.trim();
+  const header = `[OCR: ${sourceName}]`;
+  errorInput.value = current ? `${current}\n\n${header}\n${clean}` : `${header}\n${clean}`;
+  if (currentFiles.length) rerunCurrentAnalysis();
+  setOcrStatus(getUiText("ocrDone"), "done");
+}
+
+async function recognizeImageTextInBrowser(file) {
+  if (window.TextDetector && window.createImageBitmap) {
+    const detector = new window.TextDetector();
+    const bitmap = await window.createImageBitmap(file);
+    const detections = await detector.detect(bitmap);
+    bitmap.close?.();
+    const text = detections.map((item) => item.rawValue).filter(Boolean).join("\n");
+    if (text.trim()) return text;
+  }
+
+  const tesseract = await loadBrowserTesseract();
+  const result = await tesseract.recognize(file, "eng+jpn+chi_sim", {
+    logger: (message) => {
+      if (!Number.isFinite(message.progress)) return;
+      const percent = Math.max(0, Math.min(99, Math.round(message.progress * 100)));
+      setOcrStatus(getUiText("ocrProgress", { percent: formatNumber(percent) }), "working");
+    },
+  });
+  return result?.data?.text || "";
+}
+
+function loadBrowserTesseract() {
+  if (window.Tesseract?.recognize) return Promise.resolve(window.Tesseract);
+  if (browserTesseractPromise) return browserTesseractPromise;
+
+  browserTesseractPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = BROWSER_TESSERACT_URL;
+    script.async = true;
+    script.onload = () => {
+      if (window.Tesseract?.recognize) resolve(window.Tesseract);
+      else reject(new Error("Tesseract.js did not initialize."));
+    };
+    script.onerror = () => reject(new Error("Could not load OCR engine."));
+    document.head.append(script);
+  });
+  return browserTesseractPromise;
+}
+
+function normalizeOcrResultText(text) {
+  return String(text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, 4000);
 }
 
 async function importNativeFiles(fileList, sourceLabel) {
@@ -4340,16 +4470,6 @@ function renderSupport(analysis) {
     </article>
     <div class="support-grid">
       <article class="support-card">
-        <h4>${escapeHtml(getUiText("privacyBoundary"))}</h4>
-        <div class="support-privacy-list">
-          <span>${escapeHtml(getUiText("noGameFiles"))}</span>
-          <span>${escapeHtml(getUiText("noFileContents"))}</span>
-          <span>${escapeHtml(getUiText("zipMetadataOnly"))}</span>
-          <span>${escapeHtml(getUiText("relativePaths"))}</span>
-          <span>${escapeHtml(getUiText("noUpload"))}</span>
-        </div>
-      </article>
-      <article class="support-card">
         <h4>${escapeHtml(getUiText("diagnosisSummary"))}</h4>
         <div class="support-stat-grid">
           <span><strong>${analysis.status.label}</strong><small>${escapeHtml(getUiText("statusStat"))}</small></span>
@@ -4720,11 +4840,6 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     `${labels.size}: ${formatBytes(analysis.totalSize)}`,
     `${labels.assistantLanguage}: ${pack.name}`,
     "",
-    `${labels.privacy}:`,
-    `- ${labels.privacyMetadata}`,
-    `- ${labels.privacyZip}`,
-    `- ${labels.privacyPaths}`,
-    "",
     "Included files:",
     "- galaid-report.md: human-readable diagnosis",
     "- manifest.json: bundle summary",
@@ -4733,7 +4848,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
     "- launch-failure.json: optional manual launch-failure follow-up notes",
-    "- launch-profiles.json and profiles/*.json: safe launch profile hints",
+    "- launch-profiles.json and profiles/*.json: launch profile hints",
   ].join("\n");
 }
 
@@ -4775,11 +4890,6 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   for (const [index, step] of analysis.roadmap.steps.slice(0, 6).entries()) {
     lines.push(`- ${index + 1}. ${step.title}: ${step.action}`);
   }
-  lines.push("");
-  lines.push(`### ${labels.privacy}`);
-  lines.push(`- ${labels.privacyMetadata}`);
-  lines.push(`- ${labels.privacyZip}`);
-  lines.push(`- ${labels.privacyPaths}`);
   return lines.join("\n");
 }
 
@@ -5006,7 +5116,6 @@ function getPublicProfile(profile, language = getAssistantLanguage()) {
       ...template,
       description: getLaunchTemplateDescription(template, language),
     })),
-    privacy: "This profile intentionally omits absolute local paths.",
   };
 }
 
@@ -5448,6 +5557,13 @@ fileInput.addEventListener("change", () => {
 errorInput.addEventListener("input", () => {
   if (!currentFiles.length) return;
   rerunCurrentAnalysis();
+});
+ocrImageButton?.addEventListener("click", () => {
+  void chooseErrorScreenshot();
+});
+ocrImageInput?.addEventListener("change", () => {
+  const file = ocrImageInput.files?.[0];
+  if (file) void recognizeBrowserErrorScreenshot(file);
 });
 
 assistantLanguageSelect.addEventListener("change", () => {

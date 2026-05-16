@@ -30,8 +30,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
-  await expect(page.locator(".support-privacy-list")).toContainText("不包含游戏文件");
-  await expect(page.locator(".support-privacy-list")).toContainText("包/镜像只预检元数据");
+  await expect(page.locator("#supportPanel")).toContainText("诊断摘要");
 
   const supportPreview = page.locator(".support-preview");
   await expect(supportPreview).toContainText("## GalAid 求助摘要");
@@ -189,7 +188,7 @@ test("interface and assistant output language can switch to English and Japanese
   await expect(page.locator('[data-tab="roadmap"]')).toHaveText("Roadmap");
   await expect(page.locator(".summary-strip small").first()).toHaveText("files");
   await page.locator('[data-tab="profiles"]').click();
-  await expect(page.locator("#profilesPanel")).toContainText("Use only with a trusted local Locale Emulator install");
+  await expect(page.locator("#profilesPanel")).toContainText("If Locale Emulator is installed locally");
   await page.locator('[data-tab="engine"]').click();
   await expect(page.locator("#enginePanel")).toContainText("Next step");
   await expect(page.locator("#enginePanel")).toContainText("Try the root launcher first");
@@ -216,4 +215,32 @@ test("interface and assistant output language can switch to English and Japanese
   await expect(page.getByRole("heading", { name: "サポートバンドル" })).toBeVisible();
   await expect(page.locator(".support-preview")).toContainText("## GalAid サポート概要");
   await expect(page.locator(".support-preview")).toContainText("診断言語: 日本語");
+});
+
+test("error screenshot OCR text feeds the recipe matcher", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Tesseract = {
+      recognize: async () => ({
+        data: {
+          text: "The program cannot start because d3dx9_43.dll is missing.",
+        },
+      }),
+    };
+  });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "游戏样例" }).click();
+  await page.setInputFiles("#ocrImageInput", {
+    name: "startup-error.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lZHdJwAAAABJRU5ErkJggg==",
+      "base64",
+    ),
+  });
+
+  await expect(page.locator("#ocrStatus")).toHaveText("已填入截图文字");
+  await expect(page.locator("#errorInput")).toHaveValue(/OCR: startup-error\.png/);
+  await page.locator('[data-tab="errors"]').click();
+  await expect(page.locator("#errorsPanel")).toContainText("DirectX 旧组件");
 });

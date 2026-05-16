@@ -185,7 +185,7 @@ function checkReleaseDocs(errors) {
   for (const phrase of [
     expectedVersionHeading,
     "Highlights",
-    "Safety Boundary",
+    "Error screenshot OCR",
     "Pre-Release Checklist",
     "npm run audit:release -- --strict",
     "GitHub Pages",
@@ -210,15 +210,15 @@ function checkReadmes(errors) {
   const readmes = [
     {
       file: "README.md",
-      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "GalAid is a local-first launch doctor"],
+      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "GalAid is a launch doctor", "Screenshot OCR"],
     },
     {
       file: "README.zh-CN.md",
-      phrases: ["GalAid 是一个本地优先", "诊断语言", "商业/自研", "不上传、不偷偷运行、不修改原包、不破解密码"],
+      phrases: ["GalAid 是一个本地优先", "诊断语言", "商业/自研", "报错截图 OCR"],
     },
     {
       file: "README.ja.md",
-      phrases: ["GalAid は", "診断言語", "商用/自社", "アップロード、密かに実行、原本変更、未知パスワードの復号"],
+      phrases: ["GalAid は", "診断言語", "商用/自社", "エラー画像 OCR"],
     },
   ];
 
@@ -347,7 +347,8 @@ function checkBrowserSmoke(errors) {
     "DirectX 旧组件",
     "VC++ 运行库",
     "roadmap.json",
-    "不包含游戏文件",
+    "诊断摘要",
+    "error screenshot OCR",
     "ZIP 目录预检",
     "商业/自研引擎启动链",
     "prepared desktop handoff",

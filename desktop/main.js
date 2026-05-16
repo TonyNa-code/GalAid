@@ -4,6 +4,7 @@ const path = require("node:path");
 const { scanSelectedPaths } = require("./scanner");
 const { buildLaunchAllowlist, createShortcutForAllowedEntry, launchAllowedEntry } = require("./launcher");
 const { isPrepareSupportedPackage, prepareLocalPackage, unmountIsoImage } = require("./package-prep");
+const { recognizeErrorImage } = require("./ocr");
 
 const launchAllowlists = new Map();
 const packageAllowlists = new Map();
@@ -207,6 +208,33 @@ ipcMain.handle("desktop:unmount-image", async (event, payload = {}) => {
 });
 
 ipcMain.handle("desktop:get-launch-history", () => getPublicLaunchHistory());
+
+ipcMain.handle("desktop:recognize-error-image", async (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  const result = await dialog.showOpenDialog(window, {
+    title: "Choose an error screenshot",
+    properties: ["openFile"],
+    filters: [
+      { name: "Images", extensions: ["png", "jpg", "jpeg", "bmp", "webp", "tif", "tiff"] },
+    ],
+  });
+  if (result.canceled || !result.filePaths.length) return { canceled: true };
+
+  try {
+    return await recognizeErrorImage(result.filePaths[0], {
+      cachePath: path.join(app.getPath("userData"), "ocr-cache"),
+      onProgress: (progress) => {
+        event.sender.send("desktop:ocr-progress", progress);
+      },
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      errorCode: "ocr-failed",
+      message: error?.message || "OCR failed.",
+    };
+  }
+});
 
 async function scanForRenderer(selectedPaths, webContents, metaOverrides = {}) {
   const result = await scanSelectedPaths(selectedPaths, (progress) => {
