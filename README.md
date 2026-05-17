@@ -30,7 +30,7 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
 
 <table>
   <tr>
-    <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z`, split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
+    <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z/.lzh`, split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
     <td width="25%" valign="top"><strong>02 Prepare</strong><br>GalAid groups packages, asks for a password when needed, extracts or mounts, then rescans the prepared folder.</td>
     <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start the Windows `.exe/.com` with the right working directory.</td>
     <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, VC++, locale, RTP, path, or package route.</td>
@@ -229,16 +229,16 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/RPG Maker RTP repair tools, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.lzh/.lha`, `.arj`, `.cab`, `.tar/.tgz/.tar.gz`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z/LZH/LHA/ARJ/CAB/TAR-style metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/RPG Maker RTP repair tools, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
 
-When the user clicks the one-stop launch button, the desktop beta can use a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It extracts ZIP/RAR/7z packages into a new sibling `*-prepared` folder, asks for a known password when needed, mounts Windows `.iso` images through the system mount command, or best-effort extracts common disc-image files before automatically rescanning the prepared folder and launching the top entry. The manual `Extract and rescan` and `Mount/extract and rescan` actions remain available when the user wants to choose the output parent folder first. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
+When the user clicks the one-stop launch button, the desktop beta can use a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It extracts supported archive packages into a new sibling `*-prepared` folder, asks for a known password when needed, expands compressed tar packages such as `.tar.gz/.tgz` in two passes, mounts Windows `.iso` images through the system mount command, or best-effort extracts common disc-image files before automatically rescanning the prepared folder and launching the top entry. The manual `Extract and rescan` and `Mount/extract and rescan` actions remain available when the user wants to choose the output parent folder first. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 
 ## Archive and Disc Image Guidance
 
 The web MVP can recognize common package stages and tell the user what to do next:
 
-- split archives: keep every part together and start from `part1.rar`, `.7z.001`, or `.zip.001`
-- plain archives: extract fully before running the game
+- split archives: keep every part together and start from `part1.rar`, `.7z.001`, `.zip.001`, or the main `.zip` for `.z01/.z02` sets
+- plain and legacy archives: extract fully before running the game, including `.lzh/.lha`, `.arj`, `.cab`, and tar-style packages when supported by the local helper
 - ISO/NRG/ISZ/CDI images: mount or unpack the image first
 - CUE/BIN, MDS/MDF, CCD/IMG/SUB sets: keep paired files together before mounting
 

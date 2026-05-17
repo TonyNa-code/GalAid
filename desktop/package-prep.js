@@ -2,10 +2,11 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const ARCHIVE_EXTS = new Set(["zip", "rar", "7z"]);
-const SPLIT_FIRST_VOLUME_RE = /\.(7z|zip)\.001$/i;
+const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "tgz", "gz", "gzip", "bz2", "bzip2", "xz", "txz", "lzma", "zst", "lzh", "lha", "cab", "arj"]);
+const SPLIT_NUMBERED_VOLUME_RE = /\.(7z|zip)\.(\d{3})$/i;
 const RAR_PART_RE = /\.part0*(\d+)\.rar$/i;
 const OLD_RAR_VOLUME_RE = /\.r\d{2}$/i;
+const ZIP_FOLLOW_UP_VOLUME_RE = /\.z\d{2}$/i;
 const MAX_OUTPUT_BYTES = 512 * 1024;
 const EXTRACTION_TIMEOUT_MS = 30 * 60 * 1000;
 const ISO_MOUNT_TIMEOUT_MS = 90 * 1000;
@@ -53,11 +54,21 @@ async function prepareArchivePackage({
   });
 
   if (result.ok) {
+    const nestedTar = await expandNestedTarIfNeeded({
+      packagePath: normalizedPackagePath,
+      outputDirectory: normalizedOutputDirectory,
+      spawnImpl,
+      statImpl,
+    });
+    if (!nestedTar.ok) return nestedTar;
+
     return {
       ok: true,
       packagePath: normalizedPackagePath,
       outputDirectory: normalizedOutputDirectory,
       tool: result.tool,
+      nestedArchive: nestedTar.nestedArchive || "",
+      nestedTool: nestedTar.tool || "",
       passwordUsed: Boolean(password),
     };
   }
@@ -69,6 +80,7 @@ function getArchivePrepareSupport(filePath) {
   const lowerName = path.basename(filePath || "").toLowerCase();
   const ext = getExt(lowerName);
   const rarPart = lowerName.match(RAR_PART_RE);
+  const numberedVolume = lowerName.match(SPLIT_NUMBERED_VOLUME_RE);
 
   if (OLD_RAR_VOLUME_RE.test(lowerName)) {
     return {
@@ -86,7 +98,23 @@ function getArchivePrepareSupport(filePath) {
     };
   }
 
-  if (ARCHIVE_EXTS.has(ext) || SPLIT_FIRST_VOLUME_RE.test(lowerName)) {
+  if (numberedVolume && Number(numberedVolume[2]) !== 1) {
+    return {
+      supported: false,
+      errorCode: "follow-up-volume",
+      message: `This is a follow-up ${numberedVolume[1].toUpperCase()} volume. Start from the .${numberedVolume[1]}.001 file instead.`,
+    };
+  }
+
+  if (ZIP_FOLLOW_UP_VOLUME_RE.test(lowerName)) {
+    return {
+      supported: false,
+      errorCode: "follow-up-volume",
+      message: "This is a follow-up ZIP volume. Start from the matching .zip file instead.",
+    };
+  }
+
+  if (ARCHIVE_EXTS.has(ext) || (numberedVolume && Number(numberedVolume[2]) === 1)) {
     return { supported: true };
   }
 
@@ -311,6 +339,60 @@ function normalizeExtractionResult(result) {
 
 function isPasswordProblem(value) {
   return /password|encrypted|wrong password|incorrect password|enter password|can not open encrypted archive|密码/i.test(value || "");
+}
+
+async function expandNestedTarIfNeeded({ packagePath, outputDirectory, spawnImpl, statImpl }) {
+  const nestedTarName = getNestedTarName(packagePath);
+  if (!nestedTarName) return { ok: true };
+
+  const nestedTarPath = path.join(outputDirectory, nestedTarName);
+  try {
+    const stat = await statImpl(nestedTarPath);
+    if (!stat.isFile()) return { ok: true };
+  } catch {
+    return { ok: true };
+  }
+
+  const result = await runSevenZipExtract({
+    packagePath: nestedTarPath,
+    outputDirectory,
+    password: "",
+    spawnImpl,
+  });
+
+  if (result.ok) {
+    return {
+      ok: true,
+      nestedArchive: nestedTarName,
+      tool: result.tool,
+    };
+  }
+
+  return {
+    ok: false,
+    errorCode: "nested-archive-failed",
+    message: "The compressed tar was unpacked, but its inner tar archive could not be extracted.",
+  };
+}
+
+function getNestedTarName(filePath) {
+  const name = path.basename(filePath || "");
+  const rules = [
+    [/\.tar\.gz$/i, ".tar"],
+    [/\.tgz$/i, ".tar"],
+    [/\.tar\.bz2$/i, ".tar"],
+    [/\.tbz2?$/i, ".tar"],
+    [/\.tar\.xz$/i, ".tar"],
+    [/\.txz$/i, ".tar"],
+    [/\.tar\.lzma$/i, ".tar"],
+    [/\.tlz$/i, ".tar"],
+    [/\.tar\.zst$/i, ".tar"],
+    [/\.tzst$/i, ".tar"],
+  ];
+  for (const [pattern, replacement] of rules) {
+    if (pattern.test(name)) return name.replace(pattern, replacement);
+  }
+  return "";
 }
 
 function getSevenZipCandidates() {

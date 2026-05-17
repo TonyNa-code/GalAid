@@ -27,6 +27,32 @@ const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
 const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf", "ypf", "int", "gxp", "noa", "med", "wsm"]));
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
+const EXTERNAL_ARCHIVE_EXT_FORMATS = new Map([
+  ["tar", "TAR"],
+  ["tgz", "TAR.GZ"],
+  ["gz", "GZIP"],
+  ["gzip", "GZIP"],
+  ["bz2", "BZIP2"],
+  ["bzip2", "BZIP2"],
+  ["xz", "XZ"],
+  ["txz", "TAR.XZ"],
+  ["lzma", "LZMA"],
+  ["zst", "Zstandard"],
+  ["lzh", "LZH"],
+  ["lha", "LHA"],
+  ["cab", "CAB"],
+  ["arj", "ARJ"],
+]);
+const COMPOUND_ARCHIVE_FORMATS = [
+  [/\.tar\.gz$/i, "TAR.GZ"],
+  [/\.tar\.bz2$/i, "TAR.BZ2"],
+  [/\.tbz2?$/i, "TAR.BZ2"],
+  [/\.tar\.xz$/i, "TAR.XZ"],
+  [/\.tar\.lzma$/i, "TAR.LZMA"],
+  [/\.tlz$/i, "TAR.LZMA"],
+  [/\.tar\.zst$/i, "TAR.ZST"],
+  [/\.tzst$/i, "TAR.ZST"],
+];
 
 async function previewArchiveFile(filePath, ext) {
   const previewKind = getPreviewKind(filePath, ext);
@@ -55,14 +81,25 @@ function getPreviewKind(filePath, ext) {
   const lowerName = path.basename(filePath).toLowerCase();
   const normalizedExt = String(ext || "").toLowerCase();
   const rarPart = lowerName.match(/\.part0*(\d+)\.rar$/);
+  const compoundFormat = getCompoundArchiveFormat(lowerName);
 
   if (normalizedExt === "zip" && !/\.zip\.\d{3}$/.test(lowerName)) return { kind: "zip", format: "ZIP" };
   if (normalizedExt === "7z" || /\.7z\.001$/.test(lowerName)) return { kind: "external-list", format: "7Z" };
   if (normalizedExt === "rar" && (!rarPart || Number(rarPart[1]) === 1)) return { kind: "external-list", format: "RAR" };
   if (/\.zip\.001$/.test(lowerName)) return { kind: "external-list", format: "ZIP split" };
+  if (/\.z\d{2}$/.test(lowerName) || /\.(7z|zip)\.\d{3}$/.test(lowerName)) return null;
+  if (compoundFormat) return { kind: "external-list", format: compoundFormat };
+  if (EXTERNAL_ARCHIVE_EXT_FORMATS.has(normalizedExt)) return { kind: "external-list", format: EXTERNAL_ARCHIVE_EXT_FORMATS.get(normalizedExt) };
   if (/\.r\d{2}$/.test(lowerName)) return null;
   if (DISC_EXTS.has(normalizedExt)) return { kind: "disc-image", format: `${normalizedExt.toUpperCase()} disc image`, ext: normalizedExt };
   return null;
+}
+
+function getCompoundArchiveFormat(lowerName) {
+  for (const [pattern, format] of COMPOUND_ARCHIVE_FORMATS) {
+    if (pattern.test(lowerName)) return format;
+  }
+  return "";
 }
 
 async function previewExternalArchiveFile(filePath, format) {
@@ -660,6 +697,7 @@ function makeUnavailablePreview(status, format, message, packageKind = "archive"
 }
 
 module.exports = {
+  getPreviewKind,
   parseSevenZipListOutput,
   previewDiscImageFile,
   previewArchiveFile,

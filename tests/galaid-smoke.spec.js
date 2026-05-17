@@ -81,6 +81,24 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(page.locator(".package-roadmap")).toContainText("识别到古早镜像格式");
   await expect(page.locator("main")).toContainText("Blocked");
 
+  const archiveGrouping = await page.evaluate(() => {
+    const files = [
+      { name: "ClassicVN.zip", path: "ClassicVN.zip", lowerPath: "classicvn.zip", ext: "zip", size: 1000, depth: 0 },
+      { name: "ClassicVN.z01", path: "ClassicVN.z01", lowerPath: "classicvn.z01", ext: "z01", size: 1000, depth: 0 },
+      { name: "OldGame.lzh", path: "OldGame.lzh", lowerPath: "oldgame.lzh", ext: "lzh", size: 1000, depth: 0 },
+    ];
+    return analyze(files, "").packages.archiveSets.map((set) => ({
+      format: set.format,
+      firstFile: set.firstFile.path,
+      missing: set.missing,
+      level: set.level,
+    }));
+  });
+  expect(archiveGrouping).toEqual([
+    { format: "ZIP archive", firstFile: "ClassicVN.zip", missing: [], level: "good" },
+    { format: "LZH archive", firstFile: "OldGame.lzh", missing: [], level: "info" },
+  ]);
+
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-step").first()).toContainText("先处理压缩包或镜像");
   await expect(page.locator(".roadmap-step").first()).toContainText("解压/挂载并重扫");

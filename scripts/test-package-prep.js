@@ -20,9 +20,18 @@ async function main() {
   assert.ok(getBundledSevenZipPath().includes("7zip-bin"));
   assert.equal(isPrepareSupportedArchive("Game.zip"), true);
   assert.equal(isPrepareSupportedArchive("Game.7z.001"), true);
+  assert.equal(isPrepareSupportedArchive("Game.7z.002"), false);
+  assert.equal(isPrepareSupportedArchive("Game.z01"), false);
   assert.equal(isPrepareSupportedArchive("Game.part1.rar"), true);
   assert.equal(isPrepareSupportedArchive("Game.part2.rar"), false);
+  assert.equal(isPrepareSupportedArchive("Game.lzh"), true);
+  assert.equal(isPrepareSupportedArchive("Game.lha"), true);
+  assert.equal(isPrepareSupportedArchive("Game.arj"), true);
+  assert.equal(isPrepareSupportedArchive("Game.cab"), true);
+  assert.equal(isPrepareSupportedArchive("Game.tgz"), true);
   assert.equal(getArchivePrepareSupport("Disc.iso").errorCode, "unsupported-package");
+  assert.equal(getArchivePrepareSupport("Game.zip.002").errorCode, "follow-up-volume");
+  assert.equal(getArchivePrepareSupport("Game.z01").errorCode, "follow-up-volume");
   assert.equal(getDiscImagePrepareSupport("Disc.iso").kind, "disc-image");
   assert.equal(getDiscImagePrepareSupport("OldDisc.b6t").kind, "disc-image");
   assert.equal(getDiscImagePrepareSupport("Bonus.nrg").kind, "disc-image");
@@ -32,12 +41,15 @@ async function main() {
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "galaid-package-prep-"));
   const archivePath = path.join(tempDir, "MoonlightCafe.part1.rar");
+  const tarGzPath = path.join(tempDir, "SnowTrial.tar.gz");
   const isoPath = path.join(tempDir, "MoonlightCafe.iso");
   const outputDirectory = path.join(tempDir, "MoonlightCafe-prepared");
+  const tarOutputDirectory = path.join(tempDir, "SnowTrial-prepared");
   const imageOutputDirectory = path.join(tempDir, "MoonlightCafe-image-prepared");
   const knownPassword = "known-" + "password";
   const badPassword = "bad-" + "password";
   await fs.writeFile(archivePath, "fixture");
+  await fs.writeFile(tarGzPath, "fixture");
   await fs.writeFile(isoPath, "fixture");
 
   const spawned = [];
@@ -66,6 +78,19 @@ async function main() {
   assert.equal(wrongPassword.ok, false);
   assert.equal(wrongPassword.errorCode, "password-failed");
   assert.equal(JSON.stringify(wrongPassword).includes(badPassword), false);
+
+  await fs.mkdir(tarOutputDirectory, { recursive: true });
+  await fs.writeFile(path.join(tarOutputDirectory, "SnowTrial.tar"), "inner tar fixture");
+  const tarSpawned = [];
+  const nestedTar = await prepareArchivePackage({
+    packagePath: tarGzPath,
+    outputDirectory: tarOutputDirectory,
+    spawnImpl: makeSpawn({ spawned: tarSpawned, stdout: "Everything is Ok", code: 0 }),
+  });
+  assert.equal(nestedTar.ok, true);
+  assert.equal(nestedTar.nestedArchive, "SnowTrial.tar");
+  assert.equal(tarSpawned.length, 2);
+  assert.equal(tarSpawned[1].args.at(-1), path.join(tarOutputDirectory, "SnowTrial.tar"));
 
   const missingTool = await prepareArchivePackage({
     packagePath: archivePath,

@@ -41,7 +41,7 @@ const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "bmp", "webp", "tga", "dds", "
 const AUDIO_EXTS = new Set(["ogg", "mp3", "wav", "flac", "m4a", "aac", "opus", "mid", "midi"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "mov"]);
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
-const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
+const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "tgz", "gz", "gzip", "bz2", "bzip2", "xz", "txz", "lzma", "zst", "lzh", "lha", "cab", "arj"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
@@ -2336,6 +2336,35 @@ function stripLastExtension(path) {
   return path.replace(/\.[^/.]+$/, "");
 }
 
+function getArchiveFormat(file) {
+  const lower = file.lowerPath;
+  const compoundFormats = [
+    [/\.tar\.gz$|\.tgz$/, "TAR.GZ archive"],
+    [/\.tar\.bz2$|\.tbz2?$/, "TAR.BZ2 archive"],
+    [/\.tar\.xz$|\.txz$/, "TAR.XZ archive"],
+    [/\.tar\.lzma$|\.tlz$/, "TAR.LZMA archive"],
+    [/\.tar\.zst$|\.tzst$/, "TAR.ZST archive"],
+  ];
+  for (const [pattern, label] of compoundFormats) {
+    if (pattern.test(lower)) return label;
+  }
+
+  const labels = {
+    gz: "GZIP archive",
+    gzip: "GZIP archive",
+    bz2: "BZIP2 archive",
+    bzip2: "BZIP2 archive",
+    xz: "XZ archive",
+    lzma: "LZMA archive",
+    zst: "Zstandard archive",
+    lzh: "LZH archive",
+    lha: "LHA archive",
+    cab: "CAB archive",
+    arj: "ARJ archive",
+  };
+  return labels[file.ext] || `${file.ext.toUpperCase()} archive`;
+}
+
 function getArchiveInfo(file) {
   const lower = file.lowerPath;
   let match = lower.match(/^(.*)\.part(\d+)\.rar$/);
@@ -2379,10 +2408,24 @@ function getArchiveInfo(file) {
     };
   }
 
+  match = lower.match(/^(.*)\.z(\d{2})$/);
+  if (match) {
+    return {
+      kind: "archive",
+      format: "ZIP split archive",
+      family: match[1],
+      volumeIndex: Number(match[2]) + 1,
+      splitStyle: "zip-z",
+      role: "follow-up volume",
+      action: "这是传统 ZIP 后续分卷，不要单独打开；请和同名 .zip 主文件放在同一目录，再从 .zip 文件开始解压",
+      file,
+    };
+  }
+
   if (ARCHIVE_EXTS.has(file.ext)) {
     return {
       kind: "archive",
-      format: `${file.ext.toUpperCase()} archive`,
+      format: getArchiveFormat(file),
       family: stripLastExtension(lower),
       volumeIndex: file.ext === "rar" ? 1 : null,
       role: "single archive or first volume",
@@ -2461,14 +2504,19 @@ function buildArchiveSets(archives) {
         const right = b.volumeIndex || 0;
         return left - right || a.file.path.localeCompare(b.file.path);
       });
-      const volumeIndexes = sorted.map((item) => item.volumeIndex).filter(Boolean);
+      const hasZipFollowUpVolumes = sorted.some((item) => item.splitStyle === "zip-z");
+      const volumeIndexes = sorted
+        .map((item) => item.volumeIndex || (hasZipFollowUpVolumes && item.file.ext === "zip" ? 1 : 0))
+        .filter(Boolean);
       const expected = volumeIndexes.length ? Math.max(...volumeIndexes) : 0;
       const missing = [];
       for (let index = 1; index <= expected; index += 1) {
         if (!volumeIndexes.includes(index)) missing.push(index);
       }
-      const first = sorted.find((item) => item.volumeIndex === 1) || sorted[0];
-      const isSplit = sorted.length > 1 || sorted.some((item) => item.volumeIndex);
+      const first = hasZipFollowUpVolumes
+        ? sorted.find((item) => item.file.ext === "zip") || sorted.find((item) => item.volumeIndex === 1) || sorted[0]
+        : sorted.find((item) => item.volumeIndex === 1) || sorted[0];
+      const isSplit = sorted.length > 1 || sorted.some((item) => item.volumeIndex || item.splitStyle);
       const archivePreview = getBestArchivePreview(sorted);
       const previewLaunchSample = archivePreview?.signals?.launchSamples?.[0];
       const previewInstallerSample = archivePreview?.signals?.installerSamples?.[0];

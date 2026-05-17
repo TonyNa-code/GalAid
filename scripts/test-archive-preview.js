@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { parseSevenZipListOutput, previewDiscImageFile, previewZipFile } = require("../desktop/archive-preview");
+const { getPreviewKind, parseSevenZipListOutput, previewDiscImageFile, previewZipFile } = require("../desktop/archive-preview");
 
 async function main() {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "galaid-zip-preview-"));
@@ -25,6 +25,9 @@ async function main() {
   assert.equal(preview.signals.engineHints[0].id, "kirikiri");
   assert.ok(preview.signals.engineHints[0].samples.includes("SnowTrial/system/Config.tjs"));
   assert.equal(preview.sampleFiles[1].path, "SnowTrial/data.xp3");
+  assert.deepEqual(getPreviewKind("ClassicVN.lzh", "lzh"), { kind: "external-list", format: "LZH" });
+  assert.deepEqual(getPreviewKind("ClassicVN.tar.gz", "gz"), { kind: "external-list", format: "TAR.GZ" });
+  assert.equal(getPreviewKind("ClassicVN.z01", "z01"), null);
 
   const rarPreview = parseSevenZipListOutput(
     [
