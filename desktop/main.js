@@ -5,6 +5,7 @@ const { scanSelectedPaths } = require("./scanner");
 const { buildLaunchAllowlist, createShortcutForAllowedEntry, launchAllowedEntry } = require("./launcher");
 const { isPrepareSupportedPackage, prepareLocalPackage, unmountIsoImage } = require("./package-prep");
 const { recognizeErrorImage } = require("./ocr");
+const { checkRuntimeEnvironment } = require("./environment-check");
 
 const launchAllowlists = new Map();
 const packageAllowlists = new Map();
@@ -233,6 +234,18 @@ ipcMain.handle("desktop:unmount-image", async (event, payload = {}) => {
 });
 
 ipcMain.handle("desktop:get-launch-history", () => getPublicLaunchHistory());
+
+ipcMain.handle("desktop:check-environment", async () => {
+  try {
+    return await checkRuntimeEnvironment();
+  } catch (error) {
+    return {
+      ok: false,
+      errorCode: "environment-check-failed",
+      message: error?.message || "Environment check failed.",
+    };
+  }
+});
 
 ipcMain.handle("desktop:recognize-error-image", async (event) => {
   const window = BrowserWindow.fromWebContents(event.sender);

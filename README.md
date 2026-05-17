@@ -79,7 +79,7 @@ GalAid turns that mess into a guided launch route.
 
 | Surface | Use it for | What you get |
 | --- | --- | --- |
-| Windows desktop beta | Real player use | Native folder selection, recursive scan, one-stop launch guide, archive/image preparation, one-click launch, shortcuts, launch history, Screenshot OCR. |
+| Windows desktop beta | Real player use | Native folder selection, recursive scan, one-stop launch guide, archive/image preparation, one-click launch, local runtime checks, shortcuts, launch history, Screenshot OCR. |
 | Web demo | Quick preview | File-list diagnosis, engine clues, package stage hints, error recipe matching, report export. |
 | Rule data | Community contribution | Engine fingerprints, startup error recipes, package patterns, and smoke-tested examples. |
 
@@ -87,9 +87,9 @@ GalAid turns that mess into a guided launch route.
 
 <table>
   <tr>
-    <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, disc-image pairs, legacy image formats, and password prompts are folded into one prepare-and-rescan flow.</td>
+    <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, disc-image pairs, legacy image formats, runtime repair tools, and password prompts are folded into one prepare-and-rescan flow.</td>
     <td width="33%" valign="top"><strong>Folder to launcher</strong><br>Launch candidates are ranked against installers, redists, config tools, engine files, working directories, and commercial/self-developed layouts.</td>
-    <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs or screenshot OCR feed local recipes for DirectX, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
+    <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs, screenshot OCR, and optional desktop runtime checks feed the roadmap for DirectX, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
   </tr>
   <tr>
     <td width="33%" valign="top"><strong>Engine clues</strong><br>Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and private commercial structures get evidence explanations.</td>
@@ -129,7 +129,7 @@ After a launch attempt fails, the `启动` tab can walk the user through a quick
 
 The environment page turns common "why won't this start?" issues into a checklist before the user starts changing system settings.
 
-It checks whether the folder appears fully extracted, whether a launch entry exists, and whether the metadata or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
+It checks whether the folder appears fully extracted, whether a launch entry exists, whether bundled DirectX/VC++/RPG Maker RTP repair tools are present, and whether the metadata or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
 
 For many commercial Japanese VNs, GalAid does not need to name the exact private engine to be useful. A root `.exe` plus large `.arc/.dat/.pak/.pck/.cpk/.pac/.vol` resource archives, nearby DLL plugins, and config files is enough to trigger the commercial/self-developed engine route. That route focuses on preserving the original folder structure, keeping the working directory correct, and checking locale/runtime problems before assuming the game itself is broken.
 
@@ -229,7 +229,7 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/RPG Maker RTP repair tools, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
 
 When the user clicks the one-stop launch button, the desktop beta can use a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It extracts ZIP/RAR/7z packages into a new sibling `*-prepared` folder, asks for a known password when needed, mounts Windows `.iso` images through the system mount command, or best-effort extracts common disc-image files before automatically rescanning the prepared folder and launching the top entry. The manual `Extract and rescan` and `Mount/extract and rescan` actions remain available when the user wants to choose the output parent folder first. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 

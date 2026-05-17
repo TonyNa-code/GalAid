@@ -520,6 +520,7 @@ textarea {
 .roadmap-summary,
 .roadmap-step,
 .environment-summary,
+.runtime-assistant,
 .environment-check,
 .error-summary,
 .error-recipe,
@@ -572,6 +573,7 @@ textarea {
 .roadmap-summary h4,
 .roadmap-step h4,
 .environment-summary h4,
+.runtime-assistant h4,
 .environment-check h4,
 .error-summary h4,
 .error-recipe h4,
@@ -599,6 +601,7 @@ textarea {
 .roadmap-summary p,
 .roadmap-step p,
 .environment-summary p,
+.runtime-assistant p,
 .environment-check p,
 .error-summary p,
 .error-recipe p,
@@ -1173,8 +1176,17 @@ textarea {
   margin-bottom: 12px;
 }
 
+.runtime-assistant {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
 .environment-summary.warning,
-.environment-check.warning {
+.environment-check.warning,
+.runtime-assistant.warning {
   border-color: rgba(217, 154, 43, 0.44);
   background: rgba(217, 154, 43, 0.06);
 }
@@ -1186,7 +1198,8 @@ textarea {
 }
 
 .environment-summary.good,
-.environment-check.good {
+.environment-check.good,
+.runtime-assistant.good {
   border-color: rgba(54, 167, 121, 0.32);
 }
 
@@ -1240,6 +1253,10 @@ textarea {
   gap: 12px;
 }
 
+.native-environment-grid {
+  margin-bottom: 12px;
+}
+
 .environment-check {
   display: grid;
   align-content: start;
@@ -1264,6 +1281,17 @@ textarea {
   color: #334039;
   line-height: 1.55;
   font-size: 13px;
+  font-weight: 700;
+}
+
+.runtime-assistant-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.runtime-checked-at {
+  color: var(--muted);
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1868,7 +1896,8 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .environment-summary {
+  .environment-summary,
+  .runtime-assistant {
     grid-template-columns: 1fr;
   }
 
@@ -1898,6 +1927,8 @@ textarea {
 
   .support-actions,
   .support-actions button,
+  .runtime-assistant-actions,
+  .runtime-assistant-actions button,
   .wizard-actions,
   .wizard-actions button {
     width: 100%;

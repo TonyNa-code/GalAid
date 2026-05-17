@@ -367,6 +367,11 @@ function collectSignals(signals, engineHints, entry) {
     signals.installerCount += 1;
     pushLimited(signals.installerSamples, entry.path);
   }
+  const runtimeRepairType = getRuntimeRepairType(entry.path, entry.ext);
+  if (runtimeRepairType) {
+    signals.runtimeRepairCount += 1;
+    pushLimited(signals.runtimeRepairSamples, `${runtimeRepairType}: ${entry.path}`);
+  }
   if (IMAGE_EXTS.has(entry.ext)) signals.assetCounts.images += 1;
   if (AUDIO_EXTS.has(entry.ext)) signals.assetCounts.audio += 1;
   if (VIDEO_EXTS.has(entry.ext)) signals.assetCounts.video += 1;
@@ -437,6 +442,32 @@ function isInstallerLike(lowerPath, ext) {
     /(^|\/)(setup|install|installer|autorun|dxsetup|vcredist|vc_redist|directx|patch|update|append|bonus|extra|tokuten|serial|keygen|crack|no.?dvd|no.?cd)(\.[a-z0-9]+)?$/i.test(lowerPath) ||
     /(\/redist\/|\/support\/|\/directx\/|\/patch\/|\/update\/|\/bonus\/|\/extra\/|\/tokuten\/|\/特典\/|\/追加\/|data\d+\.cab$|autorun\.inf$|免dvd|免cd|no.?dvd|no.?cd)/i.test(lowerPath)
   );
+}
+
+function getRuntimeRepairType(entryPath, ext = getExt(path.posix.basename(String(entryPath || "")))) {
+  const lowerPath = normalizeZipPath(entryPath).toLowerCase();
+  if (!["exe", "msi", "zip", "rar", "7z"].includes(String(ext || "").toLowerCase())) return "";
+
+  if (
+    /(^|\/)(dxsetup|dxwebsetup)\.exe$/.test(lowerPath) ||
+    /(?:directx|direct.?x|d3dx).*?(?:setup|install|redist|runtime)/.test(lowerPath) ||
+    /(?:setup|install|redist|runtime).*?(?:directx|direct.?x|d3dx)/.test(lowerPath)
+  ) {
+    return "DirectX";
+  }
+
+  if (
+    /(^|\/)(vcredist|vc_redist|vc_red|visual.?c).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath) ||
+    /(?:vcredist|vc_redist|visual.?c|microsoft.*c\+\+|msvc|redist\/vc)/.test(lowerPath)
+  ) {
+    return "VC++";
+  }
+
+  const hasRtpMarker = /(^|[\/_. -])rtp([\/_. -]|$)|runtime package|ランタイム/.test(lowerPath);
+  const hasRpgMakerMarker = /rpg.?maker|rpgvxace|rpgvx|rpgxp|vxace|rgss|rpg2000|rpg2003/.test(lowerPath);
+  if (hasRtpMarker && hasRpgMakerMarker) return "RPG Maker RTP";
+
+  return "";
 }
 
 function readZip32Size(buffer, offset) {
@@ -605,6 +636,8 @@ function makeBasePreview(format, options = {}) {
       launchSamples: [],
       installerCount: 0,
       installerSamples: [],
+      runtimeRepairCount: 0,
+      runtimeRepairSamples: [],
       engineHints: [],
       assetCounts: {
         images: 0,

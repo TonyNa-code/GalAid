@@ -6,13 +6,15 @@ The Windows desktop beta can also launch trusted local `.exe/.com` entries that 
 
 The profile tab can create a `.lnk` shortcut for the same allowlisted entry. GalAid also keeps a small local recent-launch history with entry names, relative paths, and timestamps so users can see what they tried without adding those details to reports or support bundles.
 
-The launch tab can prepare ZIP/RAR/7z archives through the one-stop launch button. GalAid creates a fresh sibling `*-prepared` folder, asks for a user-provided password only when needed, scans the extracted folder, and launches the top recommended entry when one is found. The package tab still offers `Extract and rescan` for users who want to choose the output parent folder manually.
+The launch tab can prepare ZIP/RAR/7z archives through the one-stop launch button. GalAid creates a fresh sibling `*-prepared` folder, asks for a user-provided password only when needed, scans the extracted folder, and launches the top recommended entry when one is found. Package preflight also labels bundled DirectX/VC++/RPG Maker RTP repair tools so they are treated as fix clues rather than launch entries. The package tab still offers `Extract and rescan` for users who want to choose the output parent folder manually.
 
 Disc-image rows can use `Mount/extract and rescan`. On Windows, `.iso` files are mounted with the built-in `Mount-DiskImage` command when available. Other supported image files are handled as a best-effort local extraction through the bundled 7z-compatible helper before GalAid rescans the prepared output folder.
 
 After a package or image is prepared, the launch tab shows a prepared handoff card with the original package, the prepared target, and the top recommended launch entry. On Windows, the one-stop button can start that allowlisted `.exe/.com` entry immediately after preparation, and the handoff card can start the same entry again later.
 
 After a desktop launch action succeeds, the launch tab shows a short follow-up card. Users can mark the game as opened normally or choose a symptom such as no response, immediate crash, missing DLL/runtime, mojibake, or black screen; those symptoms update the roadmap and support bundle without GalAid monitoring the process.
+
+The environment tab can run an explicit local runtime check on Windows. It probes for common legacy DirectX DLLs, installed Microsoft Visual C++ Redistributables, RPG Maker RTP entries, and locale state, folds warning results into the roadmap, then stores the metadata-only result in reports and support bundles.
 
 When an ISO was mounted by GalAid, the same handoff card can request a Windows `Dismount-DiskImage` cleanup for that session's mounted image. GalAid only offers this action for images it mounted during the current desktop session.
 
@@ -46,6 +48,7 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 - Disc-image mounting or extraction requires an explicit launch or prepare click.
 - Mounted ISO cleanup is limited to images GalAid mounted in the current session.
 - Launch follow-up is user-marked; GalAid does not watch or inspect the running game process.
+- Runtime environment checks read only system metadata such as registry display names, common DirectX DLL presence, and locale names.
 - Package passwords are not saved to reports, support bundles, or launch history.
 - GalAid does not add hidden arguments, bypass checks, patch files, or run installers automatically.
 - Web mode cannot launch local programs because browsers intentionally block that ability.

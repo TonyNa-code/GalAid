@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld("galaidDesktop", {
   preparePackage: (payload) => ipcRenderer.invoke("desktop:prepare-package", payload),
   unmountImage: (payload) => ipcRenderer.invoke("desktop:unmount-image", payload),
   getLaunchHistory: () => ipcRenderer.invoke("desktop:get-launch-history"),
+  checkEnvironment: () => ipcRenderer.invoke("desktop:check-environment"),
   recognizeErrorImage: () => ipcRenderer.invoke("desktop:recognize-error-image"),
   onScanProgress(listener) {
     progressListeners.add(listener);

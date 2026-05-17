@@ -11,9 +11,11 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await page.locator('[data-tab="roadmap"]').click();
 
   await expect(page.locator("#projectTitle")).toHaveText("SakuraTrial");
-  await expect(page.locator(".roadmap-summary h4")).toHaveText("4 个建议步骤");
+  await expect(page.locator(".roadmap-summary h4")).toHaveText("5 个建议步骤");
+  await expect(page.locator(".roadmap-step h4").filter({ hasText: "包内运行库/修复工具" })).toBeVisible();
   await expect(page.locator(".roadmap-step h4").filter({ hasText: "DirectX 旧组件" })).toBeVisible();
   await expect(page.locator(".roadmap-step h4").filter({ hasText: "VC++ 运行库" })).toBeVisible();
+  await expect(page.locator(".roadmap-list")).toContainText("VC++: SakuraTrial/vcredist_x86.exe");
   await page.locator('[data-tab="launch"]').click();
   await expect(page.getByRole("heading", { name: "一站式启动向导" })).toBeVisible();
   await expect(page.locator(".one-stop-wizard")).toContainText("推荐优先尝试");
@@ -57,6 +59,8 @@ test("package sample shows archive and image preflight without treating it as ru
   const packagesPanel = page.locator("#packagesPanel");
   await expect(packagesPanel).toContainText("ZIP 目录预检");
   await expect(packagesPanel).toContainText("SnowTrial/Game.exe");
+  await expect(packagesPanel).toContainText("DXSETUP.exe");
+  await expect(packagesPanel).toContainText("运行库修复项");
   await expect(packagesPanel).toContainText("KiriKiri / 吉里吉里");
   await expect(packagesPanel).toContainText("RAR 包/镜像预检");
   await expect(packagesPanel).toContainText("MoonlightCafe/Game.exe");
@@ -66,6 +70,7 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(packagesPanel).toContainText("BlindWrite 6 disc image");
   await expect(packagesPanel).toContainText("古早镜像已识别");
   await expect(page.locator(".package-roadmap")).toContainText("包里看到启动线索");
+  await expect(page.locator(".package-roadmap")).toContainText("包内有运行库修复项");
   await expect(page.locator(".package-roadmap")).toContainText("识别到古早镜像格式");
   await expect(page.locator("main")).toContainText("Blocked");
 
@@ -393,6 +398,122 @@ test("commercial sample promotes proprietary engine startup route", async ({ pag
 
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).toContainText("商业/自研引擎启动链");
+});
+
+test("desktop runtime assistant records local environment checks", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__environmentChecks = 0;
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async () => ({ ok: true }),
+      createShortcut: async () => ({ ok: true }),
+      preparePackage: async () => ({ ok: false }),
+      unmountImage: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      recognizeErrorImage: async () => ({ canceled: true }),
+      checkEnvironment: async () => {
+        window.__environmentChecks += 1;
+        if (window.__environmentChecks > 1) {
+          return {
+            ok: true,
+            platform: "win32",
+            checkedAt: "2026-05-17T00:05:00.000Z",
+            summary: {
+              status: "good",
+              label: "本机环境检测没有发现明显缺口",
+              detail: "如果游戏仍启动失败，继续结合报错截图、路径和游戏完整性排查。",
+              counts: { good: 2, warning: 0, info: 0 },
+            },
+            checks: [
+              {
+                id: "directx-native",
+                title: "DirectX 旧组件",
+                status: "good",
+                statusLabel: "OK",
+                detail: "检测到常见 DirectX 9 时代 DLL。",
+                action: "如果仍黑屏，继续结合报错文字排查。",
+                evidence: ["d3dx9_43.dll (System32)"],
+              },
+              {
+                id: "vcredist-native",
+                title: "VC++ 运行库",
+                status: "good",
+                statusLabel: "OK",
+                detail: "检测到已安装的 Microsoft Visual C++ Redistributable。",
+                action: "如果报错点名某个 DLL，按报错年份补对应 x86/x64 版本。",
+                evidence: ["Microsoft Visual C++ 2015-2022 Redistributable (x86)"],
+              },
+            ],
+          };
+        }
+        return {
+          ok: true,
+          platform: "win32",
+          checkedAt: "2026-05-17T00:00:00.000Z",
+          summary: {
+            status: "warning",
+            label: "1 个本机环境建议项",
+            detail: "遇到 d3dx/xinput 报错时，优先补 DirectX End-User Runtime。",
+            counts: { good: 2, warning: 1, info: 1 },
+          },
+          checks: [
+            {
+              id: "directx-native",
+              title: "DirectX 旧组件",
+              status: "warning",
+              statusLabel: "建议处理",
+              detail: "没有检测到常见 DirectX 9 时代 DLL。",
+              action: "遇到 d3dx、xinput 相关报错时，优先补 DirectX End-User Runtime。",
+              evidence: [],
+            },
+            {
+              id: "vcredist-native",
+              title: "VC++ 运行库",
+              status: "good",
+              statusLabel: "OK",
+              detail: "检测到已安装的 Microsoft Visual C++ Redistributable。",
+              action: "如果报错点名某个 DLL，按报错年份补对应 x86/x64 版本。",
+              evidence: ["Microsoft Visual C++ 2015-2022 Redistributable (x86)"],
+            },
+          ],
+        };
+      },
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "游戏样例" }).click();
+
+  await page.locator('[data-tab="environment"]').click();
+  await expect(page.getByRole("button", { name: "检测本机环境" })).toBeVisible();
+  await page.getByRole("button", { name: "检测本机环境" }).click();
+  await page.waitForFunction(() => window.__environmentChecks === 1);
+
+  await expect(page.locator("#environmentPanel")).toContainText("1 个本机环境建议项");
+  await expect(page.locator("#environmentPanel")).toContainText("Microsoft Visual C++ 2015-2022 Redistributable");
+
+  await page.locator('[data-tab="roadmap"]').click();
+  await expect(page.locator(".roadmap-list")).toContainText("本机检测：没有检测到常见 DirectX 9 时代 DLL。");
+  await expect(page.locator(".roadmap-list")).toContainText("遇到 d3dx、xinput 相关报错时");
+
+  await page.locator('[data-tab="environment"]').click();
+  await page.getByRole("button", { name: "检测本机环境" }).click();
+  await page.waitForFunction(() => window.__environmentChecks === 2);
+  await page.locator('[data-tab="roadmap"]').click();
+  await expect(page.locator(".roadmap-list")).not.toContainText("本机检测：没有检测到常见 DirectX 9 时代 DLL。");
+
+  await page.locator('[data-tab="support"]').click();
+  await expect(page.locator(".support-file-list")).toContainText("desktop-environment.json");
+  await expect(page.locator(".support-preview")).toContainText("本机运行环境助手");
+
+  await page.locator('[data-tab="report"]').click();
+  await expect(page.locator("#reportPanel")).toContainText("## 本机运行环境助手");
+  await expect(page.locator("#reportPanel")).toContainText("DirectX 旧组件");
 });
 
 test("interface and assistant output language can switch to English and Japanese", async ({ page }) => {

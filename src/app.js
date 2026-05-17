@@ -665,6 +665,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       environmentTitle: "环境检查",
       checks: "检查",
       environmentCountsLabel: "environment check counts",
+      runtimeAssistantTitle: "本机运行环境助手",
+      runtimeAssistantBody: "检测这台 Windows 电脑上的 DirectX 旧组件、VC++ 运行库、RPG Maker RTP 和系统区域。",
+      runtimeAssistantDesktopOnly: "桌面版可直接读取本机运行环境；网页模式会继续根据文件结构和报错文本推断。",
+      runtimeCheck: "检测本机环境",
+      runtimeChecking: "检测中...",
+      runtimeCheckedAt: "检测时间：{time}",
+      runtimeCheckEmpty: "还没有检测本机环境。启动失败时可以先点一次检测。",
+      runtimeCheckFailed: "本机环境检测失败",
       ok: "OK",
       suggestions: "建议",
       blockers: "阻断",
@@ -705,6 +713,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       imageFiles: "镜像文件",
       launchClues: "启动线索",
       installerClues: "安装线索",
+      runtimeRepairClues: "运行库修复项",
       truncated: "已截断",
       assetsTitle: "素材地图",
       samplePathsTitle: "样例路径",
@@ -771,6 +780,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareImageFailed: "镜像暂时无法自动挂载或解包",
       toastPrepareMissingVolume: "分卷不完整，请补齐后从第一分卷开始",
       toastPrepareDamaged: "压缩包可能损坏或不完整",
+      toastRuntimeCheckDone: "本机运行环境检测完成",
+      toastRuntimeCheckFailed: "本机运行环境检测失败",
       toastRoadmapCopied: "路线清单已复制",
       toastSummaryCopied: "求助摘要已复制",
       toastChatHelpCopied: "QQ 求助文案已复制",
@@ -989,6 +1000,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       environmentTitle: "Environment checks",
       checks: "checks",
       environmentCountsLabel: "environment check counts",
+      runtimeAssistantTitle: "Local runtime assistant",
+      runtimeAssistantBody: "Checks this Windows PC for legacy DirectX files, VC++ redistributables, RPG Maker RTP, and locale state.",
+      runtimeAssistantDesktopOnly: "The desktop app can read local runtime state; the web app continues to infer from files and error text.",
+      runtimeCheck: "Check local runtimes",
+      runtimeChecking: "Checking...",
+      runtimeCheckedAt: "Checked: {time}",
+      runtimeCheckEmpty: "No local runtime check yet. Run this once after a launch failure.",
+      runtimeCheckFailed: "Local runtime check failed",
       ok: "OK",
       suggestions: "suggestions",
       blockers: "blockers",
@@ -1029,6 +1048,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       imageFiles: "image files",
       launchClues: "launch clues",
       installerClues: "installer clues",
+      runtimeRepairClues: "runtime repair clues",
       truncated: "truncated",
       assetsTitle: "Asset map",
       samplePathsTitle: "Sample paths",
@@ -1095,6 +1115,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareImageFailed: "This image could not be mounted or extracted automatically",
       toastPrepareMissingVolume: "A split volume is missing; start from the first volume after collecting all parts",
       toastPrepareDamaged: "The package may be damaged or incomplete",
+      toastRuntimeCheckDone: "Local runtime check finished",
+      toastRuntimeCheckFailed: "Local runtime check failed",
       toastRoadmapCopied: "Roadmap checklist copied",
       toastSummaryCopied: "Support summary copied",
       toastChatHelpCopied: "Chat help copied",
@@ -1313,6 +1335,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       environmentTitle: "環境チェック",
       checks: "チェック",
       environmentCountsLabel: "environment check counts",
+      runtimeAssistantTitle: "ローカル実行環境アシスタント",
+      runtimeAssistantBody: "この Windows PC の古い DirectX、VC++ 再頒布可能パッケージ、RPG Maker RTP、locale 状態を確認します。",
+      runtimeAssistantDesktopOnly: "デスクトップ版ではローカル環境を確認できます。Web 版ではファイル構造とエラー本文から推定します。",
+      runtimeCheck: "ローカル環境を確認",
+      runtimeChecking: "確認中...",
+      runtimeCheckedAt: "確認日時: {time}",
+      runtimeCheckEmpty: "ローカル環境チェックはまだありません。起動に失敗したら一度実行してください。",
+      runtimeCheckFailed: "ローカル環境チェックに失敗しました",
       ok: "OK",
       suggestions: "推奨",
       blockers: "阻害",
@@ -1353,6 +1383,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       imageFiles: "イメージファイル",
       launchClues: "起動手がかり",
       installerClues: "インストーラー手がかり",
+      runtimeRepairClues: "ランタイム修復候補",
       truncated: "切り詰め",
       assetsTitle: "アセットマップ",
       samplePathsTitle: "サンプルパス",
@@ -1419,6 +1450,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareImageFailed: "このイメージはまだ自動マウント/展開できません",
       toastPrepareMissingVolume: "分割ボリュームが不足しています。すべて揃えて最初のボリュームから開始してください",
       toastPrepareDamaged: "パッケージが破損または不完全な可能性があります",
+      toastRuntimeCheckDone: "ローカル環境チェックが完了しました",
+      toastRuntimeCheckFailed: "ローカル環境チェックに失敗しました",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
       toastSummaryCopied: "サポート概要をコピーしました",
       toastChatHelpCopied: "チャット用文面をコピーしました",
@@ -1543,12 +1576,15 @@ const PACKAGE_SAMPLE_FILES = [
           { path: "SnowTrial/data.xp3", name: "data.xp3", ext: "xp3", size: 423000000, compressedSize: 386000000, depth: 1 },
           { path: "SnowTrial/scenario/common.ks", name: "common.ks", ext: "ks", size: 33000, compressedSize: 12000, depth: 2 },
           { path: "SnowTrial/BGM/theme01.ogg", name: "theme01.ogg", ext: "ogg", size: 6920000, compressedSize: 6510000, depth: 2 },
+          { path: "SnowTrial/Support/DirectX/DXSETUP.exe", name: "DXSETUP.exe", ext: "exe", size: 980000, compressedSize: 720000, depth: 3 },
         ],
         signals: {
           launchCandidateCount: 1,
           launchSamples: ["SnowTrial/Game.exe"],
-          installerCount: 0,
-          installerSamples: [],
+          installerCount: 1,
+          installerSamples: ["SnowTrial/Support/DirectX/DXSETUP.exe"],
+          runtimeRepairCount: 1,
+          runtimeRepairSamples: ["DirectX: SnowTrial/Support/DirectX/DXSETUP.exe"],
           engineHints: [{ id: "kirikiri", name: "KiriKiri / 吉里吉里", count: 2, samples: ["SnowTrial/data.xp3", "SnowTrial/scenario/common.ks"] }],
           assetCounts: {
             images: 18,
@@ -1582,13 +1618,16 @@ const PACKAGE_SAMPLE_FILES = [
           { path: "MoonlightCafe/Game.exe", name: "Game.exe", ext: "exe", size: 1680000, compressedSize: 910000, depth: 1 },
           { path: "MoonlightCafe/setup.exe", name: "setup.exe", ext: "exe", size: 2610000, compressedSize: 1800000, depth: 1 },
           { path: "MoonlightCafe/data00.arc", name: "data00.arc", ext: "arc", size: 1380000000, compressedSize: 1200000000, depth: 1 },
+          { path: "MoonlightCafe/Redist/vcredist_x86.exe", name: "vcredist_x86.exe", ext: "exe", size: 6500000, compressedSize: 6100000, depth: 2 },
           { path: "MoonlightCafe/system.dat", name: "system.dat", ext: "dat", size: 4800000, compressedSize: 2800000, depth: 1 },
         ],
         signals: {
           launchCandidateCount: 1,
           launchSamples: ["MoonlightCafe/Game.exe"],
-          installerCount: 1,
-          installerSamples: ["MoonlightCafe/setup.exe"],
+          installerCount: 2,
+          installerSamples: ["MoonlightCafe/setup.exe", "MoonlightCafe/Redist/vcredist_x86.exe"],
+          runtimeRepairCount: 1,
+          runtimeRepairSamples: ["VC++: MoonlightCafe/Redist/vcredist_x86.exe"],
           engineHints: [{ id: "commercial-proprietary", name: "商业/自研引擎（文件结构）", count: 2, samples: ["MoonlightCafe/Game.exe", "MoonlightCafe/data00.arc"] }],
           assetCounts: {
             images: 0,
@@ -1656,6 +1695,7 @@ let currentFiles = [];
 let currentAnalysis = null;
 let scanRunId = 0;
 let desktopLaunchHistory = [];
+let desktopEnvironmentState = { status: "idle", result: null, error: "" };
 let launchFailureState = getEmptyLaunchFailureState();
 let pendingLaunchFollowup = null;
 const desktopApi = window.galaidDesktop || null;
@@ -2114,6 +2154,76 @@ function samplePaths(files, predicate, limit = 4) {
   return files.filter(predicate).slice(0, limit).map((file) => file.path);
 }
 
+const RUNTIME_REPAIR_EXTS = new Set(["exe", "msi", "zip", "rar", "7z"]);
+
+function getRuntimeRepairType(pathValue, ext = getExt(getBaseName(String(pathValue || "")))) {
+  const lowerPath = normalizePath(pathValue).toLowerCase();
+  if (!RUNTIME_REPAIR_EXTS.has(String(ext || "").toLowerCase())) return "";
+
+  if (
+    /(^|\/)(dxsetup|dxwebsetup)\.exe$/.test(lowerPath) ||
+    /(?:directx|direct.?x|d3dx).*?(?:setup|install|redist|runtime)/.test(lowerPath) ||
+    /(?:setup|install|redist|runtime).*?(?:directx|direct.?x|d3dx)/.test(lowerPath)
+  ) {
+    return "DirectX";
+  }
+
+  if (
+    /(^|\/)(vcredist|vc_redist|vc_red|visual.?c).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath) ||
+    /(?:vcredist|vc_redist|visual.?c|microsoft.*c\+\+|msvc|redist\/vc)/.test(lowerPath)
+  ) {
+    return "VC++";
+  }
+
+  const hasRtpMarker = /(^|[\/_. -])rtp([\/_. -]|$)|runtime package|ランタイム/.test(lowerPath);
+  const hasRpgMakerMarker = /rpg.?maker|rpgvxace|rpgvx|rpgxp|vxace|rgss|rpg2000|rpg2003/.test(lowerPath);
+  if (hasRtpMarker && hasRpgMakerMarker) return "RPG Maker RTP";
+
+  return "";
+}
+
+function getRuntimeRepairTypeForFile(file) {
+  return getRuntimeRepairType(file.path, file.ext);
+}
+
+function isDirectXRuntimeRepair(file) {
+  return getRuntimeRepairTypeForFile(file) === "DirectX";
+}
+
+function isVcRuntimeRepair(file) {
+  return getRuntimeRepairTypeForFile(file) === "VC++";
+}
+
+function isRtpRuntimeRepair(file) {
+  return getRuntimeRepairTypeForFile(file) === "RPG Maker RTP";
+}
+
+function labelRuntimeRepairEvidence(label, paths) {
+  return paths.map((path) => `${label}: ${path}`);
+}
+
+function getBundledRuntimeRepairs(files) {
+  const directX = samplePaths(files, isDirectXRuntimeRepair, 3);
+  const vc = samplePaths(files, isVcRuntimeRepair, 3);
+  const rtp = samplePaths(files, isRtpRuntimeRepair, 3);
+  const evidence = compactEvidence(
+    [
+      ...labelRuntimeRepairEvidence("DirectX", directX),
+      ...labelRuntimeRepairEvidence("VC++", vc),
+      ...labelRuntimeRepairEvidence("RPG Maker RTP", rtp),
+    ],
+    6,
+  );
+
+  return {
+    directX,
+    vc,
+    rtp,
+    evidence,
+    hasAny: Boolean(evidence.length),
+  };
+}
+
 function stripLastExtension(path) {
   return path.replace(/\.[^/.]+$/, "");
 }
@@ -2396,6 +2506,7 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
   const previewedArchiveSet = packageSets.find((set) => set.archivePreview?.status === "ok");
   const previewWithLaunch = packageSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.launchCandidateCount);
   const previewWithInstaller = packageSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.installerCount);
+  const previewWithRuntimeRepair = packageSets.find((set) => getPreviewRuntimeRepairSamples(set.archivePreview).length);
 
   if (archives.length && !executableCount) {
     steps.push({
@@ -2429,6 +2540,14 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
     steps.push({
       title: "包/镜像元数据已预检",
       body: "桌面版已读取本地目录或介质元数据，但还没有发现明确启动入口。下一步是点击准备动作或手动完整解压/挂载，再用处理后的目录重新诊断。",
+    });
+  }
+
+  if (previewWithRuntimeRepair) {
+    const sample = getPreviewRuntimeRepairSamples(previewWithRuntimeRepair.archivePreview)[0];
+    steps.push({
+      title: "包内有运行库修复项",
+      body: `预检里看到了 ${sample}。它通常不是主入口；准备并重扫后仍出现缺 DLL、黑屏、RTP/RGSS 等现象时，再回到对应修复项处理。`,
     });
   }
 
@@ -2466,6 +2585,22 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
   }
 
   return steps;
+}
+
+function getPreviewRuntimeRepairSamples(preview) {
+  if (!preview?.signals) return [];
+  if (Array.isArray(preview.signals.runtimeRepairSamples) && preview.signals.runtimeRepairSamples.length) {
+    return compactEvidence(preview.signals.runtimeRepairSamples, 4);
+  }
+  return compactEvidence(
+    (preview.signals.installerSamples || [])
+      .map((sample) => {
+        const type = getRuntimeRepairType(sample);
+        return type ? `${type}: ${sample}` : "";
+      })
+      .filter(Boolean),
+    4,
+  );
 }
 
 function groupBy(items, getter) {
@@ -2948,12 +3083,15 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const directXError = failureSymptoms.has("black-screen") || hasErrorRecipe(errorDiagnostics, "directx-legacy");
   const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist");
   const rtpError = hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp");
+  const runtimeRepairError = directXError || vcError || rtpError || failureSymptoms.has("missing-dll") || failureSymptoms.has("black-screen");
   const permissionError = hasErrorRecipe(errorDiagnostics, "permission-write");
   const webFileError = hasErrorRecipe(errorDiagnostics, "web-local-files");
-  const directXInstallers = samplePaths(files, (file) => /(dxsetup|dxwebsetup|directx|d3dx)/i.test(file.lowerPath), 3);
-  const vcInstallers = samplePaths(files, (file) => /(vcredist|vc_redist|visual.?c|redist)/i.test(file.lowerPath), 3);
+  const bundledRuntimeRepairs = getBundledRuntimeRepairs(files);
+  const directXInstallers = bundledRuntimeRepairs.directX;
+  const vcInstallers = bundledRuntimeRepairs.vc;
   const rtpEvidence = compactEvidence(
     [
+      ...bundledRuntimeRepairs.rtp,
       ...samplePaths(files, (file) => /^RGSS\d+.*\.dll$/i.test(file.name) || file.name === "Game.ini", 3),
       ...engines.filter((engine) => engine.id === "rpgmaker").flatMap((engine) => engine.evidence.slice(0, 2)),
     ],
@@ -3077,6 +3215,23 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       evidence: compactEvidence([...nonAsciiPaths, ...longPaths], 4),
     }),
   );
+
+  if (bundledRuntimeRepairs.hasAny) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "bundled-runtime",
+        title: "包内运行库/修复工具",
+        status: runtimeRepairError ? "warning" : "info",
+        detail: runtimeRepairError
+          ? "目录里看到了运行库安装器，同时当前报错或现象指向运行环境缺口。"
+          : "目录里看到了运行库安装器；它们通常是修复项，不是游戏主入口。",
+        action: runtimeRepairError
+          ? "先不要把这些当主程序；如果报错点名 DirectX、VC++ 或 RTP/RGSS，再运行对应修复项或补齐官方运行库后重试。"
+          : "正常优先从推荐游戏入口启动；只有缺 DLL、黑屏、RTP/RGSS 等报错时再回到这些修复项。",
+        evidence: bundledRuntimeRepairs.evidence,
+      }),
+    );
+  }
 
   checks.push(
     makeEnvironmentCheck({
@@ -3648,7 +3803,7 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
     }
   }
 
-  for (const checkId of ["commercial-engine", "path", "locale", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
+  for (const checkId of ["commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
     const check = envChecks.get(checkId);
     if (!check || check.status !== "warning") continue;
     const recipeId = getEnvironmentRecipeId(check.id);
@@ -3731,6 +3886,36 @@ function dedupeRoadmapSteps(steps) {
   });
 }
 
+function applyDesktopEnvironmentToAnalysis(analysis, desktopEnvironment) {
+  if (!analysis || !desktopEnvironment?.checks?.length) return analysis;
+  analysis.desktopEnvironment = desktopEnvironment;
+  const nativeSteps = buildDesktopEnvironmentRoadmapSteps(desktopEnvironment);
+  const baseSteps = analysis.roadmap.steps.filter((step) => step.source !== "desktop-environment");
+  const normalized = dedupeRoadmapSteps([...baseSteps, ...nativeSteps])
+    .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title));
+  analysis.roadmap = {
+    steps: normalized,
+    summary: summarizeRoadmap(normalized, analysis.findings, analysis.launchCandidates),
+  };
+  return analysis;
+}
+
+function buildDesktopEnvironmentRoadmapSteps(desktopEnvironment) {
+  return (desktopEnvironment.checks || [])
+    .filter((check) => check.status === "warning")
+    .map((check) => ({
+      id: `native-${check.id}`,
+      title: check.title,
+      state: "todo",
+      stateLabel: getRoadmapStateLabel("todo"),
+      priority: getDesktopEnvironmentRoadmapPriority(check.id),
+      detail: `本机检测：${check.detail}`,
+      action: check.action,
+      evidence: compactEvidence(check.evidence || [], 4),
+      source: "desktop-environment",
+    }));
+}
+
 function summarizeRoadmap(steps, findings, launchCandidates) {
   const blocked = steps.filter((step) => step.state === "blocked").length;
   const todo = steps.filter((step) => step.state === "todo").length;
@@ -3791,6 +3976,7 @@ function getEnvironmentRoadmapPriority(id) {
     "commercial-engine": 35,
     path: 40,
     locale: 50,
+    "bundled-runtime": 58,
     directx: 60,
     vcredist: 70,
     rtp: 80,
@@ -3798,6 +3984,16 @@ function getEnvironmentRoadmapPriority(id) {
     "web-vn": 100,
   };
   return priorities[id] || 120;
+}
+
+function getDesktopEnvironmentRoadmapPriority(id) {
+  const priorities = {
+    "locale-native": 55,
+    "directx-native": 62,
+    "vcredist-native": 72,
+    "rtp-native": 82,
+  };
+  return priorities[id] || 95;
 }
 
 function getEnvironmentRecipeId(id) {
@@ -3980,6 +4176,37 @@ function setOcrBusy(isBusy, message) {
   setOcrStatus(message || getUiText("ocrHint"), isBusy ? "working" : "idle");
 }
 
+async function runDesktopEnvironmentCheck(button) {
+  if (!desktopApi?.checkEnvironment) return;
+  desktopEnvironmentState = {
+    status: "checking",
+    result: desktopEnvironmentState.result,
+    error: "",
+  };
+  if (button) button.disabled = true;
+  if (currentAnalysis) render();
+
+  try {
+    const result = await desktopApi.checkEnvironment();
+    if (!result?.ok) throw new Error(result?.message || getUiText("runtimeCheckFailed"));
+    desktopEnvironmentState = { status: "done", result, error: "" };
+    if (currentAnalysis) {
+      applyDesktopEnvironmentToAnalysis(currentAnalysis, result);
+      refreshCurrentReport();
+      render();
+    }
+    showToast(getUiText("toastRuntimeCheckDone"));
+  } catch (error) {
+    desktopEnvironmentState = {
+      status: "error",
+      result: desktopEnvironmentState.result,
+      error: error?.message || String(error || getUiText("runtimeCheckFailed")),
+    };
+    if (currentAnalysis) render();
+    showToast(getUiText("toastRuntimeCheckFailed"));
+  }
+}
+
 function applyRecognizedErrorText(text, sourceName) {
   const clean = normalizeOcrResultText(text);
   if (!clean) {
@@ -4125,6 +4352,7 @@ async function setFiles(files, options = {}) {
     pendingLaunchFollowup = null;
     currentAnalysis = analyze(currentFiles, errorInput.value, launchFailureState);
     if (options.desktopMeta) currentAnalysis.desktopMeta = options.desktopMeta;
+    if (desktopEnvironmentState.result) applyDesktopEnvironmentToAnalysis(currentAnalysis, desktopEnvironmentState.result);
     refreshCurrentReport();
     updateScanState({
       title: currentAnalysis.mode.label,
@@ -4825,9 +5053,39 @@ function renderEnvironment(analysis) {
         <span>${counts.info} ${escapeHtml(getUiText("observations"))}</span>
       </div>
     </article>
+    ${renderDesktopEnvironmentAssistant(analysis)}
     <div class="environment-grid">
       ${environment.checks.map(renderEnvironmentCheck).join("")}
     </div>
+  `;
+}
+
+function renderDesktopEnvironmentAssistant(analysis) {
+  const result = analysis.desktopEnvironment || desktopEnvironmentState.result;
+  const isChecking = desktopEnvironmentState.status === "checking";
+  const isError = desktopEnvironmentState.status === "error";
+  const status = result?.summary?.status || (isError ? "warning" : "info");
+  const title = result?.summary?.label || getUiText(isError ? "runtimeCheckFailed" : "runtimeAssistantTitle");
+  const detail = result?.summary?.detail || desktopEnvironmentState.error || getUiText(desktopApi?.checkEnvironment ? "runtimeCheckEmpty" : "runtimeAssistantDesktopOnly");
+  const checkedAt = result?.checkedAt ? `<p class="runtime-checked-at">${escapeHtml(getUiText("runtimeCheckedAt", { time: formatLaunchHistoryTime(result.checkedAt) }))}</p>` : "";
+  const action = desktopApi?.checkEnvironment
+    ? `<button type="button" data-environment-action="check-runtime" ${isChecking ? "disabled" : ""}>${escapeHtml(getUiText(isChecking ? "runtimeChecking" : "runtimeCheck"))}</button>`
+    : "";
+  const checks = result?.checks?.length
+    ? `<div class="environment-grid native-environment-grid">${result.checks.map(renderEnvironmentCheck).join("")}</div>`
+    : "";
+
+  return `
+    <article class="runtime-assistant ${status}">
+      <div>
+        <h4>${escapeHtml(title)}</h4>
+        <p>${escapeHtml(getUiText("runtimeAssistantBody"))}</p>
+        <p>${escapeHtml(detail)}</p>
+        ${checkedAt}
+      </div>
+      <div class="runtime-assistant-actions">${action}</div>
+    </article>
+    ${checks}
   `;
 }
 
@@ -5114,6 +5372,7 @@ function renderArchivePreview(preview) {
   const statusClass = preview.status === "ok" ? "good" : "warn";
   const engineNames = (preview.signals?.engineHints || []).slice(0, 2).map((hint) => hint.name);
   const installerCount = preview.signals?.installerCount || 0;
+  const runtimeRepairCount = preview.signals?.runtimeRepairCount || getPreviewRuntimeRepairSamples(preview).length;
   const fileLabel = preview.packageKind === "disc-image" ? getUiText("imageFiles") : getUiText("internalFiles");
   const sampleFiles = (preview.sampleFiles || [])
     .slice(0, 5)
@@ -5131,6 +5390,7 @@ function renderArchivePreview(preview) {
         <span class="chip">${formatNumber(preview.fileCount || 0)} ${escapeHtml(fileLabel)}</span>
         <span class="chip">${formatNumber(preview.signals?.launchCandidateCount || 0)} ${escapeHtml(getUiText("launchClues"))}</span>
         ${installerCount ? `<span class="chip">${formatNumber(installerCount)} ${escapeHtml(getUiText("installerClues"))}</span>` : ""}
+        ${runtimeRepairCount ? `<span class="chip warn">${formatNumber(runtimeRepairCount)} ${escapeHtml(getUiText("runtimeRepairClues"))}</span>` : ""}
         ${engineNames.map((name) => `<span class="chip good">${escapeHtml(name)}</span>`).join("")}
         ${preview.truncated ? `<span class="chip warn">${escapeHtml(getUiText("truncated"))}</span>` : ""}
         ${warnings}
@@ -5342,6 +5602,18 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
     lines.push(`  - ${labels.action}: ${check.action}`);
     for (const evidence of check.evidence) lines.push(`  - ${labels.evidence}: ${evidence}`);
   }
+  if (analysis.desktopEnvironment?.checks?.length) {
+    lines.push("");
+    lines.push(`## ${getUiText("runtimeAssistantTitle", {}, language)}`);
+    lines.push(`- ${labels.summary}: ${analysis.desktopEnvironment.summary?.label || ""}`);
+    lines.push(`- ${labels.detail}: ${analysis.desktopEnvironment.summary?.detail || ""}`);
+    if (analysis.desktopEnvironment.checkedAt) lines.push(`- ${labels.generated}: ${analysis.desktopEnvironment.checkedAt}`);
+    for (const check of analysis.desktopEnvironment.checks) {
+      lines.push(`- [${check.status}] ${check.title}: ${check.detail}`);
+      lines.push(`  - ${labels.action}: ${check.action}`);
+      for (const evidence of check.evidence || []) lines.push(`  - ${labels.evidence}: ${evidence}`);
+    }
+  }
   lines.push("");
   lines.push(`## ${labels.errorRecipes}`);
   if (analysis.errorDiagnostics.hasText) {
@@ -5385,9 +5657,11 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
       lines.push(`- ${set.format}: ${set.summary}`);
       lines.push(`  - ${labels.nextStep}: ${set.nextStep}`);
       if (set.archivePreview) {
-        lines.push(`  - ${set.archivePreview.format || "Package"} preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} metadata entries, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues, ${set.archivePreview.signals?.installerCount || 0} installer clues`);
+        const runtimeRepairSamples = getPreviewRuntimeRepairSamples(set.archivePreview);
+        lines.push(`  - ${set.archivePreview.format || "Package"} preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} metadata entries, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues, ${set.archivePreview.signals?.installerCount || 0} installer clues, ${runtimeRepairSamples.length} runtime repair clues`);
         for (const sample of set.archivePreview.signals?.launchSamples || []) lines.push(`  - Preview launch clue: ${sample}`);
         for (const sample of set.archivePreview.signals?.installerSamples || []) lines.push(`  - Preview installer clue: ${sample}`);
+        for (const sample of runtimeRepairSamples) lines.push(`  - Preview runtime repair clue: ${sample}`);
       }
       for (const item of set.files.slice(0, 8)) {
         lines.push(`  - ${item.file.path} (${item.role})`);
@@ -5510,6 +5784,21 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     });
   }
 
+  if (analysis.desktopEnvironment?.checks?.length) {
+    entries.push({
+      path: "desktop-environment.json",
+      content: JSON.stringify(
+        {
+          schema: "galaid.desktopEnvironment.v1",
+          ...analysis.desktopEnvironment,
+        },
+        null,
+        2,
+      ),
+      type: "application/json;charset=utf-8",
+    });
+  }
+
   for (const profile of profiles) {
     entries.push({
       path: `profiles/${profile.title ? slugifyFilename(profile.title, profile.entryPath) : profile.entryPath}.galaid-profile.json`,
@@ -5563,6 +5852,7 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
       errorRecipeMatches: analysis.errorDiagnostics.matches.length,
       launchFailureEvidence: Boolean(analysis.launchFailure?.hasEvidence),
       environmentChecks: analysis.environment.checks.length,
+      desktopEnvironmentChecks: analysis.desktopEnvironment?.checks?.length || 0,
       roadmapSteps: analysis.roadmap.steps.length,
       archivePreviews: [...analysis.packages.archiveSets, ...analysis.packages.discSets].filter((set) => set.archivePreview).length,
     },
@@ -5601,6 +5891,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- manifest.json: bundle summary",
     "- file-manifest.json: sanitized file list metadata",
     "- environment-checks.json: environment checklist",
+    "- desktop-environment.json: optional local runtime check result",
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
     "- launch-failure.json: optional manual launch-failure follow-up notes",
@@ -5631,6 +5922,9 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
     lines.push(`- ${labels.launchFailure}: ${getLaunchFailureEvidence(analysis.launchFailure, language).join(", ")}`);
   }
   lines.push(`- ${labels.environmentConclusion}: ${analysis.environment.summary.label}`);
+  if (analysis.desktopEnvironment?.summary?.label) {
+    lines.push(`- ${getUiText("runtimeAssistantTitle", {}, language)}: ${analysis.desktopEnvironment.summary.label}`);
+  }
   lines.push(`- ${labels.nextStep}: ${analysis.roadmap.summary.label}`);
   lines.push(`- ${labels.recipeResult}: ${analysis.errorDiagnostics.summary.label}`);
   lines.push(`- ${labels.supportFile}: ${filename}`);
@@ -6281,8 +6575,10 @@ function readLaunchFailureForm() {
 function rerunCurrentAnalysis() {
   if (!currentFiles.length) return;
   const desktopMeta = currentAnalysis?.desktopMeta;
+  const desktopEnvironment = currentAnalysis?.desktopEnvironment || desktopEnvironmentState.result;
   currentAnalysis = analyze(currentFiles, errorInput.value, launchFailureState);
   if (desktopMeta) currentAnalysis.desktopMeta = desktopMeta;
+  if (desktopEnvironment) applyDesktopEnvironmentToAnalysis(currentAnalysis, desktopEnvironment);
   refreshCurrentReport();
   updateScanState({
     title: currentAnalysis.mode.label,
@@ -6385,6 +6681,15 @@ roadmapPanel.addEventListener("click", (event) => {
 
   if (button.dataset.roadmapAction === "copy-checklist") {
     void copyText(buildRoadmapChecklistText(currentAnalysis, getAssistantLanguage()), getUiText("toastRoadmapCopied"));
+  }
+});
+
+environmentPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-environment-action]");
+  if (!button || !currentAnalysis) return;
+
+  if (button.dataset.environmentAction === "check-runtime") {
+    void runDesktopEnvironmentCheck(button);
   }
 });
 
