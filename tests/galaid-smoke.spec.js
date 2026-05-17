@@ -228,13 +228,13 @@ test("desktop one-click flow opens install media when no game launcher exists", 
           ok: true,
           files: [
             {
-              name: "setup.exe",
-              path: "InstallDisc/setup.exe",
-              lowerPath: "installdisc/setup.exe",
+              name: "Start.exe",
+              path: "InstallDisc/Start.exe",
+              lowerPath: "installdisc/start.exe",
               ext: "exe",
               size: 2412000,
               depth: 1,
-              fullPath: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\setup.exe",
+              fullPath: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\Start.exe",
             },
             {
               name: "autorun.inf",
@@ -244,6 +244,7 @@ test("desktop one-click flow opens install media when no game launcher exists", 
               size: 400,
               depth: 1,
               fullPath: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\autorun.inf",
+              textPreview: "[autorun]\nopen=Start.exe /install\n",
             },
             {
               name: "data1.cab",
@@ -270,8 +271,8 @@ test("desktop one-click flow opens install media when no game launcher exists", 
         return {
           ok: true,
           pid: 3456,
-          entryName: "setup.exe",
-          relativePath: "InstallDisc/setup.exe",
+          entryName: "Start.exe",
+          relativePath: "InstallDisc/Start.exe",
           workingDirectory: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc",
         };
       },
@@ -312,12 +313,56 @@ test("desktop one-click flow opens install media when no game launcher exists", 
   }));
 
   expect(result.prepare.packageFullPath).toBe("C:\\Downloads\\InstallDisc.iso");
-  expect(result.launch.entryFullPath).toBe("C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\setup.exe");
+  expect(result.launch.entryFullPath).toBe("C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\Start.exe");
   expect(result.launchCandidateCount).toBe(0);
-  expect(result.installerEntry).toBe("InstallDisc/setup.exe");
+  expect(result.installerEntry).toBe("InstallDisc/Start.exe");
   expect(result.pending).toBe(false);
   await expect(page.locator(".one-stop-wizard")).toContainText("打开安装盘入口");
   await expect(page.getByRole("heading", { name: "安装盘入口", exact: true })).toBeVisible();
+});
+
+test("autorun.inf targets unusual setup names as install media", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "autorun.inf",
+        path: "Disc/autorun.inf",
+        lowerPath: "disc/autorun.inf",
+        ext: "inf",
+        size: 96,
+        depth: 1,
+        textPreview: "[autorun]\nshellexecute=Install/SetupJP.exe /silent\n",
+      },
+      {
+        name: "SetupJP.exe",
+        path: "Disc/Install/SetupJP.exe",
+        lowerPath: "disc/install/setupjp.exe",
+        ext: "exe",
+        size: 3200000,
+        depth: 2,
+        fullPath: "C:\\Downloads\\Disc\\Install\\SetupJP.exe",
+      },
+      {
+        name: "data1.cab",
+        path: "Disc/data1.cab",
+        lowerPath: "disc/data1.cab",
+        ext: "cab",
+        size: 760000000,
+        depth: 1,
+      },
+    ]);
+    return {
+      launchCandidates: analysis.launchCandidates.map((candidate) => candidate.file.path),
+      installerEntry: analysis.installerCandidates[0]?.file.path,
+      installerReasons: analysis.installerCandidates[0]?.reasons || [],
+    };
+  });
+
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.installerEntry).toBe("Disc/Install/SetupJP.exe");
+  expect(result.installerReasons).toContain("autorun.inf target");
 });
 
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {

@@ -3,6 +3,7 @@ const path = require("node:path");
 const { previewArchiveFile } = require("./archive-preview");
 
 const SCAN_PROGRESS_BATCH = 1000;
+const TEXT_PREVIEW_MAX_BYTES = 16 * 1024;
 
 async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
   const files = [];
@@ -44,13 +45,13 @@ async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
             skipped += 1;
             continue;
           }
-          files.push(await withArchivePreview(toFileRecord(absolutePath, path.relative(rootParent, absolutePath), fileStat.size)));
+          files.push(await enrichFileRecord(toFileRecord(absolutePath, path.relative(rootParent, absolutePath), fileStat.size)));
           scanned += 1;
           if (scanned % SCAN_PROGRESS_BATCH === 0) onProgress({ scanned, skipped });
         }
       }
     } else if (stat.isFile()) {
-      files.push(await withArchivePreview(toFileRecord(selectedPath, path.basename(selectedPath), stat.size)));
+      files.push(await enrichFileRecord(toFileRecord(selectedPath, path.basename(selectedPath), stat.size)));
       scanned += 1;
     }
   }
@@ -59,9 +60,32 @@ async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
   return { files, skipped, scanned };
 }
 
+async function enrichFileRecord(file) {
+  return withArchivePreview(await withTextPreview(file));
+}
+
 async function withArchivePreview(file) {
   const archivePreview = await previewArchiveFile(file.fullPath, file.ext);
   return archivePreview ? { ...file, archivePreview } : file;
+}
+
+async function withTextPreview(file) {
+  if (!shouldReadTextPreview(file)) return file;
+  try {
+    const text = await fs.readFile(file.fullPath, "utf8");
+    return { ...file, textPreview: text.slice(0, TEXT_PREVIEW_MAX_BYTES) };
+  } catch {
+    return file;
+  }
+}
+
+function shouldReadTextPreview(file) {
+  return Boolean(
+    file?.fullPath &&
+      file.name?.toLowerCase() === "autorun.inf" &&
+      file.size > 0 &&
+      file.size <= TEXT_PREVIEW_MAX_BYTES,
+  );
 }
 
 async function safeStat(filePath) {

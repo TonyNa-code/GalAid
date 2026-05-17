@@ -3079,6 +3079,8 @@ function scoreEvidence(file) {
 
 function detectLaunchCandidates(files, engines) {
   const engineIds = new Set(engines.map((engine) => engine.id));
+  const autorunTargets = getAutorunTargetPaths(files);
+  const installMediaPayload = hasInstallMediaPayload(files);
   const candidates = [];
 
   for (const file of files) {
@@ -3132,7 +3134,10 @@ function detectLaunchCandidates(files, engines) {
         reasons.push("KiriKiri/KAG launcher");
       }
 
-      if (isSetupLike(lower)) {
+      if (isInstallMediaEntry(file, { autorunTargets, installMediaPayload })) {
+        score -= 42;
+        reasons.push("installer/media entry");
+      } else if (isSetupLike(lower)) {
         score -= 42;
         reasons.push("installer or support tool");
       }
@@ -3162,14 +3167,17 @@ function detectLaunchCandidates(files, engines) {
 }
 
 function detectInstallerCandidates(files) {
+  const autorunTargets = getAutorunTargetPaths(files);
+  const installMediaPayload = hasInstallMediaPayload(files);
   const candidates = [];
 
   for (const file of files) {
     if (!["exe", "com"].includes(file.ext)) continue;
-    if (!isInstallMediaEntry(file)) continue;
+    if (!isInstallMediaEntry(file, { autorunTargets, installMediaPayload })) continue;
 
     const lower = file.lowerPath;
     const base = file.name.toLowerCase();
+    const autorunTarget = isAutorunTargetFile(file, autorunTargets);
     const reasons = ["installer/media entry"];
     let score = 45;
 
@@ -3185,9 +3193,17 @@ function detectInstallerCandidates(files) {
       score += 12;
       reasons.push("classic setup name");
     }
+    if (/^(setup|install|installer)[\w.-]*\.(exe|com)$/i.test(base) && !["setup.exe", "install.exe"].includes(base)) {
+      score += 8;
+      reasons.push("setup/install naming");
+    }
     if (base.startsWith("autorun.")) {
       score += 8;
       reasons.push("disc autorun entry");
+    }
+    if (autorunTarget) {
+      score += 22;
+      reasons.push("autorun.inf target");
     }
     if (/(\/|^)setup\//i.test(lower) || /(\/|^)install\//i.test(lower)) {
       score += 4;
@@ -3206,17 +3222,123 @@ function detectInstallerCandidates(files) {
     .slice(0, 4);
 }
 
-function isInstallMediaEntry(file) {
+function isInstallMediaEntry(file, context = {}) {
   const lower = file.lowerPath || normalizePath(file.path).toLowerCase();
   const base = file.name.toLowerCase();
   if (getRuntimeRepairTypeForFile(file)) return false;
   if (/(unins|uninstall|update|patch|crash|vcredist|vc_redist|redist|dxsetup|dxwebsetup|directx|dotnet|support|config|setting|option|keygen|crack|serial|no.?dvd|no.?cd|免dvd|免cd)/i.test(lower)) {
     return false;
   }
+  if (isAutorunTargetFile(file, context.autorunTargets) && context.installMediaPayload) return true;
   return (
     /^(setup|install|installer|autorun)\.(exe|com)$/i.test(base) ||
-    /(^|\/)(setup|install|installer|autorun)\.(exe|com)$/i.test(lower)
+    /^(setup|install|installer)[\w.-]*\.(exe|com)$/i.test(base) ||
+    /(^|\/)(setup|install|installer|autorun)\.(exe|com)$/i.test(lower) ||
+    (context.installMediaPayload && /(^|\/)(setup|install|installer)[\w.-]*\.(exe|com)$/i.test(lower))
   );
+}
+
+function getAutorunTargetPaths(files) {
+  const targets = new Set();
+  for (const file of files) {
+    if (file.name?.toLowerCase() !== "autorun.inf") continue;
+    const text = getFileTextPreview(file);
+    if (!text) continue;
+    const baseDir = getDirectoryName(file.path);
+    for (const target of parseAutorunTargets(text)) {
+      const relative = baseDir && baseDir !== "." ? `${baseDir}/${target}` : target;
+      const normalized = normalizeAutorunTargetPath(relative);
+      if (normalized) targets.add(normalized.toLowerCase());
+    }
+  }
+  return targets;
+}
+
+function getFileTextPreview(file) {
+  const value = file?.textPreview || file?.previewText || "";
+  return typeof value === "string" ? value : "";
+}
+
+function parseAutorunTargets(text) {
+  const targets = [];
+  let sawSection = false;
+  let inAutorunSection = false;
+
+  for (const rawLine of String(text || "").split(/\r?\n/)) {
+    const line = rawLine.trim().replace(/^\uFEFF/, "");
+    if (!line || line.startsWith(";") || line.startsWith("#")) continue;
+
+    const section = line.match(/^\[([^\]]+)\]$/);
+    if (section) {
+      sawSection = true;
+      inAutorunSection = section[1].trim().toLowerCase() === "autorun";
+      continue;
+    }
+
+    if (sawSection && !inAutorunSection) continue;
+    const separator = line.indexOf("=");
+    if (separator < 0) continue;
+
+    const key = line.slice(0, separator).trim().toLowerCase();
+    if (!["open", "shellexecute", "shell\\open\\command"].includes(key)) continue;
+
+    const target = extractAutorunCommandPath(line.slice(separator + 1));
+    if (target) targets.push(target);
+  }
+
+  return [...new Set(targets)];
+}
+
+function extractAutorunCommandPath(command) {
+  let value = stripAutorunInlineComment(String(command || "")).trim();
+  if (!value) return "";
+  if (value.startsWith("@")) value = value.slice(1).trim();
+
+  let target = "";
+  if (value.startsWith('"')) {
+    const closeIndex = value.indexOf('"', 1);
+    target = closeIndex > 1 ? value.slice(1, closeIndex) : value.slice(1);
+  } else {
+    target = value.split(/\s+/)[0] || "";
+  }
+
+  target = normalizeAutorunTargetPath(target.replace(/^file:/i, ""));
+  if (!target || /^[a-z]+:/i.test(target) || target.startsWith("//")) return "";
+  if (!["exe", "com"].includes(getExt(target))) return "";
+  if (/^(rundll32|cmd|command)\.(exe|com)$/i.test(getBaseName(target))) return "";
+  return target;
+}
+
+function stripAutorunInlineComment(value) {
+  let inQuote = false;
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    if (char === '"') inQuote = !inQuote;
+    if (!inQuote && (char === ";" || char === "#")) return value.slice(0, index);
+  }
+  return value;
+}
+
+function normalizeAutorunTargetPath(value) {
+  return normalizePath(value)
+    .replace(/^(\.\/)+/, "")
+    .replace(/^\/+/, "");
+}
+
+function isAutorunTargetFile(file, autorunTargets) {
+  return Boolean(file?.lowerPath && autorunTargets?.has?.(file.lowerPath));
+}
+
+function hasInstallMediaPayload(files) {
+  return files.some((file) => {
+    const lower = file.lowerPath || "";
+    const base = file.name?.toLowerCase() || "";
+    return (
+      /^data\d*\.cab$/i.test(base) ||
+      /(^|\/)(data\d*\.cab|setup\.(ini|ins|iss)|layout\.bin|isdata\.(dat|cab|hdr)|ikernel\.ex_)$/i.test(lower) ||
+      /(^|\/)(installshield|disk\d+)(\/|$)/i.test(lower)
+    );
+  });
 }
 
 function buildLaunchProfiles(launchCandidates, engines, packages) {
