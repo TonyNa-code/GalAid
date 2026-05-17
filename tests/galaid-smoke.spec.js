@@ -365,6 +365,58 @@ test("autorun.inf targets unusual setup names as install media", async ({ page }
   expect(result.installerReasons).toContain("autorun.inf target");
 });
 
+test("MSI installers are install media entries and desktop launchable", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "Installer.msi",
+        path: "Disc/Installer.msi",
+        lowerPath: "disc/installer.msi",
+        ext: "msi",
+        size: 88000000,
+        depth: 1,
+        fullPath: "C:\\Downloads\\Disc\\Installer.msi",
+      },
+      {
+        name: "data1.cab",
+        path: "Disc/data1.cab",
+        lowerPath: "disc/data1.cab",
+        ext: "cab",
+        size: 760000000,
+        depth: 1,
+      },
+    ]);
+    return {
+      launchCandidates: analysis.launchCandidates.map((candidate) => candidate.file.path),
+      installerEntry: analysis.installerCandidates[0]?.file.path,
+      installerReasons: analysis.installerCandidates[0]?.reasons || [],
+      canLaunch: canDesktopLaunchFile(analysis.installerCandidates[0]?.file),
+      html: renderInstallMediaEntries(analysis),
+    };
+  });
+
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.installerEntry).toBe("Disc/Installer.msi");
+  expect(result.installerReasons).toContain("Windows Installer package");
+  expect(result.canLaunch).toBe(true);
+  expect(result.html).toContain("data-launch-action=\"installer-candidate\"");
+});
+
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

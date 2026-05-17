@@ -2,7 +2,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com"]);
+const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com", "msi"]);
 const SHORTCUT_EXT = ".lnk";
 
 function buildLaunchAllowlist(files) {
@@ -37,8 +37,9 @@ async function launchAllowedEntry({
   const resolved = await resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform, statImpl });
   if (!resolved.ok) return resolved;
   const { entry } = resolved;
+  const launch = getLaunchCommand(entry);
 
-  const child = spawnImpl(entry.entryFullPath, [], {
+  const child = spawnImpl(launch.command, launch.args, {
     cwd: entry.workingDirectoryFull,
     detached: true,
     stdio: "ignore",
@@ -114,6 +115,19 @@ async function resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform = 
   return { ok: true, entry };
 }
 
+function getLaunchCommand(entry) {
+  if (path.extname(entry.entryFullPath).toLowerCase() === ".msi") {
+    return {
+      command: "msiexec.exe",
+      args: ["/i", entry.entryFullPath],
+    };
+  }
+  return {
+    command: entry.entryFullPath,
+    args: [],
+  };
+}
+
 function normalizeShortcutPath(shortcutPath) {
   if (!shortcutPath) return "";
   const resolved = path.resolve(shortcutPath);
@@ -124,6 +138,7 @@ module.exports = {
   WINDOWS_LAUNCH_EXTS,
   buildLaunchAllowlist,
   createShortcutForAllowedEntry,
+  getLaunchCommand,
   isWindowsLaunchablePath,
   launchAllowedEntry,
   normalizeShortcutPath,

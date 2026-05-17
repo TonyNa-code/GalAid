@@ -7,6 +7,7 @@ on:
         description: Existing GitHub release tag to receive the Windows portable exe
         required: false
         type: string
+        default: v0.1.9-beta
   push:
     tags:
       - "v*"

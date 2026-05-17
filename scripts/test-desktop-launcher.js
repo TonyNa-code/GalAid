@@ -10,15 +10,19 @@ const {
 
 async function main() {
   const gamePath = path.resolve("GameRoot", "Game.exe");
+  const msiPath = path.resolve("GameRoot", "Installer.msi");
   const setupPath = path.resolve("GameRoot", "setup.bat");
   const allowlist = buildLaunchAllowlist([
     { fullPath: gamePath, path: "GameRoot/Game.exe" },
+    { fullPath: msiPath, path: "GameRoot/Installer.msi" },
     { fullPath: setupPath, path: "GameRoot/setup.bat" },
   ]);
 
   assert.equal(isWindowsLaunchablePath(gamePath), true);
+  assert.equal(isWindowsLaunchablePath(msiPath), true);
   assert.equal(isWindowsLaunchablePath(setupPath), false);
   assert.equal(allowlist.has(gamePath), true);
+  assert.equal(allowlist.has(msiPath), true);
   assert.equal(allowlist.has(setupPath), false);
 
   const spawned = [];
@@ -41,6 +45,24 @@ async function main() {
   assert.deepEqual(spawned[0].args, []);
   assert.equal(spawned[0].options.cwd, path.dirname(gamePath));
   assert.equal(spawned[0].options.detached, true);
+
+  const msiResult = await launchAllowedEntry({
+    allowlist,
+    entryFullPath: msiPath,
+    platform: "win32",
+    statImpl: async () => ({ isFile: () => true }),
+    spawnImpl: (command, args, options) => {
+      spawned.push({ command, args, options });
+      return { pid: 2345, unref() {} };
+    },
+  });
+
+  assert.equal(msiResult.ok, true);
+  assert.equal(msiResult.entryName, "Installer.msi");
+  assert.equal(spawned.length, 2);
+  assert.equal(spawned[1].command, "msiexec.exe");
+  assert.deepEqual(spawned[1].args, ["/i", msiPath]);
+  assert.equal(spawned[1].options.cwd, path.dirname(msiPath));
 
   const rejected = await launchAllowedEntry({
     allowlist,

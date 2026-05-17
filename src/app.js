@@ -606,7 +606,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openingRepairTool: "打开中...",
       repairToolUnavailable: "桌面版可打开",
       installMediaTitle: "安装盘入口",
-      installMediaBody: "这些是 setup/autorun 这类安装介质入口；它们不算游戏主程序，但在光盘镜像或古早安装包里可能是正确下一步。",
+      installMediaBody: "这些是 setup/autorun/MSI 这类安装介质入口；它们不算游戏主程序，但在光盘镜像或古早安装包里可能是正确下一步。",
       installMediaRecommended: "建议先打开",
       installMediaReference: "安装入口",
       installMediaCardBody: "安装完成后，把安装后的完整游戏目录拖回 GalAid 再一键启动。",
@@ -967,7 +967,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openingRepairTool: "Opening...",
       repairToolUnavailable: "Desktop only",
       installMediaTitle: "Install media entries",
-      installMediaBody: "These setup/autorun entries are not game launchers, but they may be the right next step for disc images or older installer packages.",
+      installMediaBody: "These setup/autorun/MSI entries are not game launchers, but they may be the right next step for disc images or older installer packages.",
       installMediaRecommended: "Try installer first",
       installMediaReference: "Install entry",
       installMediaCardBody: "After installation, drop the installed game folder back into GalAid and launch from there.",
@@ -1328,7 +1328,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openingRepairTool: "起動中...",
       repairToolUnavailable: "デスクトップ版のみ",
       installMediaTitle: "インストールメディア入口",
-      installMediaBody: "setup/autorun 形式の入口です。ゲーム本体ではありませんが、ディスクイメージや古いインストールパッケージでは正しい次の手順になることがあります。",
+      installMediaBody: "setup/autorun/MSI 形式の入口です。ゲーム本体ではありませんが、ディスクイメージや古いインストールパッケージでは正しい次の手順になることがあります。",
       installMediaRecommended: "先に開く候補",
       installMediaReference: "インストール入口",
       installMediaCardBody: "インストール後、インストール先の完全なゲームフォルダを GalAid に投入して起動してください。",
@@ -3172,7 +3172,7 @@ function detectInstallerCandidates(files) {
   const candidates = [];
 
   for (const file of files) {
-    if (!["exe", "com"].includes(file.ext)) continue;
+    if (!["exe", "com", "msi"].includes(file.ext)) continue;
     if (!isInstallMediaEntry(file, { autorunTargets, installMediaPayload })) continue;
 
     const lower = file.lowerPath;
@@ -3192,6 +3192,10 @@ function detectInstallerCandidates(files) {
     if (base === "setup.exe" || base === "install.exe") {
       score += 12;
       reasons.push("classic setup name");
+    }
+    if (file.ext === "msi") {
+      score += 14;
+      reasons.push("Windows Installer package");
     }
     if (/^(setup|install|installer)[\w.-]*\.(exe|com)$/i.test(base) && !["setup.exe", "install.exe"].includes(base)) {
       score += 8;
@@ -3231,10 +3235,11 @@ function isInstallMediaEntry(file, context = {}) {
   }
   if (isAutorunTargetFile(file, context.autorunTargets) && context.installMediaPayload) return true;
   return (
-    /^(setup|install|installer|autorun)\.(exe|com)$/i.test(base) ||
-    /^(setup|install|installer)[\w.-]*\.(exe|com)$/i.test(base) ||
-    /(^|\/)(setup|install|installer|autorun)\.(exe|com)$/i.test(lower) ||
-    (context.installMediaPayload && /(^|\/)(setup|install|installer)[\w.-]*\.(exe|com)$/i.test(lower))
+    file.ext === "msi" ||
+    /^(setup|install|installer|autorun)\.(exe|com|msi)$/i.test(base) ||
+    /^(setup|install|installer)[\w.-]*\.(exe|com|msi)$/i.test(base) ||
+    /(^|\/)(setup|install|installer|autorun)\.(exe|com|msi)$/i.test(lower) ||
+    (context.installMediaPayload && /(^|\/)(setup|install|installer)[\w.-]*\.(exe|com|msi)$/i.test(lower))
   );
 }
 
@@ -3304,7 +3309,7 @@ function extractAutorunCommandPath(command) {
 
   target = normalizeAutorunTargetPath(target.replace(/^file:/i, ""));
   if (!target || /^[a-z]+:/i.test(target) || target.startsWith("//")) return "";
-  if (!["exe", "com"].includes(getExt(target))) return "";
+  if (!["exe", "com", "msi"].includes(getExt(target))) return "";
   if (/^(rundll32|cmd|command)\.(exe|com)$/i.test(getBaseName(target))) return "";
   return target;
 }
@@ -5354,7 +5359,7 @@ function canDesktopLaunchFile(file) {
     desktopApi?.launchEntry &&
       desktopApi.platform === "win32" &&
       file?.fullPath &&
-      ["exe", "com"].includes(file.ext),
+      ["exe", "com", "msi"].includes(file.ext),
   );
 }
 
