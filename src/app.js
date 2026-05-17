@@ -594,6 +594,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyStepFixTitle: "失败再诊断",
       emptyStepFixBody: "截图 OCR 或粘贴报错后给出下一步。",
       launchCandidates: "启动候选",
+      runtimeRepairsTitle: "运行库修复工具",
+      runtimeRepairsBody: "这些是包内或目录内看到的 DirectX、VC++、RPG Maker RTP 修复项；它们不是主游戏入口。",
+      runtimeRepairRecommended: "当前报错相关",
+      runtimeRepairReference: "备用修复项",
+      openRepairTool: "打开修复工具",
+      openingRepairTool: "打开中...",
+      repairToolUnavailable: "桌面版可打开",
       diagnosisFindings: "诊断结论",
       evidenceTitle: "判断依据",
       whyMatched: "为什么命中",
@@ -653,6 +660,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "启动中...",
       launchUnavailable: "仅桌面版可启动",
       launchUnsupported: "仅支持 Windows .exe/.com",
+      toastRepairToolStarted: "已打开修复工具：{name}",
       createShortcut: "创建快捷方式",
       creatingShortcut: "创建中...",
       launchHistoryTitle: "最近启动",
@@ -764,6 +772,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastFailureCleared: "启动失败跟进已清空",
       toastProfileJsonCopied: "配置 JSON 已复制",
       toastLaunchStarted: "已启动 {name}",
+      toastRepairToolStarted: "已打开修复工具：{name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
       toastLaunchFailed: "启动失败",
       toastOneClickNoPackage: "没有可自动准备的压缩包或镜像",
@@ -799,6 +808,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       riskFindings: "Risk findings",
       assistantLanguage: "Assistant language",
       launchCandidates: "Launch candidates",
+      runtimeRepairTools: "运行库修复工具",
       launchProfiles: "Launch profiles",
       launchFailure: "启动失败跟进",
       launchFailureTriage: "问诊答案",
@@ -929,6 +939,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyStepFixTitle: "Fix",
       emptyStepFixBody: "Use screenshot OCR or pasted logs to get the next concrete step.",
       launchCandidates: "Launch candidates",
+      runtimeRepairsTitle: "Runtime repair tools",
+      runtimeRepairsBody: "Bundled DirectX, VC++, or RPG Maker RTP repair tools found in the package or folder. They are not the main game launcher.",
+      runtimeRepairRecommended: "Relevant to current error",
+      runtimeRepairReference: "Backup repair tool",
+      openRepairTool: "Open repair tool",
+      openingRepairTool: "Opening...",
+      repairToolUnavailable: "Desktop only",
       diagnosisFindings: "Diagnosis findings",
       evidenceTitle: "Evidence",
       whyMatched: "Why it matched",
@@ -988,6 +1005,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "Launching...",
       launchUnavailable: "Desktop only",
       launchUnsupported: "Windows .exe/.com only",
+      toastRepairToolStarted: "Repair tool opened: {name}",
       createShortcut: "Create shortcut",
       creatingShortcut: "Creating...",
       launchHistoryTitle: "Recent launches",
@@ -1099,6 +1117,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastFailureCleared: "Launch follow-up cleared",
       toastProfileJsonCopied: "Profile JSON copied",
       toastLaunchStarted: "Launched {name}",
+      toastRepairToolStarted: "Repair tool opened: {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
       toastLaunchFailed: "Launch failed",
       toastOneClickNoPackage: "No package or image can be prepared automatically",
@@ -1134,6 +1153,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       riskFindings: "Risk findings",
       assistantLanguage: "Assistant language",
       launchCandidates: "Launch candidates",
+      runtimeRepairTools: "Runtime repair tools",
       launchProfiles: "Launch profiles",
       launchFailure: "Launch failure follow-up",
       launchFailureTriage: "Triage answers",
@@ -1264,6 +1284,13 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyStepFixTitle: "診断",
       emptyStepFixBody: "画像 OCR や貼り付けたログから次の手順を出します。",
       launchCandidates: "起動候補",
+      runtimeRepairsTitle: "ランタイム修復ツール",
+      runtimeRepairsBody: "パッケージまたはフォルダ内の DirectX、VC++、RPG Maker RTP 修復項目です。ゲーム本体の起動入口ではありません。",
+      runtimeRepairRecommended: "現在のエラーに関連",
+      runtimeRepairReference: "予備の修復項目",
+      openRepairTool: "修復ツールを開く",
+      openingRepairTool: "起動中...",
+      repairToolUnavailable: "デスクトップ版のみ",
       diagnosisFindings: "診断結果",
       evidenceTitle: "根拠",
       whyMatched: "一致理由",
@@ -1434,6 +1461,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastFailureCleared: "起動失敗フォローを消去しました",
       toastProfileJsonCopied: "設定 JSON をコピーしました",
       toastLaunchStarted: "{name} を起動しました",
+      toastRepairToolStarted: "修復ツールを開きました: {name}",
       toastLaunchUnavailable: "ここでは直接起動できません",
       toastLaunchFailed: "起動に失敗しました",
       toastOneClickNoPackage: "自動準備できるパッケージ/イメージがありません",
@@ -1469,6 +1497,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       riskFindings: "注意点",
       assistantLanguage: "診断言語",
       launchCandidates: "起動候補",
+      runtimeRepairTools: "ランタイム修復ツール",
       launchProfiles: "起動プロファイル",
       launchFailure: "起動失敗フォロー",
       launchFailureTriage: "問診回答",
@@ -2068,6 +2097,7 @@ function analyze(files, errorText = "", launchFailureInput = getEmptyLaunchFailu
   const launchFailure = normalizeLaunchFailureInput(launchFailureInput);
   const diagnosticErrorText = combineDiagnosticErrorText(errorText, launchFailure);
   const errorDiagnostics = buildErrorDiagnostics(diagnosticErrorText);
+  const runtimeRepairs = buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure);
   const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, diagnosticErrorText, errorDiagnostics, launchFailure);
   const findings = buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics, launchFailure);
   const roadmap = buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure });
@@ -2084,6 +2114,7 @@ function analyze(files, errorText = "", launchFailureInput = getEmptyLaunchFailu
     packages,
     engines,
     launchCandidates,
+    runtimeRepairs,
     profiles,
     launchFailure,
     errorDiagnostics,
@@ -2222,6 +2253,77 @@ function getBundledRuntimeRepairs(files) {
     evidence,
     hasAny: Boolean(evidence.length),
   };
+}
+
+function buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
+  const failureSymptoms = new Set(launchFailure.symptoms || []);
+  const genericRuntimeSymptom = failureSymptoms.has("missing-dll") || /dll|runtime|ランタイム|运行库|缺少|not found/i.test(launchFailure.note || "");
+  const recommendedTypes = new Set();
+  if (hasErrorRecipe(errorDiagnostics, "directx-legacy") || failureSymptoms.has("black-screen")) recommendedTypes.add("DirectX");
+  if (hasErrorRecipe(errorDiagnostics, "visual-cpp-redist")) recommendedTypes.add("VC++");
+  if (hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp")) recommendedTypes.add("RPG Maker RTP");
+  if (genericRuntimeSymptom) {
+    recommendedTypes.add("DirectX");
+    recommendedTypes.add("VC++");
+    recommendedTypes.add("RPG Maker RTP");
+  }
+
+  const candidates = [];
+  const seen = new Set();
+  for (const file of files) {
+    const type = getRuntimeRepairTypeForFile(file);
+    if (!type || seen.has(file.path)) continue;
+    seen.add(file.path);
+    const recommended = recommendedTypes.has(type);
+    candidates.push({
+      id: `runtime-repair-${candidates.length + 1}`,
+      type,
+      title: getRuntimeRepairTitle(type),
+      file,
+      recommended,
+      reason: recommended ? getRuntimeRepairRecommendedReason(type) : "目录里检测到这个运行库修复项，但当前报错还没有明确指向它。",
+      action: getRuntimeRepairAction(type),
+      priority: getRuntimeRepairPriority(type) + (recommended ? 0 : 200) + Math.min(file.depth || 0, 5),
+    });
+  }
+
+  return candidates.sort((a, b) => a.priority - b.priority || a.file.path.localeCompare(b.file.path)).slice(0, 8);
+}
+
+function getRuntimeRepairTitle(type) {
+  const titles = {
+    DirectX: "DirectX 旧组件修复",
+    "VC++": "VC++ 运行库修复",
+    "RPG Maker RTP": "RPG Maker RTP 修复",
+  };
+  return titles[type] || "运行库修复工具";
+}
+
+function getRuntimeRepairRecommendedReason(type) {
+  const reasons = {
+    DirectX: "当前报错或现象指向 DirectX、D3DX、XInput、黑屏或旧图形/声音组件。",
+    "VC++": "当前报错或现象指向 msvcr、msvcp、vcruntime 或缺 DLL。",
+    "RPG Maker RTP": "当前报错或现象指向 RPG Maker RTP、RGSS 或缺运行环境。",
+  };
+  return reasons[type] || "当前报错或现象指向运行环境缺口。";
+}
+
+function getRuntimeRepairAction(type) {
+  const actions = {
+    DirectX: "打开后按安装器提示补 DirectX 旧组件，完成后回到推荐游戏入口重试。",
+    "VC++": "打开后按安装器提示补 VC++ 运行库；老游戏常需要 x86，完成后回到推荐游戏入口重试。",
+    "RPG Maker RTP": "打开后按版本补 RPG Maker RTP，完成后回到推荐游戏入口重试。",
+  };
+  return actions[type] || "处理完成后回到推荐游戏入口重试。";
+}
+
+function getRuntimeRepairPriority(type) {
+  const priorities = {
+    DirectX: 10,
+    "VC++": 20,
+    "RPG Maker RTP": 30,
+  };
+  return priorities[type] || 90;
 }
 
 function stripLastExtension(path) {
@@ -4459,6 +4561,7 @@ function renderLaunch(analysis) {
     ${renderPreparedHandoff(analysis)}
     ${renderLaunchAttemptFollowup()}
     ${renderOneStopWizard(analysis)}
+    ${renderRuntimeRepairTools(analysis)}
     <div class="section-title">
       <h3>${escapeHtml(getUiText("launchCandidates"))}</h3>
       <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
@@ -4470,6 +4573,61 @@ function renderLaunch(analysis) {
       <span>${analysis.findings.length} ${escapeHtml(getUiText("findings"))}</span>
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
+  `;
+}
+
+function renderRuntimeRepairTools(analysis) {
+  if (!analysis.runtimeRepairs?.length) return "";
+  const cards = analysis.runtimeRepairs
+    .map(
+      (repair, index) => `
+        <article class="candidate repair-tool-card ${repair.recommended ? "recommended" : ""}">
+          <div>
+            <h4>${escapeHtml(repair.title)}</h4>
+            <p>${escapeHtml(repair.file.path)}</p>
+            <div class="meta-row">
+              <span class="chip ${repair.recommended ? "good" : ""}">${escapeHtml(getUiText(repair.recommended ? "runtimeRepairRecommended" : "runtimeRepairReference"))}</span>
+              <span class="chip">${escapeHtml(repair.type)}</span>
+              <span class="chip">${formatBytes(repair.file.size)}</span>
+            </div>
+            <p>${escapeHtml(repair.reason)}</p>
+            <p>${escapeHtml(repair.action)}</p>
+          </div>
+          <div class="candidate-side">
+            <div class="repair-type-badge">${escapeHtml(repair.type)}</div>
+            ${renderRuntimeRepairAction(repair, index)}
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+
+  return `
+    <div class="section-title">
+      <h3>${escapeHtml(getUiText("runtimeRepairsTitle"))}</h3>
+      <span>${analysis.runtimeRepairs.length} ${escapeHtml(getUiText("items"))}</span>
+    </div>
+    <article class="runtime-repair-summary">
+      <p>${escapeHtml(getUiText("runtimeRepairsBody"))}</p>
+    </article>
+    <div class="card-list runtime-repair-list">${cards}</div>
+  `;
+}
+
+function renderRuntimeRepairAction(repair, index) {
+  if (!desktopApi) return "";
+  const canLaunch = canDesktopLaunchFile(repair.file);
+  return `
+    <button
+      class="launch-entry-button repair-entry-button"
+      type="button"
+      data-launch-action="repair-tool"
+      data-repair-index="${index}"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("openRepairTool") : getUiText("repairToolUnavailable"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("openRepairTool") : getUiText("repairToolUnavailable"))}
+    </button>
   `;
 }
 
@@ -5560,6 +5718,17 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
     lines.push(`- ${labels.noLaunch}`);
   }
   lines.push("");
+  lines.push(`## ${labels.runtimeRepairTools}`);
+  if (analysis.runtimeRepairs?.length) {
+    for (const repair of analysis.runtimeRepairs) {
+      lines.push(`- ${repair.recommended ? "[recommended]" : "[reference]"} ${repair.title}: ${repair.file.path}`);
+      lines.push(`  - ${labels.detail}: ${repair.reason}`);
+      lines.push(`  - ${labels.action}: ${repair.action}`);
+    }
+  } else {
+    lines.push(`- none`);
+  }
+  lines.push("");
   lines.push(`## ${labels.launchProfiles}`);
   if (analysis.profiles.length) {
     for (const profile of analysis.profiles) {
@@ -5703,6 +5872,10 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     summary: analysis.environment.summary,
     checks: analysis.environment.checks,
   };
+  const runtimeRepairReport = {
+    schema: "galaid.runtimeRepairs.v1",
+    tools: (analysis.runtimeRepairs || []).map(publicRuntimeRepair),
+  };
   const roadmapReport = {
     schema: "galaid.roadmap.v1",
     summary: analysis.roadmap.summary,
@@ -5752,6 +5925,11 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     {
       path: "environment-checks.json",
       content: JSON.stringify(environmentReport, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "runtime-repairs.json",
+      content: JSON.stringify(runtimeRepairReport, null, 2),
       type: "application/json;charset=utf-8",
     },
     {
@@ -5846,6 +6024,7 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
       mode: analysis.mode.label,
       riskFindings: analysis.riskTotal,
       launchCandidates: analysis.launchCandidates.length,
+      runtimeRepairTools: analysis.runtimeRepairs?.length || 0,
       launchProfiles: analysis.profiles.length,
       engineClues: analysis.engines.length,
       engineStructureClues: analysis.engines.length,
@@ -5891,6 +6070,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- manifest.json: bundle summary",
     "- file-manifest.json: sanitized file list metadata",
     "- environment-checks.json: environment checklist",
+    "- runtime-repairs.json: bundled runtime repair tool hints",
     "- desktop-environment.json: optional local runtime check result",
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
@@ -5917,6 +6097,10 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   lines.push(`- ${labels.files}: ${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
   lines.push(`- ${labels.mode}: ${analysis.mode.label}`);
   lines.push(`- ${labels.recommendedEntry}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : labels.noLaunch}`);
+  if (analysis.runtimeRepairs?.length) {
+    const repairs = analysis.runtimeRepairs.slice(0, 3).map((repair) => `${repair.type}: ${repair.file.path}`);
+    lines.push(`- ${labels.runtimeRepairTools}: ${repairs.join(", ")}`);
+  }
   lines.push(`- ${labels.engineClues}: ${engineNames.length ? engineNames.join(", ") : labels.noEngine}`);
   if (analysis.launchFailure?.hasEvidence) {
     lines.push(`- ${labels.launchFailure}: ${getLaunchFailureEvidence(analysis.launchFailure, language).join(", ")}`);
@@ -6064,6 +6248,8 @@ function buildFileManifest(analysis) {
         directoryCount: set.archivePreview.directoryCount || 0,
         launchCandidateCount: set.archivePreview.signals?.launchCandidateCount || 0,
         launchSamples: set.archivePreview.signals?.launchSamples || [],
+        runtimeRepairCount: getPreviewRuntimeRepairSamples(set.archivePreview).length,
+        runtimeRepairSamples: getPreviewRuntimeRepairSamples(set.archivePreview),
         engineHints: (set.archivePreview.signals?.engineHints || []).map((hint) => ({
           id: hint.id,
           name: hint.name,
@@ -6094,6 +6280,22 @@ function publicErrorMatch(match) {
     cause: match.cause,
     action: match.action,
     checklist: match.checklist || [],
+  };
+}
+
+function publicRuntimeRepair(repair) {
+  return {
+    id: repair.id,
+    type: repair.type,
+    title: repair.title,
+    path: repair.file.path,
+    name: repair.file.name,
+    ext: repair.file.ext,
+    size: repair.file.size,
+    sizeLabel: formatBytes(repair.file.size),
+    recommended: Boolean(repair.recommended),
+    reason: repair.reason,
+    action: repair.action,
   };
 }
 
@@ -6332,6 +6534,40 @@ async function launchDesktopFile(file, button) {
         launchedAt: new Date().toISOString(),
       };
       showToast(getUiText("toastLaunchStarted", { name: result.entryName || file.name }));
+      await refreshDesktopLaunchHistory({ rerender: true });
+    } else {
+      showToast(result?.message || getUiText("toastLaunchFailed"));
+    }
+  } catch {
+    showToast(getUiText("toastLaunchFailed"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+}
+
+async function launchDesktopRepairTool(repair, button) {
+  if (!desktopApi?.launchEntry) {
+    showToast(getUiText("toastLaunchUnavailable"));
+    return;
+  }
+  if (!canDesktopLaunchFile(repair?.file)) {
+    showToast(getUiText(desktopApi.platform === "win32" ? "repairToolUnavailable" : "toastLaunchUnavailable"));
+    return;
+  }
+
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = getUiText("openingRepairTool");
+  }
+
+  try {
+    const result = await desktopApi.launchEntry({ entryFullPath: repair.file.fullPath });
+    if (result?.ok) {
+      showToast(getUiText("toastRepairToolStarted", { name: result.entryName || repair.file.name }));
       await refreshDesktopLaunchHistory({ rerender: true });
     } else {
       showToast(result?.message || getUiText("toastLaunchFailed"));
@@ -6616,6 +6852,9 @@ launchPanel.addEventListener("click", (event) => {
   if (button.dataset.launchAction === "candidate") {
     const candidate = currentAnalysis.launchCandidates[Number(button.dataset.candidateIndex)];
     if (candidate?.file) void launchDesktopFile(candidate.file, button);
+  } else if (button.dataset.launchAction === "repair-tool") {
+    const repair = currentAnalysis.runtimeRepairs?.[Number(button.dataset.repairIndex)];
+    if (repair?.file) void launchDesktopRepairTool(repair, button);
   } else if (button.dataset.launchAction === "mark-launch-ok") {
     markLaunchAttemptOk();
   } else if (button.dataset.launchAction === "mark-launch-symptom") {

@@ -515,6 +515,7 @@ textarea {
 .engine-card,
 .asset-card,
 .profile-card,
+.runtime-repair-summary,
 .prepared-handoff,
 .launch-attempt-card,
 .roadmap-summary,
@@ -568,6 +569,7 @@ textarea {
 .engine-card h4,
 .asset-card h4,
 .profile-card h4,
+.runtime-repair-summary h4,
 .prepared-handoff h4,
 .launch-attempt-card h4,
 .roadmap-summary h4,
@@ -596,6 +598,7 @@ textarea {
 .engine-card p,
 .asset-card p,
 .profile-card p,
+.runtime-repair-summary p,
 .prepared-handoff p,
 .launch-attempt-card p,
 .roadmap-summary p,
@@ -621,6 +624,41 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
+}
+
+.runtime-repair-summary {
+  margin-bottom: 10px;
+  border-color: rgba(217, 154, 43, 0.32);
+  background: rgba(217, 154, 43, 0.07);
+}
+
+.runtime-repair-summary p {
+  margin: 0;
+}
+
+.repair-tool-card {
+  border-color: rgba(217, 154, 43, 0.32);
+}
+
+.repair-tool-card.recommended {
+  background: rgba(54, 167, 121, 0.05);
+  border-color: rgba(54, 167, 121, 0.34);
+}
+
+.repair-type-badge {
+  min-width: 72px;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #f2ead8;
+  color: #684d18;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.repair-entry-button {
+  background: #8f6412;
+  border-color: rgba(143, 100, 18, 0.54);
 }
 
 .prepared-handoff {
@@ -1921,6 +1959,8 @@ textarea {
   .handoff-actions button,
   .launch-attempt-actions,
   .launch-attempt-actions button,
+  .candidate-side,
+  .candidate-side button,
   .roadmap-actions button {
     width: 100%;
   }

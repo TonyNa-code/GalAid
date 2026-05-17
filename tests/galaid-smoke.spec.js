@@ -21,6 +21,9 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".one-stop-wizard")).toContainText("推荐优先尝试");
   await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("判断依据");
   await expect(page.locator("#launchPanel .finding-evidence").first()).toContainText("SakuraTrial/game.exe");
+  await expect(page.getByRole("heading", { name: "运行库修复工具" })).toBeVisible();
+  await expect(page.locator(".repair-tool-card")).toContainText("vcredist_x86.exe");
+  await expect(page.locator(".repair-tool-card")).toContainText("当前报错相关");
   await page.locator('[data-tab="profiles"]').click();
   await expect(page.locator("#profilesPanel")).toContainText("可选启动模板");
   await expect(page.locator("#profilesPanel")).toContainText("Locale Emulator");
@@ -36,6 +39,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.getByRole("button", { name: "复制 QQ 求助文案" })).toBeVisible();
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
+  await expect(page.locator(".support-file-list")).toContainText("runtime-repairs.json");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
   await expect(page.locator("#supportPanel")).toContainText("诊断摘要");
 
@@ -48,6 +52,9 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   expect(chatHelp).toContain("我在 GalAid 里扫了一下这个 galgame");
   expect(chatHelp).toContain("SakuraTrial/game.exe");
   expect(chatHelp).toContain("DirectX 旧组件");
+
+  const supportEntries = await page.evaluate(() => buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN").entries.map((entry) => entry.path));
+  expect(supportEntries).toContain("runtime-repairs.json");
 });
 
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
@@ -283,6 +290,54 @@ test("desktop one-click flow retries password-protected packages", async ({ page
   expect(result.outputModes).toEqual(["auto", "auto"]);
   expect(result.launch.entryFullPath).toBe("C:\\Downloads\\MoonlightCafe-prepared\\MoonlightCafe\\Game.exe");
   expect(result.pending).toBe(true);
+});
+
+test("desktop runtime repair tools launch separately from game candidates", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return {
+          ok: true,
+          entryName: payload.entryFullPath.split("\\").pop(),
+          relativePath: payload.entryFullPath.includes("vcredist") ? "SakuraTrial/vcredist_x86.exe" : "SakuraTrial/game.exe",
+        };
+      },
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+
+  await page.goto("/");
+  await page.evaluate(async () => {
+    await setFiles(
+      SAMPLE_FILES.map(fileFromSample).map((file) => ({
+        ...file,
+        fullPath: `C:\\Games\\${file.path.replaceAll("/", "\\")}`,
+      })),
+    );
+  });
+  await page.locator("#errorInput").fill("VCRUNTIME140.dll was not found");
+
+  await expect(page.getByRole("heading", { name: "运行库修复工具" })).toBeVisible();
+  await expect(page.locator(".repair-tool-card")).toContainText("VC++ 运行库修复");
+  await expect(page.locator(".repair-tool-card")).toContainText("当前报错相关");
+  await expect(page.locator(".candidate").filter({ hasText: "game.exe" })).toContainText("启动");
+  await expect(page.locator(".candidate").filter({ hasText: "vcredist_x86.exe" })).toHaveCount(1);
+
+  await page.locator(".repair-tool-card").getByRole("button", { name: "打开修复工具" }).click();
+
+  const launchPayloads = await page.evaluate(() => window.__launchPayloads);
+  expect(launchPayloads).toHaveLength(1);
+  expect(launchPayloads[0].entryFullPath).toBe("C:\\Games\\SakuraTrial\\vcredist_x86.exe");
+  await expect(page.locator(".launch-attempt-card")).toHaveCount(0);
 });
 
 test("prepared desktop handoff highlights the next launch entry", async ({ page }) => {
