@@ -582,6 +582,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardLaunchTop: "启动推荐入口",
       wizardRepairReadyBody: "当前报错更像运行库缺口，优先打开 {tool}，修复后再回到推荐入口重试。",
       wizardOpenRepairTool: "打开推荐修复工具",
+      wizardInstallReadyBody: "没有发现游戏主入口，但看到了安装盘入口 {entry}。先打开安装器，完成后把安装目录拖回 GalAid。",
+      wizardOpenInstaller: "打开安装盘入口",
       wizardGoRoadmap: "查看路线",
       wizardRecordFailure: "记录失败/截图报错",
       wizardCopyChatHelp: "复制群聊求助",
@@ -603,6 +605,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openRepairTool: "打开修复工具",
       openingRepairTool: "打开中...",
       repairToolUnavailable: "桌面版可打开",
+      installMediaTitle: "安装盘入口",
+      installMediaBody: "这些是 setup/autorun 这类安装介质入口；它们不算游戏主程序，但在光盘镜像或古早安装包里可能是正确下一步。",
+      installMediaRecommended: "建议先打开",
+      installMediaReference: "安装入口",
+      installMediaCardBody: "安装完成后，把安装后的完整游戏目录拖回 GalAid 再一键启动。",
+      openInstaller: "打开安装器",
+      openingInstaller: "打开中...",
+      installMediaUnavailable: "桌面版可打开",
       diagnosisFindings: "诊断结论",
       evidenceTitle: "判断依据",
       whyMatched: "为什么命中",
@@ -634,8 +644,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       mountedImageUnmounted: "镜像已卸载",
       preparedHandoffTitle: "准备完成",
       preparedHandoffReadyBody: "已从 {source} 准备并重扫 {target}。下一步优先尝试 {entry}。",
+      preparedHandoffInstallerBody: "已从 {source} 准备并重扫 {target}。没有发现游戏主入口，但看到了安装盘入口 {entry}；先打开安装器，安装完成后把安装目录拖回 GalAid。",
       preparedHandoffNoLaunchBody: "已从 {source} 准备并重扫 {target}，但还没有找到可用启动入口。请查看下面的诊断结论，或把安装后的完整游戏目录拖回来。",
       preparedRecommendedEntry: "推荐入口",
+      preparedInstallerEntry: "安装入口",
       noLaunchTitle: "没有候选入口",
       noLaunchBody: "请换成完整解压后的游戏根目录再试。",
       items: "项",
@@ -775,6 +787,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastProfileJsonCopied: "配置 JSON 已复制",
       toastLaunchStarted: "已启动 {name}",
       toastRepairToolStarted: "已打开修复工具：{name}",
+      toastInstallerStarted: "已打开安装器：{name}",
       toastLaunchUnavailable: "当前环境不能直接启动",
       toastLaunchFailed: "启动失败",
       toastOneClickNoPackage: "没有可自动准备的压缩包或镜像",
@@ -810,6 +823,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       riskFindings: "Risk findings",
       assistantLanguage: "Assistant language",
       launchCandidates: "Launch candidates",
+      installerCandidates: "安装盘入口",
       runtimeRepairTools: "运行库修复工具",
       launchProfiles: "Launch profiles",
       launchFailure: "启动失败跟进",
@@ -929,6 +943,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardLaunchTop: "Launch recommended entry",
       wizardRepairReadyBody: "The current error looks like a runtime gap. Open {tool} first, then retry the recommended entry.",
       wizardOpenRepairTool: "Open recommended repair tool",
+      wizardInstallReadyBody: "No game launcher was found, but {entry} looks like install media. Open the installer first, then drop the installed folder back into GalAid.",
+      wizardOpenInstaller: "Open install entry",
       wizardGoRoadmap: "View roadmap",
       wizardRecordFailure: "Record failure/OCR",
       wizardCopyChatHelp: "Copy chat help",
@@ -950,6 +966,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openRepairTool: "Open repair tool",
       openingRepairTool: "Opening...",
       repairToolUnavailable: "Desktop only",
+      installMediaTitle: "Install media entries",
+      installMediaBody: "These setup/autorun entries are not game launchers, but they may be the right next step for disc images or older installer packages.",
+      installMediaRecommended: "Try installer first",
+      installMediaReference: "Install entry",
+      installMediaCardBody: "After installation, drop the installed game folder back into GalAid and launch from there.",
+      openInstaller: "Open installer",
+      openingInstaller: "Opening...",
+      installMediaUnavailable: "Desktop only",
       diagnosisFindings: "Diagnosis findings",
       evidenceTitle: "Evidence",
       whyMatched: "Why it matched",
@@ -981,8 +1005,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       mountedImageUnmounted: "Image unmounted",
       preparedHandoffTitle: "Prepared and rescanned",
       preparedHandoffReadyBody: "GalAid prepared {target} from {source}. Try {entry} first.",
+      preparedHandoffInstallerBody: "GalAid prepared {target} from {source}. No game launcher was found, but {entry} looks like install media. Open it first, then drop the installed folder back into GalAid.",
       preparedHandoffNoLaunchBody: "GalAid prepared {target} from {source}, but no usable launch entry was found yet. Review the findings below or drop the installed game folder back into GalAid.",
       preparedRecommendedEntry: "Recommended entry",
+      preparedInstallerEntry: "Install entry",
       noLaunchTitle: "No launch candidate",
       noLaunchBody: "Try again with the fully extracted game root folder.",
       items: "items",
@@ -1122,6 +1148,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastProfileJsonCopied: "Profile JSON copied",
       toastLaunchStarted: "Launched {name}",
       toastRepairToolStarted: "Repair tool opened: {name}",
+      toastInstallerStarted: "Installer opened: {name}",
       toastLaunchUnavailable: "Direct launch is unavailable here",
       toastLaunchFailed: "Launch failed",
       toastOneClickNoPackage: "No package or image can be prepared automatically",
@@ -1157,6 +1184,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       riskFindings: "Risk findings",
       assistantLanguage: "Assistant language",
       launchCandidates: "Launch candidates",
+      installerCandidates: "Install media entries",
       runtimeRepairTools: "Runtime repair tools",
       launchProfiles: "Launch profiles",
       launchFailure: "Launch failure follow-up",
@@ -1276,6 +1304,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardLaunchTop: "推奨入口を起動",
       wizardRepairReadyBody: "現在のエラーはランタイム不足に近いです。まず {tool} を開き、修復後に推奨入口を再試行してください。",
       wizardOpenRepairTool: "推奨修復ツールを開く",
+      wizardInstallReadyBody: "ゲーム本体の起動入口は見つかりませんが、{entry} はインストールメディア入口に見えます。先にインストーラーを開き、完了後にインストール先フォルダを GalAid へ投入してください。",
+      wizardOpenInstaller: "インストール入口を開く",
       wizardGoRoadmap: "手順を見る",
       wizardRecordFailure: "失敗/OCR を記録",
       wizardCopyChatHelp: "相談文をコピー",
@@ -1297,6 +1327,14 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openRepairTool: "修復ツールを開く",
       openingRepairTool: "起動中...",
       repairToolUnavailable: "デスクトップ版のみ",
+      installMediaTitle: "インストールメディア入口",
+      installMediaBody: "setup/autorun 形式の入口です。ゲーム本体ではありませんが、ディスクイメージや古いインストールパッケージでは正しい次の手順になることがあります。",
+      installMediaRecommended: "先に開く候補",
+      installMediaReference: "インストール入口",
+      installMediaCardBody: "インストール後、インストール先の完全なゲームフォルダを GalAid に投入して起動してください。",
+      openInstaller: "インストーラーを開く",
+      openingInstaller: "起動中...",
+      installMediaUnavailable: "デスクトップ版のみ",
       diagnosisFindings: "診断結果",
       evidenceTitle: "根拠",
       whyMatched: "一致理由",
@@ -1328,8 +1366,10 @@ const ASSISTANT_LANGUAGE_PACKS = {
       mountedImageUnmounted: "イメージをアンマウントしました",
       preparedHandoffTitle: "準備と再スキャンが完了",
       preparedHandoffReadyBody: "{source} から {target} を準備して再スキャンしました。まず {entry} を試してください。",
+      preparedHandoffInstallerBody: "{source} から {target} を準備して再スキャンしました。ゲーム本体の起動入口は見つかりませんが、{entry} はインストールメディア入口に見えます。先に開き、完了後にインストール先フォルダを GalAid へ投入してください。",
       preparedHandoffNoLaunchBody: "{source} から {target} を準備して再スキャンしましたが、使える起動入口はまだ見つかっていません。下の診断結果を確認するか、インストール後の完全なゲームフォルダをもう一度投入してください。",
       preparedRecommendedEntry: "推奨起動ファイル",
+      preparedInstallerEntry: "インストール入口",
       noLaunchTitle: "起動候補なし",
       noLaunchBody: "完全に展開されたゲームのルートフォルダで再試行してください。",
       items: "件",
@@ -1468,6 +1508,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastProfileJsonCopied: "設定 JSON をコピーしました",
       toastLaunchStarted: "{name} を起動しました",
       toastRepairToolStarted: "修復ツールを開きました: {name}",
+      toastInstallerStarted: "インストーラーを開きました: {name}",
       toastLaunchUnavailable: "ここでは直接起動できません",
       toastLaunchFailed: "起動に失敗しました",
       toastOneClickNoPackage: "自動準備できるパッケージ/イメージがありません",
@@ -1503,6 +1544,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       riskFindings: "注意点",
       assistantLanguage: "診断言語",
       launchCandidates: "起動候補",
+      installerCandidates: "インストールメディア入口",
       runtimeRepairTools: "ランタイム修復ツール",
       launchProfiles: "起動プロファイル",
       launchFailure: "起動失敗フォロー",
@@ -2099,14 +2141,15 @@ function analyze(files, errorText = "", launchFailureInput = getEmptyLaunchFailu
   const packages = analyzePackages(files);
   const engines = detectEngines(files);
   const launchCandidates = detectLaunchCandidates(files, engines);
+  const installerCandidates = detectInstallerCandidates(files);
   const profiles = buildLaunchProfiles(launchCandidates, engines, packages);
   const launchFailure = normalizeLaunchFailureInput(launchFailureInput);
   const diagnosticErrorText = combineDiagnosticErrorText(errorText, launchFailure);
   const errorDiagnostics = buildErrorDiagnostics(diagnosticErrorText);
   const runtimeRepairs = buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure);
-  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, diagnosticErrorText, errorDiagnostics, launchFailure);
-  const findings = buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics, launchFailure);
-  const roadmap = buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure });
+  const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, installerCandidates, diagnosticErrorText, errorDiagnostics, launchFailure);
+  const findings = buildFindings(files, roots, engines, launchCandidates, installerCandidates, mode, packages, errorDiagnostics, launchFailure);
+  const roadmap = buildRoadmap({ packages, launchCandidates, installerCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure });
   const riskTotal = findings.filter((item) => item.level === "warning" || item.level === "blocker").length;
   const status = getStatus(findings, launchCandidates);
 
@@ -2120,6 +2163,7 @@ function analyze(files, errorText = "", launchFailureInput = getEmptyLaunchFailu
     packages,
     engines,
     launchCandidates,
+    installerCandidates,
     runtimeRepairs,
     profiles,
     launchFailure,
@@ -3117,6 +3161,64 @@ function detectLaunchCandidates(files, engines) {
     .slice(0, 8);
 }
 
+function detectInstallerCandidates(files) {
+  const candidates = [];
+
+  for (const file of files) {
+    if (!["exe", "com"].includes(file.ext)) continue;
+    if (!isInstallMediaEntry(file)) continue;
+
+    const lower = file.lowerPath;
+    const base = file.name.toLowerCase();
+    const reasons = ["installer/media entry"];
+    let score = 45;
+
+    if (file.depth <= 1) {
+      score += 26;
+      reasons.push("root-level installer");
+    } else if (file.depth <= 2) {
+      score += 12;
+      reasons.push("near root");
+    }
+
+    if (base === "setup.exe" || base === "install.exe") {
+      score += 12;
+      reasons.push("classic setup name");
+    }
+    if (base.startsWith("autorun.")) {
+      score += 8;
+      reasons.push("disc autorun entry");
+    }
+    if (/(\/|^)setup\//i.test(lower) || /(\/|^)install\//i.test(lower)) {
+      score += 4;
+      reasons.push("installer folder");
+    }
+
+    candidates.push({
+      file,
+      score: Math.max(0, Math.min(100, score)),
+      reasons,
+    });
+  }
+
+  return candidates
+    .sort((a, b) => b.score - a.score || a.file.path.localeCompare(b.file.path))
+    .slice(0, 4);
+}
+
+function isInstallMediaEntry(file) {
+  const lower = file.lowerPath || normalizePath(file.path).toLowerCase();
+  const base = file.name.toLowerCase();
+  if (getRuntimeRepairTypeForFile(file)) return false;
+  if (/(unins|uninstall|update|patch|crash|vcredist|vc_redist|redist|dxsetup|dxwebsetup|directx|dotnet|support|config|setting|option|keygen|crack|serial|no.?dvd|no.?cd|免dvd|免cd)/i.test(lower)) {
+    return false;
+  }
+  return (
+    /^(setup|install|installer|autorun)\.(exe|com)$/i.test(base) ||
+    /(^|\/)(setup|install|installer|autorun)\.(exe|com)$/i.test(lower)
+  );
+}
+
 function buildLaunchProfiles(launchCandidates, engines, packages) {
   if (!launchCandidates.length) return [];
   const topEngines = engines.slice(0, 2).map((engine) => engine.name);
@@ -3214,7 +3316,7 @@ function buildOptionalLaunchTemplates({ entryPath, localeSensitive }) {
   ];
 }
 
-function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, errorText, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
+function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, installerCandidates, errorText, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
   const checks = [];
   const engineIds = new Set(engines.map((engine) => engine.id));
   const engineNames = engines.map((engine) => engine.name);
@@ -3228,6 +3330,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const topLaunch = launchCandidates[0]?.file;
+  const topInstaller = installerCandidates[0]?.file;
   const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
   const localeEngineNames = engines
     .filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))
@@ -3256,7 +3359,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const webEntry = files.find((file) => file.name.toLowerCase() === "index.html");
   const webLaunch = launchCandidates.find((candidate) => candidate.file.name.toLowerCase() === "index.html");
 
-  if (packages.hasPackages && !launchCandidates.length) {
+  if (packages.hasPackages && !launchCandidates.length && !installerCandidates.length) {
     checks.push(
       makeEnvironmentCheck({
         id: "extraction",
@@ -3305,14 +3408,18 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     makeEnvironmentCheck({
       id: "launcher",
       title: "启动入口",
-      status: launchCandidates.length ? "good" : "blocker",
+      status: launchCandidates.length ? "good" : topInstaller ? "warning" : "blocker",
       detail: launchCandidates.length
         ? `最高置信度入口是 ${topLaunch.path}。`
+        : topInstaller
+          ? `没有发现游戏主入口，但看到了安装盘入口 ${topInstaller.path}。`
         : "没有发现可用的 exe、bat、cmd、lnk 或 index.html 启动入口。",
       action: launchCandidates.length
         ? "优先使用配置页的推荐命令；如果失败，再尝试候选列表里的备用入口。"
+        : topInstaller
+          ? "如果这是安装盘或镜像内容，先打开安装器；安装完成后把安装后的游戏目录拖回 GalAid 重新扫描。"
         : "换成完整解压或安装后的游戏根目录再扫描。",
-      evidence: topLaunch ? [topLaunch.path] : [],
+      evidence: topLaunch ? [topLaunch.path] : topInstaller ? [topInstaller.path] : [],
     }),
   );
 
@@ -3557,7 +3664,7 @@ function isSetupLike(lowerPath) {
   return /(setup|install|installer|autorun|inst|修正|patch|update|append|bonus|extra|tokuten|特典|追加|免dvd|免cd|no.?dvd|no.?cd|crack|keygen|serial)/i.test(lowerPath);
 }
 
-function buildFindings(files, roots, engines, launchCandidates, mode, packages, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
+function buildFindings(files, roots, engines, launchCandidates, installerCandidates, mode, packages, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
   if (!files.length) return [];
 
   const findings = [];
@@ -3568,6 +3675,7 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const setupFiles = samplePaths(files, (file) => isSetupLike(file.lowerPath), 3);
+  const installerPaths = installerCandidates.slice(0, 3).map((candidate) => candidate.file.path);
   const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
   const archivePaths = packages.archives.slice(0, 3).map((item) => item.file.path);
   const discPaths = packages.discs.slice(0, 3).map((item) => item.file.path);
@@ -3589,6 +3697,13 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
       title: "找到可尝试启动入口",
       body: `最高置信度入口是 ${topCandidate.file.path}。如果它失败，再按候选列表从上到下尝试。`,
       evidence: compactEvidence([topCandidate.file.path, ...topCandidate.reasons], 4),
+    });
+  } else if (installerCandidates.length) {
+    findings.push({
+      level: "warning",
+      title: "需要先走安装盘入口",
+      body: `没有发现游戏主入口，但找到了安装器：${installerPaths.join(", ")}。如果这是镜像或安装盘内容，先运行安装器；安装完成后把安装目录拖回 GalAid。`,
+      evidence: installerPaths,
     });
   } else if (executableCount === 0 && !hasFile(files, (file) => file.name.toLowerCase() === "index.html")) {
     findings.push({
@@ -3679,12 +3794,12 @@ function buildFindings(files, roots, engines, launchCandidates, mode, packages, 
     });
   }
 
-  if (setupFiles.length && !launchCandidates.some((candidate) => candidate.score >= 75)) {
+  if (installerCandidates.length && !launchCandidates.some((candidate) => candidate.score >= 75)) {
     findings.push({
       level: "info",
       title: "可能需要先安装",
-      body: `发现安装器或补丁工具：${setupFiles.join(", ")}。如果这是光盘镜像内容，通常先运行安装器。`,
-      evidence: setupFiles,
+      body: `发现安装盘入口：${installerPaths.join(", ")}。如果这是光盘镜像内容，通常先运行安装器，再扫描安装后的游戏目录。`,
+      evidence: installerPaths,
     });
   }
 
@@ -3851,7 +3966,7 @@ function getLevelWeight(level) {
   return weights[level] ?? 4;
 }
 
-function buildRoadmap({ packages, launchCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure }) {
+function buildRoadmap({ packages, launchCandidates, installerCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure }) {
   const steps = [];
   const envChecks = new Map(environment.checks.map((check) => [check.id, check]));
   const addStep = (step) => {
@@ -3881,7 +3996,7 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
   }
 
   const extraction = envChecks.get("extraction");
-  if (extraction?.status === "blocker" || (packages.hasPackages && !launchCandidates.length)) {
+  if (extraction?.status === "blocker" || (packages.hasPackages && !launchCandidates.length && !installerCandidates?.length)) {
     addStep({
       id: "extract-first",
       title: "先处理压缩包或镜像",
@@ -3907,15 +4022,29 @@ function buildRoadmap({ packages, launchCandidates, profiles, environment, error
 
   const launcher = envChecks.get("launcher");
   if (!launchCandidates.length) {
-    addStep({
-      id: "find-launcher",
-      title: "换成完整游戏根目录",
-      state: "blocked",
-      priority: 30,
-      detail: launcher?.detail || "还没有发现可用启动入口。",
-      action: launcher?.action || "选择包含主程序、资源封包和脚本的完整目录后重新扫描。",
-      source: "launch",
-    });
+    if (installerCandidates?.length) {
+      const installer = installerCandidates[0];
+      addStep({
+        id: "run-installer",
+        title: "先打开安装盘入口",
+        state: "todo",
+        priority: 30,
+        detail: launcher?.detail || `看到了 ${installer.file.path} 这类安装器入口。`,
+        action: launcher?.action || "先运行安装器；安装完成后把安装后的游戏目录拖回 GalAid 重新扫描。",
+        evidence: [installer.file.path, ...installer.reasons],
+        source: "launch",
+      });
+    } else {
+      addStep({
+        id: "find-launcher",
+        title: "换成完整游戏根目录",
+        state: "blocked",
+        priority: 30,
+        detail: launcher?.detail || "还没有发现可用启动入口。",
+        action: launcher?.action || "选择包含主程序、资源封包和脚本的完整目录后重新扫描。",
+        source: "launch",
+      });
+    }
   }
 
   if (launchFailure?.hasEvidence) {
@@ -4616,6 +4745,7 @@ function renderLaunch(analysis) {
     ${renderLaunchAttemptFollowup()}
     ${renderOneStopWizard(analysis)}
     ${renderRuntimeRepairTools(analysis)}
+    ${renderInstallMediaEntries(analysis)}
     <div class="section-title">
       <h3>${escapeHtml(getUiText("launchCandidates"))}</h3>
       <span>${analysis.launchCandidates.length} ${escapeHtml(getUiText("items"))}</span>
@@ -4627,6 +4757,59 @@ function renderLaunch(analysis) {
       <span>${analysis.findings.length} ${escapeHtml(getUiText("findings"))}</span>
     </div>
     <div class="card-list">${analysis.findings.map(renderFinding).join("")}</div>
+  `;
+}
+
+function renderInstallMediaEntries(analysis) {
+  if (!analysis.installerCandidates?.length) return "";
+  const cards = analysis.installerCandidates
+    .map(
+      (candidate, index) => `
+        <article class="candidate installer-entry-card">
+          <div>
+            <h4>${escapeHtml(candidate.file.name)}</h4>
+            <p>${escapeHtml(candidate.file.path)}</p>
+            <div class="meta-row">
+              <span class="chip warn">${escapeHtml(index === 0 ? getUiText("installMediaRecommended") : getUiText("installMediaReference"))}</span>
+              <span class="chip">${formatBytes(candidate.file.size)}</span>
+              ${candidate.reasons.map((reason) => `<span class="chip">${escapeHtml(reason)}</span>`).join("")}
+            </div>
+            <p>${escapeHtml(getUiText("installMediaCardBody"))}</p>
+          </div>
+          <div class="candidate-side">
+            <div class="candidate-score">${candidate.score}</div>
+            ${renderInstallerLaunchAction(candidate, index)}
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+
+  return `
+    <div class="section-title">
+      <h3>${escapeHtml(getUiText("installMediaTitle"))}</h3>
+      <span>${analysis.installerCandidates.length} ${escapeHtml(getUiText("items"))}</span>
+    </div>
+    <article class="runtime-repair-summary">
+      <p>${escapeHtml(getUiText("installMediaBody"))}</p>
+    </article>
+    <div class="card-list installer-entry-list">${cards}</div>
+  `;
+}
+
+function renderInstallerLaunchAction(candidate, index) {
+  const canLaunch = canDesktopLaunchFile(candidate.file);
+  return `
+    <button
+      class="launch-entry-button installer-entry-button"
+      type="button"
+      data-launch-action="installer-candidate"
+      data-installer-index="${index}"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("openInstaller") : getUiText("installMediaUnavailable"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("openInstaller") : getUiText("installMediaUnavailable"))}
+    </button>
   `;
 }
 
@@ -4687,13 +4870,14 @@ function renderRuntimeRepairAction(repair, index) {
 
 function renderOneStopWizard(analysis) {
   const topCandidate = analysis.launchCandidates[0] || null;
+  const topInstaller = analysis.installerCandidates?.[0] || null;
   const primaryRepair = getPrimaryRuntimeRepair(analysis);
   const primaryRepairIndex = primaryRepair ? analysis.runtimeRepairs.indexOf(primaryRepair) : -1;
   const packageBlocker = analysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
-  const needsPreparation = analysis.packages.hasPackages && (!topCandidate || packageBlocker);
+  const needsPreparation = analysis.packages.hasPackages && ((!topCandidate && !topInstaller) || packageBlocker);
   const hasExtraPackages = analysis.packages.hasPackages && !needsPreparation;
   const prepareTarget = getOneClickPrepareTarget(analysis);
-  const launchState = topCandidate && !needsPreparation ? (primaryRepair ? "todo" : "current") : "waiting";
+  const launchState = (topCandidate || topInstaller) && !needsPreparation ? (primaryRepair ? "todo" : "current") : "waiting";
   const prepareState = needsPreparation ? "current" : hasExtraPackages ? "todo" : "done";
   const fixState = primaryRepair || analysis.launchFailure?.hasEvidence || analysis.errorDiagnostics.matches.length ? "current" : "waiting";
   const steps = [
@@ -4716,6 +4900,8 @@ function renderOneStopWizard(analysis) {
       title: getUiText("wizardLaunchTitle"),
       body: topCandidate && !needsPreparation
         ? getUiText("wizardLaunchReadyBody", { entry: topCandidate.file.path })
+        : topInstaller && !needsPreparation
+          ? getUiText("wizardInstallReadyBody", { entry: topInstaller.file.path })
         : getUiText("wizardLaunchWaitingBody"),
     },
     {
@@ -4732,6 +4918,8 @@ function renderOneStopWizard(analysis) {
       ? renderWizardRepairAction(primaryRepair, primaryRepairIndex)
       : topCandidate
       ? renderWizardLaunchAction(topCandidate)
+      : topInstaller
+      ? renderWizardInstallerAction(topInstaller, 0)
       : `<button type="button" data-wizard-action="roadmap">${escapeHtml(getUiText("wizardGoRoadmap"))}</button>`;
 
   return `
@@ -4811,6 +4999,21 @@ function renderWizardLaunchAction(candidate) {
   `;
 }
 
+function renderWizardInstallerAction(candidate, index) {
+  const canLaunch = canDesktopLaunchFile(candidate.file);
+  return `
+    <button
+      type="button"
+      data-wizard-action="installer-candidate"
+      data-installer-index="${index}"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("wizardOpenInstaller") : getUiText("installMediaUnavailable"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("wizardOpenInstaller") : getUiText("installMediaUnavailable"))}
+    </button>
+  `;
+}
+
 function getWizardStateLabel(state) {
   const labels = {
     done: getUiText("wizardStateDone"),
@@ -4826,12 +5029,16 @@ function renderPreparedHandoff(analysis) {
   if (!meta?.preparedFrom) return "";
 
   const topCandidate = analysis.launchCandidates[0] || null;
+  const topInstaller = analysis.installerCandidates?.[0] || null;
   const source = meta.preparedFrom || getUiText("packagesTitle");
   const target = meta.preparedOutputName || getUiText("importedFiles");
   const body = topCandidate
     ? getUiText("preparedHandoffReadyBody", { source, target, entry: topCandidate.file.path })
+    : topInstaller
+      ? getUiText("preparedHandoffInstallerBody", { source, target, entry: topInstaller.file.path })
     : getUiText("preparedHandoffNoLaunchBody", { source, target });
   const canLaunchTopCandidate = topCandidate ? canDesktopLaunchFile(topCandidate.file) : false;
+  const canLaunchTopInstaller = topInstaller ? canDesktopLaunchFile(topInstaller.file) : false;
   const mountedImageAction = renderMountedImageAction(meta);
   const action = topCandidate
     ? `
@@ -4846,6 +5053,19 @@ function renderPreparedHandoff(analysis) {
         ${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : getUiText("launchUnsupported"))}
       </button>
     `
+    : topInstaller
+      ? `
+      <button
+        class="launch-entry-button"
+        type="button"
+        data-launch-action="installer-candidate"
+        data-installer-index="0"
+        ${canLaunchTopInstaller ? "" : "disabled"}
+        title="${escapeHtml(canLaunchTopInstaller ? getUiText("openInstaller") : getUiText("installMediaUnavailable"))}"
+      >
+        ${escapeHtml(canLaunchTopInstaller ? getUiText("openInstaller") : getUiText("installMediaUnavailable"))}
+      </button>
+    `
     : "";
 
   return `
@@ -4855,6 +5075,7 @@ function renderPreparedHandoff(analysis) {
         <p>${escapeHtml(body)}</p>
         ${meta.preparedKind === "mounted-image" ? `<p>${escapeHtml(meta.mountedImageUnmounted ? getUiText("mountedImageUnmounted") : getUiText("mountedImageReady", { drive: meta.mountedImageDrive || target }))}</p>` : ""}
         ${topCandidate ? `<div class="meta-row"><span class="chip good">${escapeHtml(getUiText("preparedRecommendedEntry"))}: ${escapeHtml(topCandidate.file.name)}</span><span class="chip">${escapeHtml(topCandidate.file.path)}</span></div>` : ""}
+        ${!topCandidate && topInstaller ? `<div class="meta-row"><span class="chip warn">${escapeHtml(getUiText("preparedInstallerEntry"))}: ${escapeHtml(topInstaller.file.name)}</span><span class="chip">${escapeHtml(topInstaller.file.path)}</span></div>` : ""}
       </div>
       <div class="handoff-actions">${action}${mountedImageAction}</div>
     </article>
@@ -5797,6 +6018,15 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
     lines.push(`- ${labels.noLaunch}`);
   }
   lines.push("");
+  lines.push(`## ${labels.installerCandidates}`);
+  if (analysis.installerCandidates?.length) {
+    for (const candidate of analysis.installerCandidates) {
+      lines.push(`- ${candidate.score}/100 ${candidate.file.path} (${candidate.reasons.join(", ") || "installer"})`);
+    }
+  } else {
+    lines.push(`- none`);
+  }
+  lines.push("");
   lines.push(`## ${labels.runtimeRepairTools}`);
   if (analysis.runtimeRepairs?.length) {
     for (const repair of analysis.runtimeRepairs) {
@@ -5955,6 +6185,10 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     schema: "galaid.runtimeRepairs.v1",
     tools: (analysis.runtimeRepairs || []).map(publicRuntimeRepair),
   };
+  const installMediaReport = {
+    schema: "galaid.installMedia.v1",
+    entries: (analysis.installerCandidates || []).map(publicInstallerCandidate),
+  };
   const roadmapReport = {
     schema: "galaid.roadmap.v1",
     summary: analysis.roadmap.summary,
@@ -6009,6 +6243,11 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     {
       path: "runtime-repairs.json",
       content: JSON.stringify(runtimeRepairReport, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "install-media.json",
+      content: JSON.stringify(installMediaReport, null, 2),
       type: "application/json;charset=utf-8",
     },
     {
@@ -6103,6 +6342,7 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
       mode: analysis.mode.label,
       riskFindings: analysis.riskTotal,
       launchCandidates: analysis.launchCandidates.length,
+      installMediaEntries: analysis.installerCandidates?.length || 0,
       runtimeRepairTools: analysis.runtimeRepairs?.length || 0,
       launchProfiles: analysis.profiles.length,
       engineClues: analysis.engines.length,
@@ -6150,6 +6390,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- file-manifest.json: sanitized file list metadata",
     "- environment-checks.json: environment checklist",
     "- runtime-repairs.json: bundled runtime repair tool hints",
+    "- install-media.json: setup/autorun installer entry hints",
     "- desktop-environment.json: optional local runtime check result",
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
@@ -6163,6 +6404,7 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   const labels = pack.labels;
   const lines = [];
   const topLaunch = analysis.launchCandidates[0];
+  const topInstaller = analysis.installerCandidates?.[0];
   const engineNames = analysis.engines.slice(0, 3).map((engine) => engine.name);
   const warnings = analysis.findings
     .filter((finding) => finding.level === "blocker" || finding.level === "warning")
@@ -6176,6 +6418,9 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   lines.push(`- ${labels.files}: ${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
   lines.push(`- ${labels.mode}: ${analysis.mode.label}`);
   lines.push(`- ${labels.recommendedEntry}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : labels.noLaunch}`);
+  if (!topLaunch && topInstaller) {
+    lines.push(`- ${labels.installerCandidates}: ${topInstaller.file.path} (${topInstaller.score}/100)`);
+  }
   if (analysis.runtimeRepairs?.length) {
     const repairs = analysis.runtimeRepairs.slice(0, 3).map((repair) => `${repair.type}: ${repair.file.path}`);
     lines.push(`- ${labels.runtimeRepairTools}: ${repairs.join(", ")}`);
@@ -6263,6 +6508,7 @@ function buildChatHelpText(analysis, language = getAssistantLanguage()) {
   const copy = copies[language] || copies["zh-CN"];
   const lines = [copy.title];
   const topLaunch = analysis.launchCandidates[0];
+  const topInstaller = analysis.installerCandidates?.[0];
   const engineNames = analysis.engines.slice(0, 3).map((engine) => engine.name);
   const recipeNames = analysis.errorDiagnostics.matches.slice(0, 3).map((match) => match.title);
   const packageSets = [...analysis.packages.archiveSets, ...analysis.packages.discSets];
@@ -6276,7 +6522,7 @@ function buildChatHelpText(analysis, language = getAssistantLanguage()) {
   lines.push(`${copy.status}: ${analysis.status.label} / ${analysis.roadmap.summary.label}`);
   lines.push(`${copy.files}: ${formatNumber(analysis.files.length)} ${fileUnit} / ${formatBytes(analysis.totalSize)}`);
   lines.push(`${copy.packageState}: ${packageText}`);
-  lines.push(`${copy.launch}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : copy.noLaunch}`);
+  lines.push(`${copy.launch}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : topInstaller ? `${topInstaller.file.path} (${topInstaller.score}/100, installer/media entry)` : copy.noLaunch}`);
   lines.push(`${copy.engine}: ${engineNames.length ? engineNames.join(", ") : copy.noEngine}`);
   lines.push(`${copy.recipes}: ${recipeNames.length ? recipeNames.join(", ") : copy.noRecipes}`);
   if (analysis.launchFailure?.hasEvidence) {
@@ -6375,6 +6621,19 @@ function publicRuntimeRepair(repair) {
     recommended: Boolean(repair.recommended),
     reason: repair.reason,
     action: repair.action,
+  };
+}
+
+function publicInstallerCandidate(candidate) {
+  return {
+    path: candidate.file.path,
+    name: candidate.file.name,
+    ext: candidate.file.ext,
+    size: candidate.file.size,
+    sizeLabel: formatBytes(candidate.file.size),
+    score: candidate.score,
+    reasons: candidate.reasons,
+    action: "Open this installer/media entry first, then rescan the installed game folder.",
   };
 }
 
@@ -6661,14 +6920,53 @@ async function launchDesktopRepairTool(repair, button) {
   }
 }
 
+async function launchDesktopInstallerCandidate(candidate, button) {
+  if (!desktopApi?.launchEntry) {
+    showToast(getUiText("toastLaunchUnavailable"));
+    return;
+  }
+  if (!canDesktopLaunchFile(candidate?.file)) {
+    showToast(getUiText(desktopApi.platform === "win32" ? "installMediaUnavailable" : "toastLaunchUnavailable"));
+    return;
+  }
+
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = getUiText("openingInstaller");
+  }
+
+  try {
+    const result = await desktopApi.launchEntry({ entryFullPath: candidate.file.fullPath });
+    if (result?.ok) {
+      showToast(getUiText("toastInstallerStarted", { name: result.entryName || candidate.file.name }));
+      await refreshDesktopLaunchHistory({ rerender: true });
+    } else {
+      showToast(result?.message || getUiText("toastLaunchFailed"));
+    }
+  } catch {
+    showToast(getUiText("toastLaunchFailed"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+}
+
 async function runOneClickLaunch(button) {
   if (!currentAnalysis) return;
   const topCandidate = currentAnalysis.launchCandidates[0] || null;
+  const topInstaller = currentAnalysis.installerCandidates?.[0] || null;
   const packageBlocker = currentAnalysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
-  const needsPreparation = currentAnalysis.packages.hasPackages && (!topCandidate || packageBlocker);
+  const needsPreparation = currentAnalysis.packages.hasPackages && ((!topCandidate && !topInstaller) || packageBlocker);
 
   if (!needsPreparation && topCandidate?.file) {
     await launchDesktopFile(topCandidate.file, button);
+    return;
+  }
+  if (!needsPreparation && topInstaller?.file) {
+    await launchDesktopInstallerCandidate(topInstaller, button);
     return;
   }
 
@@ -6819,10 +7117,15 @@ async function prepareDesktopPackage(packageFile, packageSet, button, options = 
         showToast(getUiText("toastPackagePrepared", { name: result.meta?.preparedOutputName || packageFile.name }));
         activateTab("launch");
         const preparedCandidate = currentAnalysis?.launchCandidates?.[0] || null;
+        const preparedInstaller = currentAnalysis?.installerCandidates?.[0] || null;
         if (options.autoLaunch) {
           if (preparedCandidate?.file && canDesktopLaunchFile(preparedCandidate.file)) {
             await launchDesktopFile(preparedCandidate.file, null);
             return { ok: true, launched: true };
+          }
+          if (preparedInstaller?.file && canDesktopLaunchFile(preparedInstaller.file)) {
+            await launchDesktopInstallerCandidate(preparedInstaller, null);
+            return { ok: true, launched: true, installer: true };
           }
           showToast(getUiText("toastOneClickNoCandidate"));
           return { ok: true, launched: false, errorCode: "no-launch-candidate" };
@@ -6915,6 +7218,9 @@ launchPanel.addEventListener("click", (event) => {
     } else if (action === "repair-tool") {
       const repair = currentAnalysis.runtimeRepairs?.[Number(wizardButton.dataset.repairIndex)];
       if (repair?.file) void launchDesktopRepairTool(repair, wizardButton);
+    } else if (action === "installer-candidate") {
+      const installer = currentAnalysis.installerCandidates?.[Number(wizardButton.dataset.installerIndex)];
+      if (installer?.file) void launchDesktopInstallerCandidate(installer, wizardButton);
     } else if (action === "roadmap") {
       activateTab("roadmap");
     } else if (action === "fix") {
@@ -6937,6 +7243,9 @@ launchPanel.addEventListener("click", (event) => {
   } else if (button.dataset.launchAction === "repair-tool") {
     const repair = currentAnalysis.runtimeRepairs?.[Number(button.dataset.repairIndex)];
     if (repair?.file) void launchDesktopRepairTool(repair, button);
+  } else if (button.dataset.launchAction === "installer-candidate") {
+    const installer = currentAnalysis.installerCandidates?.[Number(button.dataset.installerIndex)];
+    if (installer?.file) void launchDesktopInstallerCandidate(installer, button);
   } else if (button.dataset.launchAction === "mark-launch-ok") {
     markLaunchAttemptOk();
   } else if (button.dataset.launchAction === "mark-launch-symptom") {

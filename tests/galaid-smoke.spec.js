@@ -213,6 +213,113 @@ test("desktop one-click flow prepares a package automatically before launch", as
   expect(result.droppedPaths).toEqual(["C:\\Downloads\\SnowTrial.zip"]);
 });
 
+test("desktop one-click flow opens install media when no game launcher exists", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__preparePayloads = [];
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async (payload) => {
+        window.__preparePayloads.push(payload);
+        return {
+          ok: true,
+          files: [
+            {
+              name: "setup.exe",
+              path: "InstallDisc/setup.exe",
+              lowerPath: "installdisc/setup.exe",
+              ext: "exe",
+              size: 2412000,
+              depth: 1,
+              fullPath: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\setup.exe",
+            },
+            {
+              name: "autorun.inf",
+              path: "InstallDisc/autorun.inf",
+              lowerPath: "installdisc/autorun.inf",
+              ext: "inf",
+              size: 400,
+              depth: 1,
+              fullPath: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\autorun.inf",
+            },
+            {
+              name: "data1.cab",
+              path: "InstallDisc/data1.cab",
+              lowerPath: "installdisc/data1.cab",
+              ext: "cab",
+              size: 680000000,
+              depth: 1,
+              fullPath: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\data1.cab",
+            },
+          ],
+          meta: {
+            platform: "win32",
+            selectedCount: 1,
+            skipped: 0,
+            preparedFrom: "InstallDisc.iso",
+            preparedOutputName: "InstallDisc-prepared",
+            preparedKind: "extracted-image",
+          },
+        };
+      },
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return {
+          ok: true,
+          pid: 3456,
+          entryName: "setup.exe",
+          relativePath: "InstallDisc/setup.exe",
+          workingDirectory: "C:\\Downloads\\InstallDisc-prepared\\InstallDisc",
+        };
+      },
+      createShortcut: async () => ({ ok: true }),
+      unmountImage: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      recognizeErrorImage: async () => ({ canceled: true }),
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    await setFiles([
+      {
+        name: "InstallDisc.iso",
+        path: "InstallDisc.iso",
+        lowerPath: "installdisc.iso",
+        ext: "iso",
+        size: 950000000,
+        depth: 0,
+        fullPath: "C:\\Downloads\\InstallDisc.iso",
+      },
+    ]);
+  });
+
+  await page.getByRole("button", { name: "一键准备并启动" }).click();
+  await page.waitForFunction(() => window.__launchPayloads?.length === 1);
+
+  const result = await page.evaluate(() => ({
+    prepare: window.__preparePayloads[0],
+    launch: window.__launchPayloads[0],
+    launchCandidateCount: currentAnalysis.launchCandidates.length,
+    installerEntry: currentAnalysis.installerCandidates[0]?.file.path,
+    pending: Boolean(pendingLaunchFollowup),
+  }));
+
+  expect(result.prepare.packageFullPath).toBe("C:\\Downloads\\InstallDisc.iso");
+  expect(result.launch.entryFullPath).toBe("C:\\Downloads\\InstallDisc-prepared\\InstallDisc\\setup.exe");
+  expect(result.launchCandidateCount).toBe(0);
+  expect(result.installerEntry).toBe("InstallDisc/setup.exe");
+  expect(result.pending).toBe(false);
+  await expect(page.locator(".one-stop-wizard")).toContainText("打开安装盘入口");
+  await expect(page.getByRole("heading", { name: "安装盘入口", exact: true })).toBeVisible();
+});
+
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];
