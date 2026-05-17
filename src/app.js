@@ -580,6 +580,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardOneClickLaunchPackage: "一键准备并启动",
       wizardOneClickUnavailable: "桌面版可一键启动",
       wizardLaunchTop: "启动推荐入口",
+      wizardRepairReadyBody: "当前报错更像运行库缺口，优先打开 {tool}，修复后再回到推荐入口重试。",
+      wizardOpenRepairTool: "打开推荐修复工具",
       wizardGoRoadmap: "查看路线",
       wizardRecordFailure: "记录失败/截图报错",
       wizardCopyChatHelp: "复制群聊求助",
@@ -925,6 +927,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardOneClickLaunchPackage: "Prepare and launch",
       wizardOneClickUnavailable: "Desktop one-click launch",
       wizardLaunchTop: "Launch recommended entry",
+      wizardRepairReadyBody: "The current error looks like a runtime gap. Open {tool} first, then retry the recommended entry.",
+      wizardOpenRepairTool: "Open recommended repair tool",
       wizardGoRoadmap: "View roadmap",
       wizardRecordFailure: "Record failure/OCR",
       wizardCopyChatHelp: "Copy chat help",
@@ -1270,6 +1274,8 @@ const ASSISTANT_LANGUAGE_PACKS = {
       wizardOneClickLaunchPackage: "準備して起動",
       wizardOneClickUnavailable: "デスクトップ版で一括起動",
       wizardLaunchTop: "推奨入口を起動",
+      wizardRepairReadyBody: "現在のエラーはランタイム不足に近いです。まず {tool} を開き、修復後に推奨入口を再試行してください。",
+      wizardOpenRepairTool: "推奨修復ツールを開く",
       wizardGoRoadmap: "手順を見る",
       wizardRecordFailure: "失敗/OCR を記録",
       wizardCopyChatHelp: "相談文をコピー",
@@ -4633,13 +4639,15 @@ function renderRuntimeRepairAction(repair, index) {
 
 function renderOneStopWizard(analysis) {
   const topCandidate = analysis.launchCandidates[0] || null;
+  const primaryRepair = getPrimaryRuntimeRepair(analysis);
+  const primaryRepairIndex = primaryRepair ? analysis.runtimeRepairs.indexOf(primaryRepair) : -1;
   const packageBlocker = analysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
   const needsPreparation = analysis.packages.hasPackages && (!topCandidate || packageBlocker);
   const hasExtraPackages = analysis.packages.hasPackages && !needsPreparation;
   const prepareTarget = getOneClickPrepareTarget(analysis);
-  const launchState = topCandidate && !needsPreparation ? "current" : "waiting";
+  const launchState = topCandidate && !needsPreparation ? (primaryRepair ? "todo" : "current") : "waiting";
   const prepareState = needsPreparation ? "current" : hasExtraPackages ? "todo" : "done";
-  const fixState = analysis.launchFailure?.hasEvidence || analysis.errorDiagnostics.matches.length ? "current" : "waiting";
+  const fixState = primaryRepair || analysis.launchFailure?.hasEvidence || analysis.errorDiagnostics.matches.length ? "current" : "waiting";
   const steps = [
     {
       state: "done",
@@ -4665,12 +4673,16 @@ function renderOneStopWizard(analysis) {
     {
       state: fixState,
       title: getUiText("wizardFixTitle"),
-      body: getUiText("wizardFixBody"),
+      body: primaryRepair
+        ? getUiText("wizardRepairReadyBody", { tool: primaryRepair.file.name })
+        : getUiText("wizardFixBody"),
     },
   ];
   const primaryAction = needsPreparation
     ? renderWizardOneClickAction(prepareTarget, true)
-    : topCandidate
+    : primaryRepair
+      ? renderWizardRepairAction(primaryRepair, primaryRepairIndex)
+      : topCandidate
       ? renderWizardLaunchAction(topCandidate)
       : `<button type="button" data-wizard-action="roadmap">${escapeHtml(getUiText("wizardGoRoadmap"))}</button>`;
 
@@ -4704,6 +4716,10 @@ function renderWizardOneClickAction(prepareTarget, needsPreparation) {
   return `<button type="button" data-wizard-action="packages" title="${escapeHtml(getUiText("wizardOneClickUnavailable"))}">${escapeHtml(getUiText("wizardGoPackages"))}</button>`;
 }
 
+function getPrimaryRuntimeRepair(analysis) {
+  return analysis.runtimeRepairs?.find((repair) => repair.recommended) || null;
+}
+
 function renderOneStopStep(step, index) {
   return `
     <article class="one-stop-step ${step.state}">
@@ -4714,6 +4730,21 @@ function renderOneStopStep(step, index) {
       </div>
       <strong>${escapeHtml(getWizardStateLabel(step.state))}</strong>
     </article>
+  `;
+}
+
+function renderWizardRepairAction(repair, index) {
+  const canLaunch = canDesktopLaunchFile(repair.file);
+  return `
+    <button
+      type="button"
+      data-wizard-action="repair-tool"
+      data-repair-index="${index}"
+      ${canLaunch ? "" : "disabled"}
+      title="${escapeHtml(canLaunch ? getUiText("wizardOpenRepairTool") : getUiText("repairToolUnavailable"))}"
+    >
+      ${escapeHtml(canLaunch ? getUiText("wizardOpenRepairTool") : getUiText("repairToolUnavailable"))}
+    </button>
   `;
 }
 
@@ -6833,6 +6864,9 @@ launchPanel.addEventListener("click", (event) => {
       activateTab("packages");
     } else if (action === "smart-launch") {
       void runOneClickLaunch(wizardButton);
+    } else if (action === "repair-tool") {
+      const repair = currentAnalysis.runtimeRepairs?.[Number(wizardButton.dataset.repairIndex)];
+      if (repair?.file) void launchDesktopRepairTool(repair, wizardButton);
     } else if (action === "roadmap") {
       activateTab("roadmap");
     } else if (action === "fix") {

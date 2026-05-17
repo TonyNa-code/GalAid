@@ -14,6 +14,8 @@ After a package or image is prepared, the launch tab shows a prepared handoff ca
 
 After a desktop launch action succeeds, the launch tab shows a short follow-up card. Users can mark the game as opened normally or choose a symptom such as no response, immediate crash, missing DLL/runtime, mojibake, or black screen; those symptoms update the roadmap and support bundle without GalAid monitoring the process.
 
+When the latest error text or launch-failure symptom points to DirectX, VC++, or RPG Maker RTP and a matching repair tool was found in the scanned folder, the one-stop guide promotes that repair tool as the primary next click. Repair tools still use the same allowlisted desktop launch path and stay separate from game launch follow-up state.
+
 The environment tab can run an explicit local runtime check on Windows. It probes for common legacy DirectX DLLs, installed Microsoft Visual C++ Redistributables, RPG Maker RTP entries, and locale state, folds warning results into the roadmap, then stores the metadata-only result in reports and support bundles.
 
 When an ISO was mounted by GalAid, the same handoff card can request a Windows `Dismount-DiskImage` cleanup for that session's mounted image. GalAid only offers this action for images it mounted during the current desktop session.

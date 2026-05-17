@@ -331,8 +331,10 @@ test("desktop runtime repair tools launch separately from game candidates", asyn
   await expect(page.locator(".repair-tool-card")).toContainText("当前报错相关");
   await expect(page.locator(".candidate").filter({ hasText: "game.exe" })).toContainText("启动");
   await expect(page.locator(".candidate").filter({ hasText: "vcredist_x86.exe" })).toHaveCount(1);
+  await expect(page.locator(".one-stop-wizard")).toContainText("打开推荐修复工具");
+  await expect(page.locator(".one-stop-wizard")).toContainText("修复后再回到推荐入口重试");
 
-  await page.locator(".repair-tool-card").getByRole("button", { name: "打开修复工具" }).click();
+  await page.locator(".one-stop-wizard").getByRole("button", { name: "打开推荐修复工具" }).click();
 
   const launchPayloads = await page.evaluate(() => window.__launchPayloads);
   expect(launchPayloads).toHaveLength(1);
