@@ -2,15 +2,15 @@
 
 GalAid can run as a static web app or as an Electron desktop beta. The desktop build keeps the same local-first safety boundary, but it can use native folder/file pickers and recursive local scanning.
 
-The Windows desktop beta can also launch trusted local `.exe/.com` entries that GalAid just scanned. Launching is always user-initiated: the user clicks `Launch`, GalAid verifies the path is in the latest scan allowlist, then starts it with the entry folder as the working directory.
+The Windows desktop beta can also launch trusted local `.exe/.com/.lnk` entries that GalAid just scanned. Launching is always user-initiated: the user clicks `Launch`, GalAid verifies the path is in the latest scan allowlist, then starts it with the entry folder as the working directory. Shortcut entries are opened through the normal Windows shell `start` route.
 
-The profile tab can create a `.lnk` shortcut for the same allowlisted entry. GalAid also keeps a small local recent-launch history with entry names, relative paths, and timestamps so users can see what they tried without adding those details to reports or support bundles.
+The profile tab can create a `.lnk` shortcut for normal executable entries. GalAid also keeps a small local recent-launch history with entry names, relative paths, and timestamps so users can see what they tried without adding those details to reports or support bundles.
 
 The launch tab can prepare ZIP/RAR/7z archives, legacy LZH/LHA/ARJ/CAB packages, and tar-style packages through the one-stop launch button. GalAid creates a fresh sibling `*-prepared` folder, asks for a user-provided password only when needed, expands compressed tar packages such as `.tar.gz/.tgz` in a second pass when an inner `.tar` appears, scans the extracted folder, and launches the top recommended entry when one is found. If the prepared content has no game launcher but does expose `setup.exe`, `install.exe`, `autorun.exe`, `.msi`, or an `autorun.inf` target such as `Start.exe` / `SetupJP.exe`, GalAid presents that as a separate install-media entry and can open it from the same one-stop flow. Windows Installer packages are launched through `msiexec.exe /i`. Package preflight also labels bundled DirectX/VC++/RPG Maker RTP repair tools so they are treated as fix clues rather than launch entries. The package tab still offers `Extract and rescan` for users who want to choose the output parent folder manually.
 
 Disc-image rows can use `Mount/extract and rescan`. On Windows, `.iso` files are mounted with the built-in `Mount-DiskImage` command when available. Other supported image files are handled as a best-effort local extraction through the bundled 7z-compatible helper before GalAid rescans the prepared output folder.
 
-After a package or image is prepared, the launch tab shows a prepared handoff card with the original package, the prepared target, and the top recommended launch or install-media entry. On Windows, the one-stop button can start that allowlisted `.exe/.com` entry immediately after preparation, and the handoff card can start the same entry again later. Installer/media entries do not create the game-launch follow-up card; the next step is to scan the installed game folder.
+After a package or image is prepared, the launch tab shows a prepared handoff card with the original package, the prepared target, and the top recommended launch or install-media entry. On Windows, the one-stop button can start that allowlisted `.exe/.com/.lnk` entry immediately after preparation, and the handoff card can start the same entry again later. Installer/media entries do not create the game-launch follow-up card; the next step is to scan the installed game folder.
 
 After a desktop launch action succeeds, the launch tab shows a short follow-up card. Users can mark the game as opened normally or choose a symptom such as no response, immediate crash, missing DLL/runtime, mojibake, or black screen; those symptoms update the roadmap and support bundle without GalAid monitoring the process.
 
@@ -42,7 +42,7 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 
 ## One-Click Launch Boundary
 
-- Only Windows `.exe/.com` entries are launchable in V1.
+- Windows `.exe/.com/.lnk` entries are launchable in V1, and install-media `.msi` entries open through Windows Installer.
 - The path must come from the latest desktop scan result.
 - Shortcut creation uses the same latest-scan allowlist and writes a normal Windows `.lnk` only after the user chooses the save location.
 - Recent-launch history is local app data and is not included in exported reports or support ZIPs.

@@ -417,6 +417,70 @@ test("MSI installers are install media entries and desktop launchable", async ({
   expect(result.html).toContain("data-launch-action=\"installer-candidate\"");
 });
 
+test("desktop launch buttons support scanned Windows shortcuts", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return {
+          ok: true,
+          pid: 4567,
+          entryName: "Play.lnk",
+          relativePath: "ShortcutVN/Play.lnk",
+          workingDirectory: "C:\\Games\\ShortcutVN",
+        };
+      },
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    await setFiles([
+      {
+        name: "Play.lnk",
+        path: "ShortcutVN/Play.lnk",
+        lowerPath: "shortcutvn/play.lnk",
+        ext: "lnk",
+        size: 1400,
+        depth: 1,
+        fullPath: "C:\\Games\\ShortcutVN\\Play.lnk",
+      },
+      {
+        name: "data.xp3",
+        path: "ShortcutVN/data.xp3",
+        lowerPath: "shortcutvn/data.xp3",
+        ext: "xp3",
+        size: 420000000,
+        depth: 1,
+        fullPath: "C:\\Games\\ShortcutVN\\data.xp3",
+      },
+    ]);
+  });
+
+  await expect(page.locator(".candidate").filter({ hasText: "Play.lnk" })).toContainText("启动");
+  await page.locator(".candidate").filter({ hasText: "Play.lnk" }).getByRole("button", { name: "启动" }).click();
+  await page.waitForFunction(() => window.__launchPayloads?.length === 1);
+
+  const result = await page.evaluate(() => ({
+    launch: window.__launchPayloads[0],
+    entry: currentAnalysis.launchCandidates[0]?.file.path,
+    canLaunch: canDesktopLaunchFile(currentAnalysis.launchCandidates[0]?.file),
+  }));
+
+  expect(result.entry).toBe("ShortcutVN/Play.lnk");
+  expect(result.canLaunch).toBe(true);
+  expect(result.launch.entryFullPath).toBe("C:\\Games\\ShortcutVN\\Play.lnk");
+});
+
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

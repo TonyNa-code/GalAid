@@ -32,7 +32,7 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
   <tr>
     <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z/.lzh`, split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
     <td width="25%" valign="top"><strong>02 Prepare</strong><br>GalAid groups packages, asks for a password when needed, extracts or mounts, then rescans the prepared folder.</td>
-    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start the Windows `.exe/.com` with the right working directory.</td>
+    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start the Windows `.exe/.com/.lnk` with the right working directory.</td>
     <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, VC++, locale, RTP, path, or package route.</td>
   </tr>
 </table>
@@ -117,7 +117,7 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - engine and locale notes
 - a portable `.galaid-profile.json` file
 
-Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a scanned Windows `.exe/.com` entry with the correct working directory, and users can create a Windows shortcut for the same entry.
+Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a scanned Windows `.exe/.com/.lnk` entry with the correct working directory, and users can create a Windows shortcut for normal executable entries.
 
 ## Next-Step Roadmap
 
@@ -286,7 +286,7 @@ npm install
 npm start
 ```
 
-The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker and drag/drop path scan are native and can recursively scan local folders without browser directory limitations. It can launch scanned Windows `.exe/.com` entries after the user clicks `Launch`; when the current input is a trusted package/image, that same launch flow can prepare, rescan, and launch the top entry. GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for the same entry and shows a recent-launch history.
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker and drag/drop path scan are native and can recursively scan local folders without browser directory limitations. It can launch scanned Windows `.exe/.com/.lnk` entries after the user clicks `Launch`; install-media `.msi` entries are opened through Windows Installer. When the current input is a trusted package/image, that same launch flow can prepare, rescan, and launch the top entry. GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for normal executable entries and shows a recent-launch history.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
 

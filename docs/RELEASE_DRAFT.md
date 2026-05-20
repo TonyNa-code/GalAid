@@ -8,7 +8,7 @@ GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps 
 
 - Static web app that runs locally or on GitHub Pages
 - Desktop beta with native folder and file selection
-- Desktop one-click launch for scanned Windows `.exe/.com` entries
+- Desktop one-click launch for scanned Windows `.exe/.com/.lnk` entries
 - Launch candidate scoring for `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html`
 - Commercial/self-developed engine route based on root executables, same-folder DLLs, resource archives, config files, and working directory
 - Evidence explanations, confidence details, and next steps for engine matches

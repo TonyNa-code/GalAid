@@ -2,7 +2,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com", "msi"]);
+const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com", "lnk", "msi"]);
 const SHORTCUT_EXT = ".lnk";
 
 function buildLaunchAllowlist(files) {
@@ -116,7 +116,14 @@ async function resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform = 
 }
 
 function getLaunchCommand(entry) {
-  if (path.extname(entry.entryFullPath).toLowerCase() === ".msi") {
+  const ext = path.extname(entry.entryFullPath).toLowerCase();
+  if (ext === ".lnk") {
+    return {
+      command: "cmd.exe",
+      args: ["/d", "/s", "/c", "start", "", entry.entryFullPath],
+    };
+  }
+  if (ext === ".msi") {
     return {
       command: "msiexec.exe",
       args: ["/i", entry.entryFullPath],
