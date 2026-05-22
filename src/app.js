@@ -606,7 +606,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openingRepairTool: "打开中...",
       repairToolUnavailable: "桌面版可打开",
       installMediaTitle: "安装盘入口",
-      installMediaBody: "这些是 setup/autorun/MSI 这类安装介质入口；它们不算游戏主程序，但在光盘镜像或古早安装包里可能是正确下一步。",
+      installMediaBody: "这些是 setup/autorun/MSI 或 autorun 脚本这类安装介质入口；它们不算游戏主程序，但在光盘镜像或古早安装包里可能是正确下一步。",
       installMediaRecommended: "建议先打开",
       installMediaReference: "安装入口",
       installMediaCardBody: "安装完成后，把安装后的完整游戏目录拖回 GalAid 再一键启动。",
@@ -967,7 +967,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openingRepairTool: "Opening...",
       repairToolUnavailable: "Desktop only",
       installMediaTitle: "Install media entries",
-      installMediaBody: "These setup/autorun/MSI entries are not game launchers, but they may be the right next step for disc images or older installer packages.",
+      installMediaBody: "These setup/autorun/MSI or autorun-script entries are not game launchers, but they may be the right next step for disc images or older installer packages.",
       installMediaRecommended: "Try installer first",
       installMediaReference: "Install entry",
       installMediaCardBody: "After installation, drop the installed game folder back into GalAid and launch from there.",
@@ -1328,7 +1328,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       openingRepairTool: "起動中...",
       repairToolUnavailable: "デスクトップ版のみ",
       installMediaTitle: "インストールメディア入口",
-      installMediaBody: "setup/autorun/MSI 形式の入口です。ゲーム本体ではありませんが、ディスクイメージや古いインストールパッケージでは正しい次の手順になることがあります。",
+      installMediaBody: "setup/autorun/MSI または autorun スクリプト形式の入口です。ゲーム本体ではありませんが、ディスクイメージや古いインストールパッケージでは正しい次の手順になることがあります。",
       installMediaRecommended: "先に開く候補",
       installMediaReference: "インストール入口",
       installMediaCardBody: "インストール後、インストール先の完全なゲームフォルダを GalAid に投入して起動してください。",
@@ -3172,7 +3172,7 @@ function detectInstallerCandidates(files) {
   const candidates = [];
 
   for (const file of files) {
-    if (!["exe", "com", "msi"].includes(file.ext)) continue;
+    if (!["exe", "com", "msi", "bat", "cmd"].includes(file.ext)) continue;
     if (!isInstallMediaEntry(file, { autorunTargets, installMediaPayload })) continue;
 
     const lower = file.lowerPath;
@@ -3309,7 +3309,7 @@ function extractAutorunCommandPath(command) {
 
   target = normalizeAutorunTargetPath(target.replace(/^file:/i, ""));
   if (!target || /^[a-z]+:/i.test(target) || target.startsWith("//")) return "";
-  if (!["exe", "com", "msi"].includes(getExt(target))) return "";
+  if (!["exe", "com", "msi", "bat", "cmd"].includes(getExt(target))) return "";
   if (/^(rundll32|cmd|command)\.(exe|com)$/i.test(getBaseName(target))) return "";
   return target;
 }
@@ -4925,7 +4925,7 @@ function renderInstallMediaEntries(analysis) {
 }
 
 function renderInstallerLaunchAction(candidate, index) {
-  const canLaunch = canDesktopLaunchFile(candidate.file);
+  const canLaunch = canDesktopLaunchInstallerCandidate(candidate);
   return `
     <button
       class="launch-entry-button installer-entry-button"
@@ -5127,7 +5127,7 @@ function renderWizardLaunchAction(candidate) {
 }
 
 function renderWizardInstallerAction(candidate, index) {
-  const canLaunch = canDesktopLaunchFile(candidate.file);
+  const canLaunch = canDesktopLaunchInstallerCandidate(candidate);
   return `
     <button
       type="button"
@@ -5165,7 +5165,7 @@ function renderPreparedHandoff(analysis) {
       ? getUiText("preparedHandoffInstallerBody", { source, target, entry: topInstaller.file.path })
     : getUiText("preparedHandoffNoLaunchBody", { source, target });
   const canLaunchTopCandidate = topCandidate ? canDesktopLaunchFile(topCandidate.file) : false;
-  const canLaunchTopInstaller = topInstaller ? canDesktopLaunchFile(topInstaller.file) : false;
+  const canLaunchTopInstaller = topInstaller ? canDesktopLaunchInstallerCandidate(topInstaller) : false;
   const mountedImageAction = renderMountedImageAction(meta);
   const action = topCandidate
     ? `
@@ -5361,6 +5361,18 @@ function canDesktopLaunchFile(file) {
       file?.fullPath &&
       ["exe", "com", "bat", "cmd", "lnk", "msi"].includes(file.ext) &&
       isAllowedDesktopScriptLaunch(file),
+  );
+}
+
+function canDesktopLaunchInstallerCandidate(candidate) {
+  const file = candidate?.file;
+  if (canDesktopLaunchFile(file)) return true;
+  return Boolean(
+    desktopApi?.launchEntry &&
+      desktopApi.platform === "win32" &&
+      file?.fullPath &&
+      ["bat", "cmd"].includes(file.ext) &&
+      candidate?.reasons?.includes("autorun.inf target"),
   );
 }
 
@@ -6528,7 +6540,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- file-manifest.json: sanitized file list metadata",
     "- environment-checks.json: environment checklist",
     "- runtime-repairs.json: bundled runtime repair tool hints",
-    "- install-media.json: setup/autorun/MSI installer entry hints",
+    "- install-media.json: setup/autorun/MSI/autorun-script installer entry hints",
     "- desktop-environment.json: optional local runtime check result",
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
     "- error-recipes.json: matched error recipes",
@@ -7063,7 +7075,7 @@ async function launchDesktopInstallerCandidate(candidate, button) {
     showToast(getUiText("toastLaunchUnavailable"));
     return;
   }
-  if (!canDesktopLaunchFile(candidate?.file)) {
+  if (!canDesktopLaunchInstallerCandidate(candidate)) {
     showToast(getUiText(desktopApi.platform === "win32" ? "installMediaUnavailable" : "toastLaunchUnavailable"));
     return;
   }
@@ -7261,7 +7273,7 @@ async function prepareDesktopPackage(packageFile, packageSet, button, options = 
             await launchDesktopFile(preparedCandidate.file, null);
             return { ok: true, launched: true };
           }
-          if (preparedInstaller?.file && canDesktopLaunchFile(preparedInstaller.file)) {
+          if (preparedInstaller?.file && canDesktopLaunchInstallerCandidate(preparedInstaller)) {
             await launchDesktopInstallerCandidate(preparedInstaller, null);
             return { ok: true, launched: true, installer: true };
           }

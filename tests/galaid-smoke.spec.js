@@ -365,6 +365,71 @@ test("autorun.inf targets unusual setup names as install media", async ({ page }
   expect(result.installerReasons).toContain("autorun.inf target");
 });
 
+test("autorun.inf targets batch setup scripts as launchable install media", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "autorun.inf",
+        path: "Disc/autorun.inf",
+        lowerPath: "disc/autorun.inf",
+        ext: "inf",
+        size: 96,
+        depth: 1,
+        textPreview: "[autorun]\nopen=Install/Setup.cmd /silent\n",
+      },
+      {
+        name: "Setup.cmd",
+        path: "Disc/Install/Setup.cmd",
+        lowerPath: "disc/install/setup.cmd",
+        ext: "cmd",
+        size: 820,
+        depth: 2,
+        fullPath: "C:\\Downloads\\Disc\\Install\\Setup.cmd",
+      },
+      {
+        name: "data1.cab",
+        path: "Disc/data1.cab",
+        lowerPath: "disc/data1.cab",
+        ext: "cab",
+        size: 760000000,
+        depth: 1,
+      },
+    ]);
+    const installer = analysis.installerCandidates[0];
+    return {
+      launchCandidates: analysis.launchCandidates.map((candidate) => candidate.file.path),
+      installerEntry: installer?.file.path,
+      installerReasons: installer?.reasons || [],
+      normalLaunch: canDesktopLaunchFile(installer?.file),
+      installerLaunch: canDesktopLaunchInstallerCandidate(installer),
+      html: renderInstallMediaEntries(analysis),
+    };
+  });
+
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.installerEntry).toBe("Disc/Install/Setup.cmd");
+  expect(result.installerReasons).toContain("autorun.inf target");
+  expect(result.normalLaunch).toBe(false);
+  expect(result.installerLaunch).toBe(true);
+  expect(result.html).toContain("data-launch-action=\"installer-candidate\"");
+  expect(result.html).not.toContain("disabled");
+});
+
 test("MSI installers are install media entries and desktop launchable", async ({ page }) => {
   await page.addInitScript(() => {
     window.galaidDesktop = {

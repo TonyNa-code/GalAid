@@ -16,6 +16,7 @@ async function main() {
   const shortcutPath = path.resolve("GameRoot", "Play.lnk");
   const msiPath = path.resolve("GameRoot", "Installer.msi");
   const setupPath = path.resolve("GameRoot", "setup.bat");
+  const autorunSetupPath = path.resolve("GameRoot", "Setup.cmd");
   const allowlist = buildLaunchAllowlist([
     { fullPath: gamePath, path: "GameRoot/Game.exe" },
     { fullPath: scriptPath, path: "GameRoot/Start.bat", lowerPath: "gameroot/start.bat" },
@@ -23,6 +24,13 @@ async function main() {
     { fullPath: shortcutPath, path: "GameRoot/Play.lnk" },
     { fullPath: msiPath, path: "GameRoot/Installer.msi" },
     { fullPath: setupPath, path: "GameRoot/setup.bat", lowerPath: "gameroot/setup.bat" },
+    { fullPath: autorunSetupPath, path: "GameRoot/Setup.cmd", lowerPath: "gameroot/setup.cmd" },
+    {
+      fullPath: path.resolve("GameRoot", "autorun.inf"),
+      path: "GameRoot/autorun.inf",
+      lowerPath: "gameroot/autorun.inf",
+      textPreview: "[autorun]\nopen=Setup.cmd /install\n",
+    },
   ]);
 
   assert.equal(isWindowsLaunchablePath(gamePath), true);
@@ -39,6 +47,7 @@ async function main() {
   assert.equal(allowlist.has(shortcutPath), true);
   assert.equal(allowlist.has(msiPath), true);
   assert.equal(allowlist.has(setupPath), false);
+  assert.equal(allowlist.has(autorunSetupPath), true);
 
   const spawned = [];
   const result = await launchAllowedEntry({
@@ -97,6 +106,24 @@ async function main() {
   assert.deepEqual(spawned[2].args, ["/d", "/s", "/c", "call", commandPath]);
   assert.equal(spawned[2].options.cwd, path.dirname(commandPath));
 
+  const autorunSetupResult = await launchAllowedEntry({
+    allowlist,
+    entryFullPath: autorunSetupPath,
+    platform: "win32",
+    statImpl: async () => ({ isFile: () => true }),
+    spawnImpl: (command, args, options) => {
+      spawned.push({ command, args, options });
+      return { pid: 2136, unref() {} };
+    },
+  });
+
+  assert.equal(autorunSetupResult.ok, true);
+  assert.equal(autorunSetupResult.entryName, "Setup.cmd");
+  assert.equal(spawned.length, 4);
+  assert.equal(spawned[3].command, "cmd.exe");
+  assert.deepEqual(spawned[3].args, ["/d", "/s", "/c", "call", autorunSetupPath]);
+  assert.equal(spawned[3].options.cwd, path.dirname(autorunSetupPath));
+
   const shortcutLaunchResult = await launchAllowedEntry({
     allowlist,
     entryFullPath: shortcutPath,
@@ -110,10 +137,10 @@ async function main() {
 
   assert.equal(shortcutLaunchResult.ok, true);
   assert.equal(shortcutLaunchResult.entryName, "Play.lnk");
-  assert.equal(spawned.length, 4);
-  assert.equal(spawned[3].command, "cmd.exe");
-  assert.deepEqual(spawned[3].args, ["/d", "/s", "/c", "start", "", shortcutPath]);
-  assert.equal(spawned[3].options.cwd, path.dirname(shortcutPath));
+  assert.equal(spawned.length, 5);
+  assert.equal(spawned[4].command, "cmd.exe");
+  assert.deepEqual(spawned[4].args, ["/d", "/s", "/c", "start", "", shortcutPath]);
+  assert.equal(spawned[4].options.cwd, path.dirname(shortcutPath));
 
   const msiResult = await launchAllowedEntry({
     allowlist,
@@ -128,10 +155,10 @@ async function main() {
 
   assert.equal(msiResult.ok, true);
   assert.equal(msiResult.entryName, "Installer.msi");
-  assert.equal(spawned.length, 5);
-  assert.equal(spawned[4].command, "msiexec.exe");
-  assert.deepEqual(spawned[4].args, ["/i", msiPath]);
-  assert.equal(spawned[4].options.cwd, path.dirname(msiPath));
+  assert.equal(spawned.length, 6);
+  assert.equal(spawned[5].command, "msiexec.exe");
+  assert.deepEqual(spawned[5].args, ["/i", msiPath]);
+  assert.equal(spawned[5].options.cwd, path.dirname(msiPath));
 
   const rejected = await launchAllowedEntry({
     allowlist,
