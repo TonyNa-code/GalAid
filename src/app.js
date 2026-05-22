@@ -3487,8 +3487,39 @@ function getLegacyExecutableRoute(files, topLaunch, topInstaller) {
   };
 }
 
+function getLegacyWin32CompatibilityRoute(files, topLaunch) {
+  const legacyWin32Files = files.filter(isLegacyWin32ExecutableFile);
+  if (!legacyWin32Files.length) return { hasAny: false };
+
+  const topIsLegacyWin32 = legacyWin32Files.some((file) => file.path === topLaunch?.path);
+  const eraCounts = legacyWin32Files.reduce((counts, file) => {
+    const era = file.executableInfo?.targetEra || "legacy-win32";
+    counts.set(era, (counts.get(era) || 0) + 1);
+    return counts;
+  }, new Map());
+  const parts = [];
+  if (eraCounts.get("win95-nt4-era")) parts.push(`${eraCounts.get("win95-nt4-era")} 个 Win95/NT4 时代 Win32 入口`);
+  if (eraCounts.get("win2000-xp-era")) parts.push(`${eraCounts.get("win2000-xp-era")} 个 Win2000/XP 时代 Win32 入口`);
+  const evidence = compactEvidence(legacyWin32Files.map(formatExecutableInfoEvidence), 4);
+
+  return {
+    hasAny: true,
+    topIsLegacyWin32,
+    detail: topIsLegacyWin32
+      ? `推荐入口 ${topLaunch.path} 是旧版 Win32 程序（${parts.join("、")}）。它通常仍可在 Windows 上尝试启动，但失败时更像兼容模式或旧运行库问题。`
+      : `桌面扫描读到了 ${parts.join("、")}。这类入口通常仍可在 Windows 上尝试启动，但失败时更像兼容模式或旧运行库问题。`,
+    action: "先按推荐入口直接启动；若无响应、黑屏、花屏或全屏异常，再尝试 XP SP3/Win98 兼容模式、禁用全屏优化、英文短路径和 DirectX End-User Runtime。",
+    evidence,
+  };
+}
+
 function isLegacyExecutableFile(file) {
   return LEGACY_EXECUTABLE_RUNTIMES.has(file?.executableInfo?.runtime);
+}
+
+function isLegacyWin32ExecutableFile(file) {
+  const info = file?.executableInfo || {};
+  return info.runtime === "win32" && ["win95-nt4-era", "win2000-xp-era"].includes(info.targetEra);
 }
 
 function isDirectLaunchCompatibleExecutable(file) {
@@ -3498,7 +3529,8 @@ function isDirectLaunchCompatibleExecutable(file) {
 function formatExecutableInfoEvidence(file) {
   const info = file.executableInfo || {};
   const label = info.label || info.format || info.runtime || "executable";
-  return `${file.path} (${label})`;
+  const details = [label, info.targetEra, info.subsystemVersion ? `subsystem ${info.subsystemVersion}` : ""].filter(Boolean).join(", ");
+  return `${file.path} (${details})`;
 }
 
 function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, installerCandidates, errorText, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
@@ -3517,6 +3549,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const topLaunch = launchCandidates[0]?.file;
   const topInstaller = installerCandidates[0]?.file;
   const legacyExecutableRoute = getLegacyExecutableRoute(files, topLaunch, topInstaller);
+  const legacyWin32Route = getLegacyWin32CompatibilityRoute(files, topLaunch);
   const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
   const localeEngineNames = engines
     .filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))
@@ -3618,6 +3651,19 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
         detail: legacyExecutableRoute.detail,
         action: legacyExecutableRoute.action,
         evidence: legacyExecutableRoute.evidence,
+      }),
+    );
+  }
+
+  if (legacyWin32Route.hasAny) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "legacy-win32",
+        title: "旧版 Win32 兼容性",
+        status: "warning",
+        detail: legacyWin32Route.detail,
+        action: legacyWin32Route.action,
+        evidence: legacyWin32Route.evidence,
       }),
     );
   }
@@ -4287,7 +4333,7 @@ function buildRoadmap({ packages, launchCandidates, installerCandidates, profile
     }
   }
 
-  for (const checkId of ["legacy-runtime", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
+  for (const checkId of ["legacy-runtime", "legacy-win32", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
     const check = envChecks.get(checkId);
     if (!check || !["blocker", "warning"].includes(check.status)) continue;
     const recipeId = getEnvironmentRecipeId(check.id);
@@ -4458,7 +4504,8 @@ function getRoadmapStateLabel(state) {
 function getEnvironmentRoadmapPriority(id) {
   const priorities = {
     "legacy-runtime": 34,
-    "commercial-engine": 35,
+    "legacy-win32": 36,
+    "commercial-engine": 37,
     path: 40,
     locale: 50,
     "bundled-runtime": 58,

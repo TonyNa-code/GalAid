@@ -13,6 +13,7 @@ async function main() {
     await fs.writeFile(path.join(tempRoot, "WIN32.EXE"), makePeExecutable({ machine: 0x014c, magic: 0x10b }));
     await fs.writeFile(path.join(tempRoot, "WIN64.EXE"), makePeExecutable({ machine: 0x8664, magic: 0x20b }));
     await fs.writeFile(path.join(tempRoot, "WINCOM.COM"), makePeExecutable({ machine: 0x014c, magic: 0x10b }));
+    await fs.writeFile(path.join(tempRoot, "XP32.EXE"), makePeExecutable({ machine: 0x014c, magic: 0x10b, subsystemVersion: [5, 1] }));
 
     const result = await scanSelectedPaths([tempRoot]);
     const byName = new Map(result.files.map((file) => [file.name, file]));
@@ -29,6 +30,9 @@ async function main() {
     assert.equal(byName.get("WIN64.EXE").executableInfo.architecture, "x64");
     assert.equal(byName.get("WINCOM.COM").executableInfo.runtime, "win32");
     assert.equal(byName.get("WINCOM.COM").executableInfo.architecture, "x86");
+    assert.equal(byName.get("XP32.EXE").executableInfo.runtime, "win32");
+    assert.equal(byName.get("XP32.EXE").executableInfo.subsystemVersion, "5.1");
+    assert.equal(byName.get("XP32.EXE").executableInfo.targetEra, "win2000-xp-era");
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
@@ -50,7 +54,7 @@ function makeNeExecutable() {
   return buffer;
 }
 
-function makePeExecutable({ machine, magic }) {
+function makePeExecutable({ machine, magic, subsystemVersion = [6, 0] }) {
   const buffer = Buffer.alloc(256);
   buffer.write("MZ", 0, "ascii");
   buffer.writeUInt32LE(0x80, 0x3c);
@@ -58,6 +62,8 @@ function makePeExecutable({ machine, magic }) {
   buffer.writeUInt16LE(machine, 0x84);
   buffer.writeUInt16LE(0xe0, 0x94);
   buffer.writeUInt16LE(magic, 0x98);
+  buffer.writeUInt16LE(subsystemVersion[0], 0x98 + 48);
+  buffer.writeUInt16LE(subsystemVersion[1], 0x98 + 50);
   buffer.writeUInt16LE(2, 0x98 + 68);
   return buffer;
 }

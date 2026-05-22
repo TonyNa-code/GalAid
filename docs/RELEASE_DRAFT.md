@@ -11,6 +11,7 @@ GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps 
 - Desktop one-click launch for scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries
 - Launch candidate scoring for `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html`
 - Executable header hints for DOS COM/MZ, Win16 NE, legacy LE/LX, Win32 PE, and Win64 PE entries, with DOS/Win16 routed away from direct launch
+- Old Win32 PE subsystem-version hints for Win95/NT4/Win2000/XP compatibility-mode guidance while keeping the entry launchable
 - Commercial/self-developed engine route based on root executables, same-folder DLLs, resource archives, config files, and working directory
 - Evidence explanations, confidence details, and next steps for engine matches
 - Optional Locale Emulator, Wine, and Proton launch templates for locale-sensitive profiles
@@ -66,6 +67,7 @@ npm start
 - Web mode does not inspect inside large archives or disc images yet.
 - Disc-image extraction depends on what the bundled 7z-compatible helper can read; some older or damaged images may still need manual mounting outside GalAid.
 - DOS and Win16 programs are detected and routed, but actually running them still needs a suitable old-runtime environment such as DOSBox or a 32-bit/virtualized Windows setup.
+- Old Win32 compatibility hints are metadata-based. They tell the user what to try after a failed launch, but they do not prove the game requires compatibility mode.
 - Web OCR may need the browser text-detection API or a Tesseract.js page load.
 - Desktop OCR may download language data on first use.
 - Launch profiles are hints only; actual desktop launching still requires a user click on a scanned or prepared entry.

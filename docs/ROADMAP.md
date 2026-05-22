@@ -32,6 +32,7 @@
 - Disc-image mount/extract handoff with automatic rescan
 - One-click launch for scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries
 - Legacy executable header detection for DOS/Win16/LE/LX routing
+- Old Win32 subsystem-version hints for XP/Win98 compatibility guidance
 - Launch history
 - Create shortcuts
 - Portable Windows release workflow

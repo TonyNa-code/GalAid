@@ -759,6 +759,82 @@ test("legacy executable headers route DOS and Win16 away from direct launch", as
   expect(result.manifestInfo).toBe("win16");
 });
 
+test("old Win32 PE headers stay launchable but add compatibility guidance", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "Game.exe",
+        path: "XpVN/Game.exe",
+        lowerPath: "xpvn/game.exe",
+        ext: "exe",
+        size: 640000,
+        depth: 1,
+        fullPath: "C:\\Games\\XpVN\\Game.exe",
+        executableInfo: {
+          schema: "galaid.executableInfo.v1",
+          format: "pe",
+          runtime: "win32",
+          bitness: "32-bit",
+          architecture: "x86",
+          subsystem: "windows-gui",
+          subsystemVersion: "5.1",
+          targetEra: "win2000-xp-era",
+          label: "32-bit Windows PE executable",
+          route: "native-windows",
+          confidence: "high",
+        },
+      },
+      {
+        name: "data.arc",
+        path: "XpVN/data.arc",
+        lowerPath: "xpvn/data.arc",
+        ext: "arc",
+        size: 180000000,
+        depth: 1,
+      },
+    ]);
+    const compatibilityCheck = analysis.environment.checks.find((check) => check.id === "legacy-win32");
+    const compatibilityStep = analysis.roadmap.steps.find((step) => step.id === "env-legacy-win32");
+    const topCandidate = analysis.launchCandidates[0];
+    const profile = analysis.profiles[0];
+    return {
+      topEntry: topCandidate?.file.path,
+      canLaunchTop: canDesktopLaunchFile(topCandidate?.file),
+      compatibilityStatus: compatibilityCheck?.status,
+      compatibilityAction: compatibilityCheck?.action,
+      compatibilityEvidence: compatibilityCheck?.evidence || [],
+      roadmapState: compatibilityStep?.state,
+      manifestInfo: buildFileManifest(analysis).files[0]?.executableInfo?.targetEra,
+      profileInfo: profile?.config?.executableInfo?.subsystemVersion,
+    };
+  });
+
+  expect(result.topEntry).toBe("XpVN/Game.exe");
+  expect(result.canLaunchTop).toBe(true);
+  expect(result.compatibilityStatus).toBe("warning");
+  expect(result.compatibilityAction).toContain("XP SP3");
+  expect(result.compatibilityAction).toContain("DirectX End-User Runtime");
+  expect(result.compatibilityEvidence.join("\n")).toContain("subsystem 5.1");
+  expect(result.roadmapState).toBe("todo");
+  expect(result.manifestInfo).toBe("win2000-xp-era");
+  expect(result.profileInfo).toBe("5.1");
+});
+
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

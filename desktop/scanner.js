@@ -154,12 +154,17 @@ function readPeExecutableInfo(header, offset) {
   const bitness = optionalMagic === 0x20b ? "64-bit" : "32-bit";
   const runtime = bitness === "64-bit" ? "win64" : "win32";
   const architecture = getPeMachineArchitecture(machine);
+  const subsystemVersion = readPeVersion(header, optionalHeaderOffset + 48);
+  const osVersion = readPeVersion(header, optionalHeaderOffset + 40);
 
   return makeExecutableInfo({
     format: "pe",
     runtime,
     bitness,
     architecture,
+    osVersion,
+    subsystemVersion,
+    targetEra: getPeTargetEra(runtime, subsystemVersion),
     subsystem: getPeSubsystemName(readUInt16(header, optionalHeaderOffset + 68)),
     label: `${bitness} Windows PE executable`,
     route: "native-windows",
@@ -169,6 +174,21 @@ function readPeExecutableInfo(header, offset) {
 
 function readUInt16(buffer, offset) {
   return offset + 2 <= buffer.length ? buffer.readUInt16LE(offset) : 0;
+}
+
+function readPeVersion(buffer, offset) {
+  const major = readUInt16(buffer, offset);
+  const minor = readUInt16(buffer, offset + 2);
+  return major || minor ? `${major}.${minor}` : "";
+}
+
+function getPeTargetEra(runtime, subsystemVersion) {
+  if (runtime !== "win32" || !subsystemVersion) return "";
+  const major = Number.parseInt(String(subsystemVersion).split(".")[0] || "", 10);
+  if (!Number.isFinite(major) || major <= 0) return "";
+  if (major < 5) return "win95-nt4-era";
+  if (major === 5) return "win2000-xp-era";
+  return "";
 }
 
 function getPeMachineArchitecture(machine) {

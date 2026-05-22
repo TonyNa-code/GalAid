@@ -4,7 +4,7 @@ GalAid can run as a static web app or as an Electron desktop beta. The desktop b
 
 The Windows desktop beta can also launch trusted local compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries that GalAid just scanned. Launching is always user-initiated: the user clicks `Launch`, GalAid verifies the path is in the latest scan allowlist, then starts it with the entry folder as the working directory. Batch/script entries are opened through `cmd.exe call`, and shortcut entries are opened through the normal Windows shell `start` route.
 
-During native scanning, GalAid reads `.exe/.com` headers and labels DOS COM/MZ, Win16 NE, legacy LE/LX, Win32 PE, and Win64 PE formats. DOS and Win16-style entries are kept out of the direct-launch allowlist and become a legacy runtime route for DOSBox, a 32-bit Windows environment, or a VM-style handoff.
+During native scanning, GalAid reads `.exe/.com` headers and labels DOS COM/MZ, Win16 NE, legacy LE/LX, Win32 PE, and Win64 PE formats. DOS and Win16-style entries are kept out of the direct-launch allowlist and become a legacy runtime route for DOSBox, a 32-bit Windows environment, or a VM-style handoff. Old Win32 PE entries that target Win95/NT4/Win2000/XP through the PE subsystem version stay launchable, but the roadmap adds compatibility-mode guidance for XP SP3/Win98 mode, fullscreen behavior, short paths, and legacy DirectX.
 
 The profile tab can create a `.lnk` shortcut for normal executable entries. GalAid also keeps a small local recent-launch history with entry names, relative paths, and timestamps so users can see what they tried without adding those details to reports or support bundles.
 
@@ -46,6 +46,7 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 
 - Compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries are launchable in V1, and install-media `.msi` entries open through Windows Installer.
 - DOS COM/MZ, Win16 NE, and LE/LX legacy executables are detected from headers and routed to old-runtime guidance instead of direct launch.
+- Win95/NT4/Win2000/XP-era Win32 PE entries are still direct-launch candidates; the compatibility warning is guidance for failed launches, not a block.
 - The path must come from the latest desktop scan result.
 - Shortcut creation uses the same latest-scan allowlist and writes a normal Windows `.lnk` only after the user chooses the save location.
 - Recent-launch history is local app data and is not included in exported reports or support ZIPs.
