@@ -3285,13 +3285,20 @@ function parseAutorunTargets(text) {
     if (separator < 0) continue;
 
     const key = line.slice(0, separator).trim().toLowerCase();
-    if (!["open", "shellexecute", "shell\\open\\command"].includes(key)) continue;
+    if (!isAutorunCommandKey(key)) continue;
 
     const target = extractAutorunCommandPath(line.slice(separator + 1));
     if (target) targets.push(target);
   }
 
   return [...new Set(targets)];
+}
+
+function isAutorunCommandKey(key) {
+  if (["open", "shellexecute", "shell\\open\\command"].includes(key)) return true;
+  const match = key.match(/^shell\\([^\\]+)\\command$/);
+  if (!match) return false;
+  return /^(install|setup|start|run|play)$/i.test(match[1]) || /(install|setup|start|run|play)/i.test(match[1]);
 }
 
 function extractAutorunCommandPath(command) {

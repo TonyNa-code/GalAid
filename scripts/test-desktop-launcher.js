@@ -29,7 +29,7 @@ async function main() {
       fullPath: path.resolve("GameRoot", "autorun.inf"),
       path: "GameRoot/autorun.inf",
       lowerPath: "gameroot/autorun.inf",
-      textPreview: "[autorun]\nopen=Setup.cmd /install\n",
+      textPreview: "[autorun]\nshell\\install\\command=Setup.cmd /install\n",
     },
   ]);
 

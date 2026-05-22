@@ -430,6 +430,50 @@ test("autorun.inf targets batch setup scripts as launchable install media", asyn
   expect(result.html).not.toContain("disabled");
 });
 
+test("autorun.inf shell install commands become install media entries", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "autorun.inf",
+        path: "Disc/autorun.inf",
+        lowerPath: "disc/autorun.inf",
+        ext: "inf",
+        size: 160,
+        depth: 1,
+        textPreview: "[autorun]\nshell\\install=Install game\nshell\\install\\command=Bin/SetupVN.exe /install\n",
+      },
+      {
+        name: "SetupVN.exe",
+        path: "Disc/Bin/SetupVN.exe",
+        lowerPath: "disc/bin/setupvn.exe",
+        ext: "exe",
+        size: 3300000,
+        depth: 2,
+        fullPath: "C:\\Downloads\\Disc\\Bin\\SetupVN.exe",
+      },
+      {
+        name: "data1.cab",
+        path: "Disc/data1.cab",
+        lowerPath: "disc/data1.cab",
+        ext: "cab",
+        size: 760000000,
+        depth: 1,
+      },
+    ]);
+    return {
+      launchCandidates: analysis.launchCandidates.map((candidate) => candidate.file.path),
+      installerEntry: analysis.installerCandidates[0]?.file.path,
+      installerReasons: analysis.installerCandidates[0]?.reasons || [],
+    };
+  });
+
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.installerEntry).toBe("Disc/Bin/SetupVN.exe");
+  expect(result.installerReasons).toContain("autorun.inf target");
+});
+
 test("MSI installers are install media entries and desktop launchable", async ({ page }) => {
   await page.addInitScript(() => {
     window.galaidDesktop = {
