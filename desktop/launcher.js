@@ -31,10 +31,15 @@ function isWindowsLaunchablePath(filePath) {
 
 function isAllowedScannedLaunchFile(file, context = {}) {
   if (!file?.fullPath || !isWindowsLaunchablePath(file.fullPath)) return false;
+  if (isDirectLaunchBlockedByExecutableInfo(file)) return false;
   const ext = path.extname(String(file.fullPath || "")).replace(/^\./, "").toLowerCase();
   if (!WINDOWS_SCRIPT_EXTS.has(ext)) return true;
   if (isAutorunTargetFile(file, context.autorunTargetPaths)) return true;
   return !isInstallerOrToolScript(file);
+}
+
+function isDirectLaunchBlockedByExecutableInfo(file) {
+  return ["dos", "win16", "legacy-linear"].includes(file?.executableInfo?.runtime);
 }
 
 function isInstallerOrToolScript(file) {

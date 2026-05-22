@@ -4,6 +4,8 @@ const { previewArchiveFile } = require("./archive-preview");
 
 const SCAN_PROGRESS_BATCH = 1000;
 const TEXT_PREVIEW_MAX_BYTES = 16 * 1024;
+const EXECUTABLE_INFO_HEADER_BYTES = 4096;
+const EXECUTABLE_INFO_EXTS = new Set(["exe", "com"]);
 
 async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
   const files = [];
@@ -61,7 +63,162 @@ async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
 }
 
 async function enrichFileRecord(file) {
-  return withArchivePreview(await withTextPreview(file));
+  return withArchivePreview(await withTextPreview(await withExecutableInfo(file)));
+}
+
+async function withExecutableInfo(file) {
+  if (!shouldReadExecutableInfo(file)) return file;
+  try {
+    const executableInfo = await readExecutableInfo(file);
+    return executableInfo ? { ...file, executableInfo } : file;
+  } catch {
+    return file;
+  }
+}
+
+function shouldReadExecutableInfo(file) {
+  return Boolean(file?.fullPath && EXECUTABLE_INFO_EXTS.has(file.ext) && file.size > 0);
+}
+
+async function readExecutableInfo(file) {
+  const header = await readFilePrefix(file.fullPath, Math.min(file.size, EXECUTABLE_INFO_HEADER_BYTES));
+  if (file.ext === "com" && !hasMzSignature(header)) return makeDosComInfo();
+  return readExecutableInfoFromHeader(header);
+}
+
+async function readFilePrefix(filePath, length) {
+  const handle = await fs.open(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(length);
+    const { bytesRead } = await handle.read(buffer, 0, length, 0);
+    return buffer.subarray(0, bytesRead);
+  } finally {
+    await handle.close();
+  }
+}
+
+function readExecutableInfoFromHeader(header) {
+  if (!header || header.length < 2) return null;
+  if (!hasMzSignature(header)) {
+    return makeExecutableInfo({
+      format: "unknown-executable",
+      runtime: "unknown",
+      bitness: "",
+      label: "Unknown executable",
+      route: "inspect",
+      confidence: "low",
+    });
+  }
+
+  if (header.length < 0x40) return makeDosMzInfo();
+  const newHeaderOffset = header.readUInt32LE(0x3c);
+  if (!newHeaderOffset || newHeaderOffset + 2 > header.length) return makeDosMzInfo();
+
+  const signature2 = header.toString("ascii", newHeaderOffset, newHeaderOffset + 2);
+  if (signature2 === "NE") {
+    return makeExecutableInfo({
+      format: "ne",
+      runtime: "win16",
+      bitness: "16-bit",
+      label: "Windows NE / Win16 executable",
+      route: "win16-vm",
+      confidence: "high",
+    });
+  }
+  if (signature2 === "LE" || signature2 === "LX") {
+    return makeExecutableInfo({
+      format: signature2.toLowerCase(),
+      runtime: "legacy-linear",
+      bitness: "32-bit",
+      label: `${signature2} legacy linear executable`,
+      route: "legacy-runtime",
+      confidence: "medium",
+    });
+  }
+
+  if (newHeaderOffset + 4 <= header.length && header.toString("binary", newHeaderOffset, newHeaderOffset + 4) === "PE\u0000\u0000") {
+    return readPeExecutableInfo(header, newHeaderOffset);
+  }
+
+  return makeDosMzInfo();
+}
+
+function hasMzSignature(header) {
+  return Boolean(header && header.length >= 2 && header[0] === 0x4d && header[1] === 0x5a);
+}
+
+function readPeExecutableInfo(header, offset) {
+  const machine = readUInt16(header, offset + 4);
+  const optionalHeaderOffset = offset + 24;
+  const optionalMagic = readUInt16(header, optionalHeaderOffset);
+  const bitness = optionalMagic === 0x20b ? "64-bit" : "32-bit";
+  const runtime = bitness === "64-bit" ? "win64" : "win32";
+  const architecture = getPeMachineArchitecture(machine);
+
+  return makeExecutableInfo({
+    format: "pe",
+    runtime,
+    bitness,
+    architecture,
+    subsystem: getPeSubsystemName(readUInt16(header, optionalHeaderOffset + 68)),
+    label: `${bitness} Windows PE executable`,
+    route: "native-windows",
+    confidence: "high",
+  });
+}
+
+function readUInt16(buffer, offset) {
+  return offset + 2 <= buffer.length ? buffer.readUInt16LE(offset) : 0;
+}
+
+function getPeMachineArchitecture(machine) {
+  const architectures = {
+    0x014c: "x86",
+    0x8664: "x64",
+    0x01c0: "arm",
+    0xaa64: "arm64",
+  };
+  if (architectures[machine]) return architectures[machine];
+  return machine ? `machine-0x${machine.toString(16)}` : "";
+}
+
+function getPeSubsystemName(subsystem) {
+  const subsystems = {
+    2: "windows-gui",
+    3: "windows-console",
+    9: "windows-ce",
+    10: "efi-application",
+  };
+  return subsystems[subsystem] || "";
+}
+
+function makeDosMzInfo() {
+  return makeExecutableInfo({
+    format: "mz",
+    runtime: "dos",
+    bitness: "16-bit",
+    label: "DOS MZ executable",
+    route: "dosbox",
+    confidence: "medium",
+  });
+}
+
+function makeDosComInfo() {
+  return makeExecutableInfo({
+    format: "dos-com",
+    runtime: "dos",
+    bitness: "16-bit",
+    label: "DOS COM executable",
+    route: "dosbox",
+    confidence: "medium",
+  });
+}
+
+function makeExecutableInfo(info) {
+  return {
+    schema: "galaid.executableInfo.v1",
+    ...info,
+  };
 }
 
 async function withArchivePreview(file) {
@@ -120,6 +277,7 @@ function getExt(name) {
 }
 
 module.exports = {
+  readExecutableInfoFromHeader,
   scanSelectedPaths,
   toFileRecord,
 };

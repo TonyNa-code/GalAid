@@ -17,6 +17,7 @@ async function main() {
   const msiPath = path.resolve("GameRoot", "Installer.msi");
   const setupPath = path.resolve("GameRoot", "setup.bat");
   const autorunSetupPath = path.resolve("GameRoot", "Setup.cmd");
+  const dosPath = path.resolve("GameRoot", "DOSGAME.EXE");
   const allowlist = buildLaunchAllowlist([
     { fullPath: gamePath, path: "GameRoot/Game.exe" },
     { fullPath: scriptPath, path: "GameRoot/Start.bat", lowerPath: "gameroot/start.bat" },
@@ -25,6 +26,7 @@ async function main() {
     { fullPath: msiPath, path: "GameRoot/Installer.msi" },
     { fullPath: setupPath, path: "GameRoot/setup.bat", lowerPath: "gameroot/setup.bat" },
     { fullPath: autorunSetupPath, path: "GameRoot/Setup.cmd", lowerPath: "gameroot/setup.cmd" },
+    { fullPath: dosPath, path: "GameRoot/DOSGAME.EXE", executableInfo: { runtime: "dos", format: "mz" } },
     {
       fullPath: path.resolve("GameRoot", "autorun.inf"),
       path: "GameRoot/autorun.inf",
@@ -48,6 +50,7 @@ async function main() {
   assert.equal(allowlist.has(msiPath), true);
   assert.equal(allowlist.has(setupPath), false);
   assert.equal(allowlist.has(autorunSetupPath), true);
+  assert.equal(allowlist.has(dosPath), false);
 
   const spawned = [];
   const result = await launchAllowedEntry({

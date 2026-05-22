@@ -672,6 +672,93 @@ test("desktop launch buttons support trusted Windows launch scripts", async ({ p
   expect(result.launch.entryFullPath).toBe("C:\\Games\\ScriptVN\\Start.bat");
 });
 
+test("legacy executable headers route DOS and Win16 away from direct launch", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "Game.exe",
+        path: "LegacyVN/Game.exe",
+        lowerPath: "legacyvn/game.exe",
+        ext: "exe",
+        size: 320000,
+        depth: 1,
+        fullPath: "C:\\Games\\LegacyVN\\Game.exe",
+        executableInfo: {
+          schema: "galaid.executableInfo.v1",
+          format: "ne",
+          runtime: "win16",
+          bitness: "16-bit",
+          label: "Windows NE / Win16 executable",
+          route: "win16-vm",
+          confidence: "high",
+        },
+      },
+      {
+        name: "DOSGAME.COM",
+        path: "LegacyVN/DOSGAME.COM",
+        lowerPath: "legacyvn/dosgame.com",
+        ext: "com",
+        size: 4096,
+        depth: 1,
+        fullPath: "C:\\Games\\LegacyVN\\DOSGAME.COM",
+        executableInfo: {
+          schema: "galaid.executableInfo.v1",
+          format: "dos-com",
+          runtime: "dos",
+          bitness: "16-bit",
+          label: "DOS COM executable",
+          route: "dosbox",
+          confidence: "medium",
+        },
+      },
+      {
+        name: "data.arc",
+        path: "LegacyVN/data.arc",
+        lowerPath: "legacyvn/data.arc",
+        ext: "arc",
+        size: 120000000,
+        depth: 1,
+      },
+    ]);
+    const legacyCheck = analysis.environment.checks.find((check) => check.id === "legacy-runtime");
+    const legacyStep = analysis.roadmap.steps.find((step) => step.id === "env-legacy-runtime");
+    const topCandidate = analysis.launchCandidates[0];
+    return {
+      topEntry: topCandidate?.file.path,
+      canLaunchTop: canDesktopLaunchFile(topCandidate?.file),
+      legacyStatus: legacyCheck?.status,
+      legacyAction: legacyCheck?.action,
+      legacyEvidence: legacyCheck?.evidence || [],
+      roadmapState: legacyStep?.state,
+      manifestInfo: buildFileManifest(analysis).files[0]?.executableInfo?.runtime,
+    };
+  });
+
+  expect(result.topEntry).toBe("LegacyVN/Game.exe");
+  expect(result.canLaunchTop).toBe(false);
+  expect(result.legacyStatus).toBe("blocker");
+  expect(result.legacyAction).toContain("DOSBox");
+  expect(result.legacyAction).toContain("虚拟机");
+  expect(result.legacyEvidence.join("\n")).toContain("Win16");
+  expect(result.roadmapState).toBe("blocked");
+  expect(result.manifestInfo).toBe("win16");
+});
+
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

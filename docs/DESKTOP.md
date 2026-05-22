@@ -2,7 +2,9 @@
 
 GalAid can run as a static web app or as an Electron desktop beta. The desktop build keeps the same local-first safety boundary, but it can use native folder/file pickers and recursive local scanning.
 
-The Windows desktop beta can also launch trusted local `.exe/.com/.bat/.cmd/.lnk` entries that GalAid just scanned. Launching is always user-initiated: the user clicks `Launch`, GalAid verifies the path is in the latest scan allowlist, then starts it with the entry folder as the working directory. Batch/script entries are opened through `cmd.exe call`, and shortcut entries are opened through the normal Windows shell `start` route.
+The Windows desktop beta can also launch trusted local compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries that GalAid just scanned. Launching is always user-initiated: the user clicks `Launch`, GalAid verifies the path is in the latest scan allowlist, then starts it with the entry folder as the working directory. Batch/script entries are opened through `cmd.exe call`, and shortcut entries are opened through the normal Windows shell `start` route.
+
+During native scanning, GalAid reads `.exe/.com` headers and labels DOS COM/MZ, Win16 NE, legacy LE/LX, Win32 PE, and Win64 PE formats. DOS and Win16-style entries are kept out of the direct-launch allowlist and become a legacy runtime route for DOSBox, a 32-bit Windows environment, or a VM-style handoff.
 
 The profile tab can create a `.lnk` shortcut for normal executable entries. GalAid also keeps a small local recent-launch history with entry names, relative paths, and timestamps so users can see what they tried without adding those details to reports or support bundles.
 
@@ -10,7 +12,7 @@ The launch tab can prepare ZIP/RAR/7z archives, legacy LZH/LHA/ARJ/CAB packages,
 
 Disc-image rows can use `Mount/extract and rescan`. On Windows, `.iso` files are mounted with the built-in `Mount-DiskImage` command when available. Other supported image files are handled as a best-effort local extraction through the bundled 7z-compatible helper before GalAid rescans the prepared output folder.
 
-After a package or image is prepared, the launch tab shows a prepared handoff card with the original package, the prepared target, and the top recommended launch or install-media entry. On Windows, the one-stop button can start that allowlisted `.exe/.com/.bat/.cmd/.lnk` entry immediately after preparation, and the handoff card can start the same entry again later. Installer/media entries do not create the game-launch follow-up card; the next step is to scan the installed game folder.
+After a package or image is prepared, the launch tab shows a prepared handoff card with the original package, the prepared target, and the top recommended launch or install-media entry. On Windows, the one-stop button can start that allowlisted compatible `.exe/.com/.bat/.cmd/.lnk` entry immediately after preparation, and the handoff card can start the same entry again later. Installer/media entries do not create the game-launch follow-up card; the next step is to scan the installed game folder.
 
 After a desktop launch action succeeds, the launch tab shows a short follow-up card. Users can mark the game as opened normally or choose a symptom such as no response, immediate crash, missing DLL/runtime, mojibake, or black screen; those symptoms update the roadmap and support bundle without GalAid monitoring the process.
 
@@ -42,7 +44,8 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 
 ## One-Click Launch Boundary
 
-- Windows `.exe/.com/.bat/.cmd/.lnk` entries are launchable in V1, and install-media `.msi` entries open through Windows Installer.
+- Compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries are launchable in V1, and install-media `.msi` entries open through Windows Installer.
+- DOS COM/MZ, Win16 NE, and LE/LX legacy executables are detected from headers and routed to old-runtime guidance instead of direct launch.
 - The path must come from the latest desktop scan result.
 - Shortcut creation uses the same latest-scan allowlist and writes a normal Windows `.lnk` only after the user chooses the save location.
 - Recent-launch history is local app data and is not included in exported reports or support ZIPs.

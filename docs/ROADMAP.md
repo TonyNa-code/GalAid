@@ -30,7 +30,8 @@
 - Package and disc-image metadata preflight before extraction or mounting
 - Bundled archive extraction handoff with password prompt and automatic rescan
 - Disc-image mount/extract handoff with automatic rescan
-- One-click launch for scanned `.exe/.com/.bat/.cmd/.lnk` entries
+- One-click launch for scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries
+- Legacy executable header detection for DOS/Win16/LE/LX routing
 - Launch history
 - Create shortcuts
 - Portable Windows release workflow

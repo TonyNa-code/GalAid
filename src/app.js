@@ -44,6 +44,7 @@ const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "tgz", "gz", "gzip", "bz2", "bzip2", "xz", "txz", "lzma", "zst", "lzh", "lha", "cab", "arj"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
+const LEGACY_EXECUTABLE_RUNTIMES = new Set(["dos", "win16", "legacy-linear"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
 const ENGINE_RULES = Array.isArray(window.GALAID_ENGINE_RULES) ? window.GALAID_ENGINE_RULES : [];
 const COMMERCIAL_RESOURCE_ARCHIVES = new Set(getEngineRuleExtensions("commercial-proprietary", ["arc", "dat", "pak", "pck", "cpk", "pac", "vol", "iro", "wolf", "ypf", "int", "gxp", "noa", "med", "wsm"]));
@@ -674,6 +675,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "启动中...",
       launchUnavailable: "仅桌面版可启动",
       launchUnsupported: "仅支持 Windows .exe/.com/.bat/.cmd/.lnk/.msi",
+      legacyLaunchUnsupported: "需要旧系统/DOSBox路线",
       toastRepairToolStarted: "已打开修复工具：{name}",
       createShortcut: "创建快捷方式",
       creatingShortcut: "创建中...",
@@ -1035,6 +1037,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "Launching...",
       launchUnavailable: "Desktop only",
       launchUnsupported: "Windows .exe/.com/.bat/.cmd/.lnk/.msi only",
+      legacyLaunchUnsupported: "Legacy OS/DOSBox route required",
       toastRepairToolStarted: "Repair tool opened: {name}",
       createShortcut: "Create shortcut",
       creatingShortcut: "Creating...",
@@ -1396,6 +1399,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launching: "起動中...",
       launchUnavailable: "デスクトップ版のみ",
       launchUnsupported: "Windows .exe/.com/.bat/.cmd/.lnk/.msi のみ",
+      legacyLaunchUnsupported: "旧環境/DOSBox ルートが必要",
       createShortcut: "ショートカット作成",
       creatingShortcut: "作成中...",
       launchHistoryTitle: "最近の起動",
@@ -3401,6 +3405,7 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
       entryName,
       entryPath: file.path,
       entryFullPath: file.fullPath || "",
+      executableInfo: file.executableInfo || null,
       workingDirectory,
       hasDesktopPath: Boolean(file.fullPath),
       confidence: candidate.score,
@@ -3419,6 +3424,7 @@ function buildLaunchProfiles(launchCandidates, engines, packages) {
         engineClues: topEngines,
         localeSensitive,
         launchTemplates,
+        executableInfo: file.executableInfo || undefined,
       },
     };
   });
@@ -3450,6 +3456,51 @@ function buildOptionalLaunchTemplates({ entryPath, localeSensitive }) {
   ];
 }
 
+function getLegacyExecutableRoute(files, topLaunch, topInstaller) {
+  const legacyFiles = files.filter(isLegacyExecutableFile);
+  if (!legacyFiles.length) return { hasAny: false };
+
+  const legacyPaths = new Set(legacyFiles.map((file) => file.path));
+  const topIsLegacy = legacyPaths.has(topLaunch?.path) || legacyPaths.has(topInstaller?.path);
+  const dosSamples = legacyFiles.filter((file) => file.executableInfo?.runtime === "dos");
+  const win16Samples = legacyFiles.filter((file) => file.executableInfo?.runtime === "win16");
+  const linearSamples = legacyFiles.filter((file) => file.executableInfo?.runtime === "legacy-linear");
+  const evidence = compactEvidence(legacyFiles.map(formatExecutableInfoEvidence), 4);
+  const parts = [];
+  if (dosSamples.length) parts.push(`${dosSamples.length} 个 DOS 可执行文件`);
+  if (win16Samples.length) parts.push(`${win16Samples.length} 个 Win16/NE 可执行文件`);
+  if (linearSamples.length) parts.push(`${linearSamples.length} 个 LE/LX 旧线性可执行文件`);
+
+  const detail = `桌面扫描读到了 ${parts.join("、")}。这类 Win95/Win98 早期或 DOS 程序通常不能在 64 位 Windows 里直接启动。`;
+  const actionParts = [];
+  if (dosSamples.length) actionParts.push("DOS/COM/MZ 程序走 DOSBox 路线");
+  if (win16Samples.length) actionParts.push("Win16/NE 程序需要 32 位 Windows 或虚拟机");
+  if (linearSamples.length) actionParts.push("LE/LX 旧线性程序优先用对应旧系统或专用兼容层验证");
+  actionParts.push("如果它只是安装器，先在旧系统/虚拟机中安装，再把安装后的游戏目录拖回 GalAid");
+
+  return {
+    hasAny: true,
+    topIsLegacy,
+    detail,
+    action: `${actionParts.join("；")}。`,
+    evidence,
+  };
+}
+
+function isLegacyExecutableFile(file) {
+  return LEGACY_EXECUTABLE_RUNTIMES.has(file?.executableInfo?.runtime);
+}
+
+function isDirectLaunchCompatibleExecutable(file) {
+  return !isLegacyExecutableFile(file);
+}
+
+function formatExecutableInfoEvidence(file) {
+  const info = file.executableInfo || {};
+  const label = info.label || info.format || info.runtime || "executable";
+  return `${file.path} (${label})`;
+}
+
 function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, installerCandidates, errorText, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
   const checks = [];
   const engineIds = new Set(engines.map((engine) => engine.id));
@@ -3465,6 +3516,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
   const topLaunch = launchCandidates[0]?.file;
   const topInstaller = installerCandidates[0]?.file;
+  const legacyExecutableRoute = getLegacyExecutableRoute(files, topLaunch, topInstaller);
   const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
   const localeEngineNames = engines
     .filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))
@@ -3556,6 +3608,19 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       evidence: topLaunch ? [topLaunch.path] : topInstaller ? [topInstaller.path] : [],
     }),
   );
+
+  if (legacyExecutableRoute.hasAny) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "legacy-runtime",
+        title: "古早系统可执行格式",
+        status: legacyExecutableRoute.topIsLegacy ? "blocker" : "warning",
+        detail: legacyExecutableRoute.detail,
+        action: legacyExecutableRoute.action,
+        evidence: legacyExecutableRoute.evidence,
+      }),
+    );
+  }
 
   if (commercialEngine) {
     checks.push(
@@ -4222,15 +4287,15 @@ function buildRoadmap({ packages, launchCandidates, installerCandidates, profile
     }
   }
 
-  for (const checkId of ["commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
+  for (const checkId of ["legacy-runtime", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
     const check = envChecks.get(checkId);
-    if (!check || check.status !== "warning") continue;
+    if (!check || !["blocker", "warning"].includes(check.status)) continue;
     const recipeId = getEnvironmentRecipeId(check.id);
     if (recipeId && hasErrorRecipe(errorDiagnostics, recipeId)) continue;
     addStep({
       id: `env-${check.id}`,
       title: check.title,
-      state: "todo",
+      state: check.status === "blocker" ? "blocked" : "todo",
       priority: getEnvironmentRoadmapPriority(check.id),
       detail: check.detail,
       action: check.action,
@@ -4392,6 +4457,7 @@ function getRoadmapStateLabel(state) {
 
 function getEnvironmentRoadmapPriority(id) {
   const priorities = {
+    "legacy-runtime": 34,
     "commercial-engine": 35,
     path: 40,
     locale: 50,
@@ -5120,15 +5186,16 @@ function renderWizardRepairAction(repair, index) {
 
 function renderWizardLaunchAction(candidate) {
   const canLaunch = canDesktopLaunchFile(candidate.file);
+  const unavailableText = getDesktopLaunchUnavailableText(candidate.file);
   return `
     <button
       type="button"
       data-launch-action="candidate"
       data-candidate-index="0"
       ${canLaunch ? "" : "disabled"}
-      title="${escapeHtml(canLaunch ? getUiText("wizardLaunchTop") : getUiText("launchUnavailable"))}"
+      title="${escapeHtml(canLaunch ? getUiText("wizardLaunchTop") : unavailableText)}"
     >
-      ${escapeHtml(canLaunch ? getUiText("wizardOneClickLaunch") : getUiText("launchUnavailable"))}
+      ${escapeHtml(canLaunch ? getUiText("wizardOneClickLaunch") : unavailableText)}
     </button>
   `;
 }
@@ -5173,6 +5240,7 @@ function renderPreparedHandoff(analysis) {
     : getUiText("preparedHandoffNoLaunchBody", { source, target });
   const canLaunchTopCandidate = topCandidate ? canDesktopLaunchFile(topCandidate.file) : false;
   const canLaunchTopInstaller = topInstaller ? canDesktopLaunchInstallerCandidate(topInstaller) : false;
+  const launchUnavailableText = topCandidate ? getDesktopLaunchUnavailableText(topCandidate.file) : getUiText("launchUnsupported");
   const mountedImageAction = renderMountedImageAction(meta);
   const action = topCandidate
     ? `
@@ -5182,9 +5250,9 @@ function renderPreparedHandoff(analysis) {
         data-launch-action="candidate"
         data-candidate-index="0"
         ${canLaunchTopCandidate ? "" : "disabled"}
-        title="${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : getUiText("launchUnsupported"))}"
+        title="${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : launchUnavailableText)}"
       >
-        ${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : getUiText("launchUnsupported"))}
+        ${escapeHtml(canLaunchTopCandidate ? getUiText("launchNow") : launchUnavailableText)}
       </button>
     `
     : topInstaller
@@ -5347,6 +5415,7 @@ function renderLaunchFailureTriageOption(question, option, selectedOptionId) {
 function renderCandidateLaunchAction(candidate, index) {
   if (!desktopApi) return "";
   const canLaunch = canDesktopLaunchFile(candidate.file);
+  const unavailableText = getDesktopLaunchUnavailableText(candidate.file);
   return `
     <button
       class="launch-entry-button"
@@ -5354,9 +5423,9 @@ function renderCandidateLaunchAction(candidate, index) {
       data-launch-action="candidate"
       data-candidate-index="${index}"
       ${canLaunch ? "" : "disabled"}
-      title="${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}"
+      title="${escapeHtml(canLaunch ? getUiText("launchNow") : unavailableText)}"
     >
-      ${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}
+      ${escapeHtml(canLaunch ? getUiText("launchNow") : unavailableText)}
     </button>
   `;
 }
@@ -5367,8 +5436,14 @@ function canDesktopLaunchFile(file) {
       desktopApi.platform === "win32" &&
       file?.fullPath &&
       ["exe", "com", "bat", "cmd", "lnk", "msi"].includes(file.ext) &&
+      isDirectLaunchCompatibleExecutable(file) &&
       isAllowedDesktopScriptLaunch(file),
   );
+}
+
+function getDesktopLaunchUnavailableText(file) {
+  if (isLegacyExecutableFile(file)) return getUiText("legacyLaunchUnsupported");
+  return getUiText("launchUnsupported");
 }
 
 function canDesktopLaunchInstallerCandidate(candidate) {
@@ -5398,7 +5473,8 @@ function canDesktopCreateShortcut(file) {
     desktopApi?.createShortcut &&
       desktopApi.platform === "win32" &&
       file?.fullPath &&
-      ["exe", "com"].includes(file.ext),
+      ["exe", "com"].includes(file.ext) &&
+      isDirectLaunchCompatibleExecutable(file),
   );
 }
 
@@ -5582,7 +5658,9 @@ function getLaunchTemplateDescription(template, language = getAssistantLanguage(
 
 function renderProfileLaunchButton(profile) {
   if (!desktopApi) return "";
-  const canLaunch = canDesktopLaunchFile({ ext: getExt(profile.entryName), fullPath: profile.entryFullPath });
+  const file = { ext: getExt(profile.entryName), fullPath: profile.entryFullPath, executableInfo: profile.executableInfo };
+  const canLaunch = canDesktopLaunchFile(file);
+  const unavailableText = getDesktopLaunchUnavailableText(file);
   return `
     <button
       class="launch-entry-button"
@@ -5590,25 +5668,27 @@ function renderProfileLaunchButton(profile) {
       data-profile-action="launch"
       data-profile-id="${profile.id}"
       ${canLaunch ? "" : "disabled"}
-      title="${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}"
+      title="${escapeHtml(canLaunch ? getUiText("launchNow") : unavailableText)}"
     >
-      ${escapeHtml(canLaunch ? getUiText("launchNow") : getUiText("launchUnsupported"))}
+      ${escapeHtml(canLaunch ? getUiText("launchNow") : unavailableText)}
     </button>
   `;
 }
 
 function renderProfileShortcutButton(profile) {
   if (!desktopApi) return "";
-  const canCreate = canDesktopCreateShortcut({ ext: getExt(profile.entryName), fullPath: profile.entryFullPath });
+  const file = { ext: getExt(profile.entryName), fullPath: profile.entryFullPath, executableInfo: profile.executableInfo };
+  const canCreate = canDesktopCreateShortcut(file);
+  const unavailableText = getDesktopLaunchUnavailableText(file);
   return `
     <button
       type="button"
       data-profile-action="create-shortcut"
       data-profile-id="${profile.id}"
       ${canCreate ? "" : "disabled"}
-      title="${escapeHtml(canCreate ? getUiText("createShortcut") : getUiText("launchUnsupported"))}"
+      title="${escapeHtml(canCreate ? getUiText("createShortcut") : unavailableText)}"
     >
-      ${escapeHtml(canCreate ? getUiText("createShortcut") : getUiText("launchUnsupported"))}
+      ${escapeHtml(canCreate ? getUiText("createShortcut") : unavailableText)}
     </button>
   `;
 }
@@ -6701,6 +6781,7 @@ function buildFileManifest(analysis) {
     size: file.size,
     sizeLabel: formatBytes(file.size),
     depth: file.depth,
+    executableInfo: file.executableInfo || undefined,
   }));
 
   return {

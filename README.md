@@ -32,7 +32,7 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
   <tr>
     <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z/.lzh`, split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
     <td width="25%" valign="top"><strong>02 Prepare</strong><br>GalAid groups packages, asks for a password when needed, extracts or mounts, then rescans the prepared folder.</td>
-    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start the Windows `.exe/.com/.bat/.cmd/.lnk` with the right working directory.</td>
+    <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start compatible Windows `.exe/.com/.bat/.cmd/.lnk` files with the right working directory.</td>
     <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, VC++, locale, RTP, path, or package route.</td>
   </tr>
 </table>
@@ -71,6 +71,7 @@ Many visual novel players get stuck before the game even opens:
 - Japanese locale, fonts, and path encoding cause mojibake or crashes
 - old DirectX / VC++ / RPG Maker RTP dependencies are missing
 - folders contain many `.exe` files and it is unclear which one starts the game
+- Win95/Win98/WinXP-era entries may actually be DOS, Win16, old installer media, or normal Win32
 - a startup dialog appears, but the user cannot copy the text
 
 GalAid turns that mess into a guided launch route.
@@ -88,7 +89,7 @@ GalAid turns that mess into a guided launch route.
 <table>
   <tr>
     <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, disc-image pairs, legacy image formats, runtime repair tools, and password prompts are folded into one prepare-and-rescan flow.</td>
-    <td width="33%" valign="top"><strong>Folder to launcher</strong><br>Launch candidates are ranked against installers, redists, config tools, engine files, working directories, and commercial/self-developed layouts. Setup/autorun/MSI entries, including `autorun.inf` targets, become a separate install-media route when no game launcher is ready.</td>
+    <td width="33%" valign="top"><strong>Folder to launcher</strong><br>Launch candidates are ranked against installers, redists, config tools, engine files, executable headers, working directories, and commercial/self-developed layouts. Setup/autorun/MSI entries, including `autorun.inf` targets, become a separate install-media route when no game launcher is ready.</td>
     <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs, screenshot OCR, and optional desktop runtime checks feed the roadmap for DirectX, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
   </tr>
   <tr>
@@ -117,7 +118,7 @@ GalAid can generate a launch profile from the best executable candidate. A profi
 - engine and locale notes
 - a portable `.galaid-profile.json` file
 
-Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a scanned Windows `.exe/.com/.bat/.cmd/.lnk` entry with the correct working directory, and users can create a Windows shortcut for normal executable entries.
+Profiles do not auto-run games by themselves. In the web app, commands use relative paths. Locale-sensitive profiles can include optional Locale Emulator, Wine, and Proton templates that users can inspect and copy. In the desktop beta, copying a command can use the local path from the folder picker, a deliberate click can launch a scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entry with the correct working directory, and users can create a Windows shortcut for normal executable entries. DOS MZ/COM, Win16 NE, and LE/LX legacy executables are routed to old-runtime guidance instead of direct launch.
 
 ## Next-Step Roadmap
 
@@ -129,7 +130,7 @@ After a launch attempt fails, the `启动` tab can walk the user through a quick
 
 The environment page turns common "why won't this start?" issues into a checklist before the user starts changing system settings.
 
-It checks whether the folder appears fully extracted, whether a launch entry exists, whether bundled DirectX/VC++/RPG Maker RTP repair tools are present, and whether the metadata or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
+It checks whether the folder appears fully extracted, whether a launch entry exists, whether bundled DirectX/VC++/RPG Maker RTP repair tools are present, and whether the metadata or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old executable formats, old DirectX components, VC++ redistributables, RPG Maker RTP, permissions, or web VN browser restrictions.
 
 For many commercial Japanese VNs, GalAid does not need to name the exact private engine to be useful. A root `.exe` plus large `.arc/.dat/.pak/.pck/.cpk/.pac/.vol` resource archives, nearby DLL plugins, and config files is enough to trigger the commercial/self-developed engine route. That route focuses on preserving the original folder structure, keeping the working directory correct, and checking locale/runtime problems before assuming the game itself is broken.
 
@@ -229,7 +230,7 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.lzh/.lha`, `.arj`, `.cab`, `.tar/.tgz/.tar.gz`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z/LZH/LHA/ARJ/CAB/TAR-style metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/RPG Maker RTP repair tools, split-volume status, old install-media clues, bonus discs, patch-like packages, and engine clues before extraction.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.lzh/.lha`, `.arj`, `.cab`, `.tar/.tgz/.tar.gz`, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z/LZH/LHA/ARJ/CAB/TAR-style metadata through the bundled or local 7z-compatible command, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/RPG Maker RTP repair tools, split-volume status, old install-media clues, bonus discs, patch-like packages, engine clues, and DOS/Win16/Win32/Win64 executable headers before extraction.
 
 When the user clicks the one-stop launch button, the desktop beta can use a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It extracts supported archive packages into a new sibling `*-prepared` folder, asks for a known password when needed, expands compressed tar packages such as `.tar.gz/.tgz` in two passes, mounts Windows `.iso` images through the system mount command, or best-effort extracts common disc-image files before automatically rescanning the prepared folder and launching the top entry. If no game launcher exists but an install-media entry does, including `.msi`, the same flow opens that installer and tells the user to rescan the installed game folder afterward. The manual `Extract and rescan` and `Mount/extract and rescan` actions remain available when the user wants to choose the output parent folder first. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 
@@ -286,7 +287,7 @@ npm install
 npm start
 ```
 
-The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker and drag/drop path scan are native and can recursively scan local folders without browser directory limitations. It can launch scanned Windows `.exe/.com/.bat/.cmd/.lnk` entries after the user clicks `Launch`; install-media `.msi` entries are opened through Windows Installer. When the current input is a trusted package/image, that same launch flow can prepare, rescan, and launch the top entry. GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for normal executable entries and shows a recent-launch history.
+The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker and drag/drop path scan are native and can recursively scan local folders without browser directory limitations. It can launch scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries after the user clicks `Launch`; install-media `.msi` entries are opened through Windows Installer. DOS COM/MZ, Win16 NE, and LE/LX entries are detected from headers and kept on a DOSBox/old-OS/VM route instead of direct launch. When the current input is a trusted package/image, that same launch flow can prepare, rescan, and launch the top entry when it is compatible. GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for normal executable entries and shows a recent-launch history.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:
 
