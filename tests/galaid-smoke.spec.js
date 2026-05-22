@@ -481,6 +481,88 @@ test("desktop launch buttons support scanned Windows shortcuts", async ({ page }
   expect(result.launch.entryFullPath).toBe("C:\\Games\\ShortcutVN\\Play.lnk");
 });
 
+test("desktop launch buttons support trusted Windows launch scripts", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return {
+          ok: true,
+          pid: 5678,
+          entryName: "Start.bat",
+          relativePath: "ScriptVN/Start.bat",
+          workingDirectory: "C:\\Games\\ScriptVN",
+        };
+      },
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    await setFiles([
+      {
+        name: "Start.bat",
+        path: "ScriptVN/Start.bat",
+        lowerPath: "scriptvn/start.bat",
+        ext: "bat",
+        size: 220,
+        depth: 1,
+        fullPath: "C:\\Games\\ScriptVN\\Start.bat",
+      },
+      {
+        name: "setup.bat",
+        path: "ScriptVN/setup.bat",
+        lowerPath: "scriptvn/setup.bat",
+        ext: "bat",
+        size: 220,
+        depth: 1,
+        fullPath: "C:\\Games\\ScriptVN\\setup.bat",
+      },
+      {
+        name: "data.xp3",
+        path: "ScriptVN/data.xp3",
+        lowerPath: "scriptvn/data.xp3",
+        ext: "xp3",
+        size: 420000000,
+        depth: 1,
+        fullPath: "C:\\Games\\ScriptVN\\data.xp3",
+      },
+    ]);
+  });
+
+  await expect(page.locator(".candidate").filter({ hasText: "Start.bat" })).toContainText("启动");
+  await expect(page.locator(".candidate").filter({ hasText: "setup.bat" })).toHaveCount(0);
+  await page.locator(".candidate").filter({ hasText: "Start.bat" }).getByRole("button", { name: "启动" }).click();
+  await page.waitForFunction(() => window.__launchPayloads?.length === 1);
+
+  const result = await page.evaluate(() => ({
+    launch: window.__launchPayloads[0],
+    entry: currentAnalysis.launchCandidates[0]?.file.path,
+    canLaunch: canDesktopLaunchFile(currentAnalysis.launchCandidates[0]?.file),
+    setupCanLaunch: canDesktopLaunchFile({
+      name: "setup.bat",
+      path: "ScriptVN/setup.bat",
+      lowerPath: "scriptvn/setup.bat",
+      ext: "bat",
+      fullPath: "C:\\Games\\ScriptVN\\setup.bat",
+    }),
+  }));
+
+  expect(result.entry).toBe("ScriptVN/Start.bat");
+  expect(result.canLaunch).toBe(true);
+  expect(result.setupCanLaunch).toBe(false);
+  expect(result.launch.entryFullPath).toBe("C:\\Games\\ScriptVN\\Start.bat");
+});
+
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

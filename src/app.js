@@ -665,7 +665,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noProfilesTitle: "还不能生成启动配置",
       noProfilesBody: "当前没有可用启动入口。先处理压缩包/镜像，或换成完整解压后的游戏文件夹再试。",
       safeModeTitle: "启动方式",
-      safeModeBody: "网页里会生成可检查的命令；桌面版可以在你点击后用正确工作目录启动本地 .exe/.com/.lnk，安装盘 .msi 也可从安装入口打开。",
+      safeModeBody: "网页里会生成可检查的命令；桌面版可以在你点击后用正确工作目录启动本地 .exe/.com/.bat/.cmd/.lnk，安装盘 .msi 也可从安装入口打开。",
       entryLabel: "entry",
       workdirLabel: "workdir",
       desktopPathReady: "desktop path ready",
@@ -673,7 +673,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchNow: "启动",
       launching: "启动中...",
       launchUnavailable: "仅桌面版可启动",
-      launchUnsupported: "仅支持 Windows .exe/.com/.lnk/.msi",
+      launchUnsupported: "仅支持 Windows .exe/.com/.bat/.cmd/.lnk/.msi",
       toastRepairToolStarted: "已打开修复工具：{name}",
       createShortcut: "创建快捷方式",
       creatingShortcut: "创建中...",
@@ -1026,7 +1026,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noProfilesTitle: "No launch profile yet",
       noProfilesBody: "There is no usable launcher yet. Handle archives/images first, or retry with the fully extracted game folder.",
       safeModeTitle: "Launch method",
-      safeModeBody: "The web app generates inspectable commands. In the desktop app, a deliberate click can launch local .exe/.com/.lnk entries with the correct working directory, while install-media .msi entries open through the installer route.",
+      safeModeBody: "The web app generates inspectable commands. In the desktop app, a deliberate click can launch local .exe/.com/.bat/.cmd/.lnk entries with the correct working directory, while install-media .msi entries open through the installer route.",
       entryLabel: "entry",
       workdirLabel: "workdir",
       desktopPathReady: "desktop path ready",
@@ -1034,7 +1034,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchNow: "Launch",
       launching: "Launching...",
       launchUnavailable: "Desktop only",
-      launchUnsupported: "Windows .exe/.com/.lnk/.msi only",
+      launchUnsupported: "Windows .exe/.com/.bat/.cmd/.lnk/.msi only",
       toastRepairToolStarted: "Repair tool opened: {name}",
       createShortcut: "Create shortcut",
       creatingShortcut: "Creating...",
@@ -1387,7 +1387,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       noProfilesTitle: "起動設定はまだ生成できません",
       noProfilesBody: "使える起動ファイルがありません。先にアーカイブ/イメージを処理するか、展開済みゲームフォルダで再試行してください。",
       safeModeTitle: "起動方法",
-      safeModeBody: "Web 版では確認できるコマンドを生成します。デスクトップ版では、クリックした場合に正しい作業フォルダでローカルの .exe/.com/.lnk を起動でき、インストールメディアの .msi も開けます。",
+      safeModeBody: "Web 版では確認できるコマンドを生成します。デスクトップ版では、クリックした場合に正しい作業フォルダでローカルの .exe/.com/.bat/.cmd/.lnk を起動でき、インストールメディアの .msi も開けます。",
       entryLabel: "入口",
       workdirLabel: "作業フォルダ",
       desktopPathReady: "デスクトップパスあり",
@@ -1395,7 +1395,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchNow: "起動",
       launching: "起動中...",
       launchUnavailable: "デスクトップ版のみ",
-      launchUnsupported: "Windows .exe/.com/.lnk/.msi のみ",
+      launchUnsupported: "Windows .exe/.com/.bat/.cmd/.lnk/.msi のみ",
       createShortcut: "ショートカット作成",
       creatingShortcut: "作成中...",
       launchHistoryTitle: "最近の起動",
@@ -5359,7 +5359,18 @@ function canDesktopLaunchFile(file) {
     desktopApi?.launchEntry &&
       desktopApi.platform === "win32" &&
       file?.fullPath &&
-      ["exe", "com", "lnk", "msi"].includes(file.ext),
+      ["exe", "com", "bat", "cmd", "lnk", "msi"].includes(file.ext) &&
+      isAllowedDesktopScriptLaunch(file),
+  );
+}
+
+function isAllowedDesktopScriptLaunch(file) {
+  if (!["bat", "cmd"].includes(file?.ext)) return true;
+  const lower = String(file.lowerPath || file.path || file.name || file.fullPath || "").toLowerCase();
+  return !(
+    /(^|\/)(setup|install|installer|redist|support|patch|update|unins|uninstall)([._ -]|$)/i.test(lower) ||
+    /^(setup|install|installer|redist|patch|update|unins|uninstall)[\w .-]*\.(bat|cmd)$/i.test(String(file.name || "")) ||
+    /(dxsetup|dxwebsetup|vcredist|vc_redist|dotnet|config|setting|option|keygen|crack|serial|no.?dvd|no.?cd|免dvd|免cd)/i.test(lower)
   );
 }
 

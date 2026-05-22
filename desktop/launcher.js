@@ -2,14 +2,15 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com", "lnk", "msi"]);
+const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com", "bat", "cmd", "lnk", "msi"]);
+const WINDOWS_SCRIPT_EXTS = new Set(["bat", "cmd"]);
 const SHORTCUT_EXT = ".lnk";
 
 function buildLaunchAllowlist(files) {
   const allowlist = new Map();
 
   for (const file of files || []) {
-    if (!file?.fullPath || !isWindowsLaunchablePath(file.fullPath)) continue;
+    if (!isAllowedScannedLaunchFile(file)) continue;
     const entryFullPath = path.resolve(file.fullPath);
     allowlist.set(entryFullPath, {
       entryFullPath,
@@ -25,6 +26,23 @@ function buildLaunchAllowlist(files) {
 function isWindowsLaunchablePath(filePath) {
   const ext = path.extname(String(filePath || "")).replace(/^\./, "").toLowerCase();
   return WINDOWS_LAUNCH_EXTS.has(ext);
+}
+
+function isAllowedScannedLaunchFile(file) {
+  if (!file?.fullPath || !isWindowsLaunchablePath(file.fullPath)) return false;
+  const ext = path.extname(String(file.fullPath || "")).replace(/^\./, "").toLowerCase();
+  if (!WINDOWS_SCRIPT_EXTS.has(ext)) return true;
+  return !isInstallerOrToolScript(file);
+}
+
+function isInstallerOrToolScript(file) {
+  const lowerPath = String(file.lowerPath || file.path || file.fullPath || "").toLowerCase();
+  const base = path.basename(String(file.fullPath || file.name || "")).toLowerCase();
+  return (
+    /(^|[\\/])(setup|install|installer|redist|support|patch|update|unins|uninstall)([._ -]|$)/i.test(lowerPath) ||
+    /^(setup|install|installer|redist|patch|update|unins|uninstall)[\w .-]*\.(bat|cmd)$/i.test(base) ||
+    /(dxsetup|dxwebsetup|vcredist|vc_redist|dotnet|config|setting|option|keygen|crack|serial|no.?dvd|no.?cd|免dvd|免cd)/i.test(lowerPath)
+  );
 }
 
 async function launchAllowedEntry({
@@ -123,6 +141,12 @@ function getLaunchCommand(entry) {
       args: ["/d", "/s", "/c", "start", "", entry.entryFullPath],
     };
   }
+  if (ext === ".bat" || ext === ".cmd") {
+    return {
+      command: "cmd.exe",
+      args: ["/d", "/s", "/c", "call", entry.entryFullPath],
+    };
+  }
   if (ext === ".msi") {
     return {
       command: "msiexec.exe",
@@ -146,6 +170,7 @@ module.exports = {
   buildLaunchAllowlist,
   createShortcutForAllowedEntry,
   getLaunchCommand,
+  isAllowedScannedLaunchFile,
   isWindowsLaunchablePath,
   launchAllowedEntry,
   normalizeShortcutPath,
