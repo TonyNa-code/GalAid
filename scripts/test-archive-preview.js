@@ -28,6 +28,8 @@ async function main() {
   assert.deepEqual(getPreviewKind("ClassicVN.lzh", "lzh"), { kind: "external-list", format: "LZH" });
   assert.deepEqual(getPreviewKind("ClassicVN.tar.gz", "gz"), { kind: "external-list", format: "TAR.GZ" });
   assert.equal(getPreviewKind("ClassicVN.z01", "z01"), null);
+  assert.equal(getPreviewKind("DownloadPackage.exe", "exe"), null);
+  assert.deepEqual(getPreviewKind("DownloadPackage.exe", "exe", { allowSelfExtractingExecutable: true }), { kind: "self-extracting-archive", format: "Self-extracting EXE" });
 
   const rarPreview = parseSevenZipListOutput(
     [
@@ -76,6 +78,33 @@ async function main() {
   assert.deepEqual(rarPreview.signals.installerSamples, ["MoonlightCafe/setup.exe"]);
   assert.equal(rarPreview.signals.assetCounts.commercialArchives, 4);
   assert.equal(rarPreview.signals.engineHints[0].id, "commercial-proprietary");
+
+  const sfxPreview = parseSevenZipListOutput(
+    [
+      "Path = GalgamePackage.exe",
+      "Type = 7z",
+      "",
+      "Path = GalgamePackage/Game.exe",
+      "Size = 1422000",
+      "Packed Size = 980000",
+      "Encrypted = -",
+      "",
+      "Path = GalgamePackage/data.xp3",
+      "Size = 420000000",
+      "Packed Size = 380000000",
+      "Encrypted = -",
+      "",
+    ].join("\n"),
+    "Self-extracting EXE",
+    {
+      packageKind: "self-extracting-archive",
+      warnings: ["Self-extracting EXE package detected; prepare it like an archive before launching the extracted game."],
+    },
+  );
+  assert.equal(sfxPreview.status, "ok");
+  assert.equal(sfxPreview.packageKind, "self-extracting-archive");
+  assert.equal(sfxPreview.signals.launchCandidateCount, 1);
+  assert.deepEqual(sfxPreview.signals.launchSamples, ["GalgamePackage/Game.exe"]);
 
   const isoPath = path.join(tempDir, "MoonlightCafe_Bonus.iso");
   await fs.writeFile(isoPath, Buffer.alloc(32));

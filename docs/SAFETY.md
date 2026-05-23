@@ -14,8 +14,8 @@ GalAid is a diagnostics tool, not a piracy tool.
 - Generate a local next-step roadmap without changing system settings
 - Generate a local diagnosis report
 - Generate a local support ZIP containing diagnosis metadata only
-- Preflight ZIP/RAR/7z package metadata and disc-image media roles in the desktop beta before any extraction or mounting
-- Extract ZIP/RAR/7z packages locally only after the user explicitly chooses an output folder and supplies any known password
+- Preflight ZIP/RAR/7z/self-extracting EXE package metadata and disc-image media roles in the desktop beta before any extraction or mounting
+- Extract ZIP/RAR/7z/self-extracting EXE packages locally only after the user explicitly clicks a prepare/launch action and supplies any known password
 - Mount Windows `.iso` images or best-effort extract supported disc images only after the user explicitly clicks the desktop prepare action
 - Unmount ISO images that GalAid mounted in the current desktop session after the user explicitly clicks the cleanup action
 - Record user-marked launch outcome symptoms without monitoring the game process
@@ -46,7 +46,7 @@ The app does not read file contents for diagnosis in the MVP.
 
 Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. The support tab previews the included file list before download.
 
-Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z can be listed through the bundled or local 7z-compatible command when available, and disc images are treated as media/descriptor files.
+Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z and detected self-extracting EXE packages can be listed through the bundled or local 7z-compatible command when available, and disc images are treated as media/descriptor files.
 
 Desktop package preparation is separate from preflight. It only starts after a user launch/prepare click, uses an automatic sibling `*-prepared` folder for the one-stop flow or a user-selected output folder for the manual prepare flow, accepts a password the user already knows, and immediately rescans the prepared folder or mounted image. GalAid does not save package passwords, crack passwords, upload package contents, silently mount disc images, or run executables outside the allowlisted launch flow.
 

@@ -115,6 +115,88 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(page.getByRole("heading", { name: "No launch candidate" })).toBeVisible();
 });
 
+test("self-extracting EXE packages prepare before launch", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async () => ({ ok: false, errorCode: "canceled" }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    await setFiles([
+      {
+        name: "DownloadPackage.exe",
+        path: "DownloadPackage.exe",
+        lowerPath: "downloadpackage.exe",
+        ext: "exe",
+        size: 520000000,
+        depth: 0,
+        fullPath: "C:\\Downloads\\DownloadPackage.exe",
+        archivePreview: {
+          schema: "galaid.archivePreview.v1",
+          format: "Self-extracting EXE",
+          packageKind: "self-extracting-archive",
+          status: "ok",
+          totalEntries: 2,
+          scannedEntries: 2,
+          fileCount: 2,
+          directoryCount: 0,
+          encryptedEntries: 0,
+          truncated: false,
+          warnings: ["Self-extracting EXE package detected; prepare it like an archive before launching the extracted game."],
+          sampleFiles: [
+            { path: "DownloadPackage/Game.exe", name: "Game.exe", ext: "exe", size: 1422000, compressedSize: 980000, depth: 1 },
+            { path: "DownloadPackage/data.xp3", name: "data.xp3", ext: "xp3", size: 420000000, compressedSize: 380000000, depth: 1 },
+          ],
+          signals: {
+            launchCandidateCount: 1,
+            launchSamples: ["DownloadPackage/Game.exe"],
+            installerCount: 0,
+            installerSamples: [],
+            runtimeRepairCount: 0,
+            runtimeRepairSamples: [],
+            engineHints: [{ id: "kirikiri", name: "KiriKiri / 吉里吉里", count: 1, samples: ["DownloadPackage/data.xp3"] }],
+            assetCounts: {
+              images: 0,
+              audio: 0,
+              video: 0,
+              scripts: 0,
+              resourceArchives: 1,
+              commercialArchives: 0,
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  await page.locator('[data-tab="packages"]').click();
+  await expect(page.locator("#packagesPanel")).toContainText("Self-extracting EXE archive");
+  await expect(page.locator("#packagesPanel")).toContainText("DownloadPackage/Game.exe");
+  await expect(page.locator("#packagesPanel")).toContainText("解压并重扫");
+  await page.locator('[data-tab="launch"]').click();
+  await expect(page.locator(".one-stop-wizard")).toContainText("一键准备并启动");
+
+  const result = await page.evaluate(() => ({
+    launchCandidates: currentAnalysis.launchCandidates.map((candidate) => candidate.file.path),
+    archiveFormat: currentAnalysis.packages.archiveSets[0]?.format,
+    roadmapId: currentAnalysis.roadmap.steps[0]?.id,
+  }));
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.archiveFormat).toBe("Self-extracting EXE archive");
+  expect(result.roadmapId).toBe("extract-first");
+});
+
 test("desktop one-click flow prepares a package automatically before launch", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

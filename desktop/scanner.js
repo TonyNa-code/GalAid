@@ -341,8 +341,17 @@ function makeExecutableInfo(info) {
 }
 
 async function withArchivePreview(file) {
-  const archivePreview = await previewArchiveFile(file.fullPath, file.ext);
+  const archivePreview = await previewArchiveFile(file.fullPath, file.ext, {
+    allowSelfExtractingExecutable: shouldPreviewSelfExtractingExecutable(file),
+  });
   return archivePreview ? { ...file, archivePreview } : file;
+}
+
+function shouldPreviewSelfExtractingExecutable(file) {
+  if (!file?.fullPath || file.ext !== "exe" || file.size <= 0) return false;
+  if (file.depth === 0) return true;
+  const lowerPath = String(file.lowerPath || file.path || file.name || "").toLowerCase();
+  return file.depth <= 1 && /(sfx|self.?extract|extract|unpack|archive|package|setup|install|patch|update)/i.test(lowerPath);
 }
 
 async function withTextPreview(file) {

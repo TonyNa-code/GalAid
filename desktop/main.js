@@ -348,10 +348,19 @@ function getMountedImageKey(value) {
 function buildPackageAllowlist(files) {
   const allowlist = new Map();
   for (const file of files || []) {
-    if (!file?.fullPath || !isPrepareSupportedPackage(file.fullPath)) continue;
+    if (!file?.fullPath) continue;
+    if (path.extname(file.fullPath).toLowerCase() === ".exe") {
+      if (!isSelfExtractingArchiveFile(file)) continue;
+    } else if (!isPrepareSupportedPackage(file.fullPath)) {
+      continue;
+    }
     allowlist.set(path.resolve(file.fullPath), file);
   }
   return allowlist;
+}
+
+function isSelfExtractingArchiveFile(file) {
+  return file?.archivePreview?.packageKind === "self-extracting-archive" && file.archivePreview.status === "ok";
 }
 
 async function readLaunchHistory() {
@@ -434,6 +443,7 @@ function stripPackageExt(filename) {
     .replace(/\.(zip|rar|7z)$/i, "")
     .replace(/\.(zip|7z)\.001$/i, "")
     .replace(/\.part0*1\.rar$/i, "")
+    .replace(/\.exe$/i, "")
     .replace(/\.(iso|cue|bin|mdf|mds|ccd|img|nrg|sub|isz|cdi|bwt|bwi|bws|bwa|b5t|b5i|b6t|b6i|mdx|daa|uif|pdi)$/i, "");
 }
 

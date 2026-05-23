@@ -54,11 +54,17 @@ const COMPOUND_ARCHIVE_FORMATS = [
   [/\.tzst$/i, "TAR.ZST"],
 ];
 
-async function previewArchiveFile(filePath, ext) {
-  const previewKind = getPreviewKind(filePath, ext);
+async function previewArchiveFile(filePath, ext, options = {}) {
+  const previewKind = getPreviewKind(filePath, ext, options);
   if (!previewKind) return null;
   if (previewKind.kind === "zip") return previewZipFile(filePath);
   if (previewKind.kind === "external-list") return previewExternalArchiveFile(filePath, previewKind.format);
+  if (previewKind.kind === "self-extracting-archive") {
+    return previewExternalArchiveFile(filePath, previewKind.format, {
+      packageKind: "self-extracting-archive",
+      silentOnFailure: true,
+    });
+  }
   if (previewKind.kind === "disc-image") return previewDiscImageFile(filePath, previewKind.ext);
   return null;
 }
@@ -77,7 +83,7 @@ async function previewZipFile(filePath) {
   }
 }
 
-function getPreviewKind(filePath, ext) {
+function getPreviewKind(filePath, ext, options = {}) {
   const lowerName = path.basename(filePath).toLowerCase();
   const normalizedExt = String(ext || "").toLowerCase();
   const rarPart = lowerName.match(/\.part0*(\d+)\.rar$/);
@@ -90,6 +96,9 @@ function getPreviewKind(filePath, ext) {
   if (/\.z\d{2}$/.test(lowerName) || /\.(7z|zip)\.\d{3}$/.test(lowerName)) return null;
   if (compoundFormat) return { kind: "external-list", format: compoundFormat };
   if (EXTERNAL_ARCHIVE_EXT_FORMATS.has(normalizedExt)) return { kind: "external-list", format: EXTERNAL_ARCHIVE_EXT_FORMATS.get(normalizedExt) };
+  if (normalizedExt === "exe" && options.allowSelfExtractingExecutable) {
+    return { kind: "self-extracting-archive", format: "Self-extracting EXE" };
+  }
   if (/\.r\d{2}$/.test(lowerName)) return null;
   if (DISC_EXTS.has(normalizedExt)) return { kind: "disc-image", format: `${normalizedExt.toUpperCase()} disc image`, ext: normalizedExt };
   return null;
@@ -102,16 +111,18 @@ function getCompoundArchiveFormat(lowerName) {
   return "";
 }
 
-async function previewExternalArchiveFile(filePath, format) {
+async function previewExternalArchiveFile(filePath, format, options = {}) {
   try {
     const stat = await fs.stat(filePath);
     if (!stat.isFile()) return null;
   } catch (error) {
+    if (options.silentOnFailure) return null;
     return makeUnavailablePreview("error", format, `${format} metadata preview failed: ${error.message || "unknown error"}`);
   }
 
   const result = await runExternalList(filePath);
   if (result.missing) {
+    if (options.silentOnFailure) return null;
     return makeUnavailablePreview(
       "tool-missing",
       format,
@@ -120,6 +131,7 @@ async function previewExternalArchiveFile(filePath, format) {
   }
 
   if (result.timedOut) {
+    if (options.silentOnFailure) return null;
     return makeUnavailablePreview(
       "timeout",
       format,
@@ -128,6 +140,7 @@ async function previewExternalArchiveFile(filePath, format) {
   }
 
   if (result.error) {
+    if (options.silentOnFailure) return null;
     return makeUnavailablePreview(
       "error",
       format,
@@ -136,6 +149,7 @@ async function previewExternalArchiveFile(filePath, format) {
   }
 
   const warnings = ["Listed with a local 7z-compatible command; no files were extracted."];
+  if (options.packageKind === "self-extracting-archive") warnings.push("Self-extracting EXE package detected; prepare it like an archive before launching the extracted game.");
   if (result.truncated) warnings.push("External listing output was truncated.");
   if (result.code !== 0) warnings.push(`7z-compatible listing exited with code ${result.code}.`);
   if (result.stderr && result.code !== 0) warnings.push(trimMessage(result.stderr));
@@ -143,7 +157,10 @@ async function previewExternalArchiveFile(filePath, format) {
   const preview = parseSevenZipListOutput(result.stdout, format, {
     warnings,
     truncated: result.truncated,
+    packageKind: options.packageKind,
   });
+
+  if (options.silentOnFailure && !preview.scannedEntries) return null;
 
   if (!preview.scannedEntries && result.code !== 0) {
     return makeUnavailablePreview(
@@ -313,6 +330,7 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
 
 function parseSevenZipListOutput(output, format = "7Z", options = {}) {
   const preview = makeBasePreview(format, {
+    packageKind: options.packageKind || "archive",
     warnings: options.warnings || [],
     truncated: Boolean(options.truncated),
   });

@@ -29,6 +29,8 @@ async function main() {
   assert.equal(isPrepareSupportedArchive("Game.arj"), true);
   assert.equal(isPrepareSupportedArchive("Game.cab"), true);
   assert.equal(isPrepareSupportedArchive("Game.tgz"), true);
+  assert.equal(isPrepareSupportedArchive("SelfExtracting.exe"), true);
+  assert.equal(getArchivePrepareSupport("SelfExtracting.exe").selfExtracting, true);
   assert.equal(getArchivePrepareSupport("Disc.iso").errorCode, "unsupported-package");
   assert.equal(getArchivePrepareSupport("Game.zip.002").errorCode, "follow-up-volume");
   assert.equal(getArchivePrepareSupport("Game.z01").errorCode, "follow-up-volume");
@@ -43,14 +45,17 @@ async function main() {
   const archivePath = path.join(tempDir, "MoonlightCafe.part1.rar");
   const tarGzPath = path.join(tempDir, "SnowTrial.tar.gz");
   const isoPath = path.join(tempDir, "MoonlightCafe.iso");
+  const sfxPath = path.join(tempDir, "InstallerPackage.exe");
   const outputDirectory = path.join(tempDir, "MoonlightCafe-prepared");
   const tarOutputDirectory = path.join(tempDir, "SnowTrial-prepared");
   const imageOutputDirectory = path.join(tempDir, "MoonlightCafe-image-prepared");
+  const sfxOutputDirectory = path.join(tempDir, "InstallerPackage-prepared");
   const knownPassword = "known-" + "password";
   const badPassword = "bad-" + "password";
   await fs.writeFile(archivePath, "fixture");
   await fs.writeFile(tarGzPath, "fixture");
   await fs.writeFile(isoPath, "fixture");
+  await fs.writeFile(sfxPath, "fixture");
 
   const spawned = [];
   const success = await prepareArchivePackage({
@@ -144,6 +149,16 @@ async function main() {
     spawnImpl: makeSpawn({ stdout: "Everything is Ok", code: 0 }),
   });
   assert.equal(generic.ok, true);
+
+  const sfxSpawned = [];
+  const sfx = await prepareLocalPackage({
+    packagePath: sfxPath,
+    outputDirectory: sfxOutputDirectory,
+    spawnImpl: makeSpawn({ spawned: sfxSpawned, stdout: "Everything is Ok", code: 0 }),
+  });
+  assert.equal(sfx.ok, true);
+  assert.equal(sfx.outputDirectory, sfxOutputDirectory);
+  assert.equal(sfxSpawned[0].args.at(-1), sfxPath);
 
   await fs.rm(tempDir, { recursive: true, force: true });
   console.log("Package prep smoke passed.");

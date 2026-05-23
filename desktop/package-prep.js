@@ -114,6 +114,14 @@ function getArchivePrepareSupport(filePath) {
     };
   }
 
+  if (ext === "exe") {
+    return {
+      supported: true,
+      selfExtracting: true,
+      message: "This looks like a self-extracting archive executable.",
+    };
+  }
+
   if (ARCHIVE_EXTS.has(ext) || (numberedVolume && Number(numberedVolume[2]) === 1)) {
     return { supported: true };
   }

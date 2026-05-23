@@ -2535,6 +2535,18 @@ function getArchiveInfo(file) {
     };
   }
 
+  if (isSelfExtractingArchiveFile(file)) {
+    return {
+      kind: "archive",
+      format: "Self-extracting EXE archive",
+      family: stripLastExtension(lower),
+      volumeIndex: null,
+      role: "self-extracting package",
+      action: "这是自解压 EXE 包。桌面版可点解包并重扫；不要把外层 EXE 当作游戏主入口。",
+      file,
+    };
+  }
+
   if (ARCHIVE_EXTS.has(file.ext)) {
     return {
       kind: "archive",
@@ -2548,6 +2560,10 @@ function getArchiveInfo(file) {
   }
 
   return null;
+}
+
+function isSelfExtractingArchiveFile(file) {
+  return file?.archivePreview?.packageKind === "self-extracting-archive" && file.archivePreview.status === "ok";
 }
 
 function getDiscInfo(file) {
@@ -2770,7 +2786,7 @@ function buildDiscSets(discs) {
 
 function buildPackageRecommendations(archiveSets, discSets, archives, discs, files) {
   const steps = [];
-  const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext));
+  const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext) && !isSelfExtractingArchiveFile(file));
   const packageSets = [...archiveSets, ...discSets];
   const previewedArchiveSet = packageSets.find((set) => set.archivePreview?.status === "ok");
   const previewWithLaunch = packageSets.find((set) => set.archivePreview?.status === "ok" && set.archivePreview.signals?.launchCandidateCount);
@@ -3154,6 +3170,7 @@ function detectLaunchCandidates(files, engines) {
 
   for (const file of files) {
     if (!EXE_EXTS.has(file.ext) && file.name.toLowerCase() !== "index.html") continue;
+    if (isSelfExtractingArchiveFile(file)) continue;
 
     const lower = file.lowerPath;
     const base = file.name.toLowerCase();
@@ -3242,6 +3259,7 @@ function detectInstallerCandidates(files) {
 
   for (const file of files) {
     if (!["exe", "com", "msi", "bat", "cmd"].includes(file.ext)) continue;
+    if (isSelfExtractingArchiveFile(file)) continue;
     if (!isInstallMediaEntry(file, { autorunTargets, installMediaPayload })) continue;
 
     const lower = file.lowerPath;
@@ -4066,7 +4084,7 @@ function buildFindings(files, roots, engines, launchCandidates, installerCandida
   const findings = [];
   const archiveCount = packages.archives.length;
   const discCount = packages.discs.length;
-  const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext));
+  const executableCount = countFiles(files, (file) => EXE_EXTS.has(file.ext) && !isSelfExtractingArchiveFile(file));
   const resourceArchiveCount = countFiles(files, (file) => RESOURCE_ARCHIVES.has(file.ext));
   const nonAsciiPaths = samplePaths(files, (file) => /[^\x00-\x7F]/.test(file.path), 3);
   const longPaths = samplePaths(files, (file) => file.path.length > 180, 3);
