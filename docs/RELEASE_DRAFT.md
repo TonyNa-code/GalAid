@@ -20,8 +20,8 @@ GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps 
 - Error screenshot OCR for English, Japanese, and Simplified Chinese dialog text
 - Ordered next-step roadmap for beginners
 - Runtime and environment checks for locale, paths, DirectX, VC++ runtime, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, permissions, and web VN local-server needs
-- Archive and disc-image guidance for split archives, `.iso`, `.cue/.bin`, `.mds/.mdf`, and similar package stages
-- Desktop package preflight for ZIP metadata, bundled/local 7z-compatible RAR/7z/self-extracting EXE listings, and disc-image media/descriptor clues
+- Archive and disc-image guidance for split archives, `.iso`, CUE sheets with referenced `.bin/.img` tracks, `.mds/.mdf`, and similar package stages
+- Desktop package preflight for ZIP metadata, bundled/local 7z-compatible RAR/7z/self-extracting EXE listings, CUE track declarations, and disc-image media/descriptor clues
 - Bundled archive extraction handoff: enter a known password if needed, extract locally into a fresh prepared folder, automatically rescan, then launch the top entry from the one-stop flow
 - Self-extracting EXE packages are routed to prepare-and-rescan when their internal archive directory can be listed
 - Disc-image preparation handoff: mount Windows `.iso` images when available, or best-effort extract supported image files before rescanning

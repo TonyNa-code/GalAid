@@ -43,6 +43,7 @@ const VIDEO_EXTS = new Set(["mp4", "webm", "avi", "wmv", "mpg", "mpeg", "mkv", "
 const SCRIPT_EXTS = new Set(["rpy", "rpyc", "ks", "tjs", "tpm", "txt", "json", "csv", "xml", "ini", "lua", "js"]);
 const ARCHIVE_EXTS = new Set(["zip", "rar", "7z", "tar", "tgz", "gz", "gzip", "bz2", "bzip2", "xz", "txz", "lzma", "zst", "lzh", "lha", "cab", "arj"]);
 const DISC_EXTS = new Set(["iso", "mdf", "mds", "cue", "bin", "ccd", "img", "nrg", "sub", "isz", "cdi", "bwt", "bwi", "bws", "bwa", "b5t", "b5i", "b6t", "b6i", "mdx", "daa", "uif", "pdi"]);
+const CUE_MEDIA_EXTS = new Set(["bin", "img"]);
 const EXE_EXTS = new Set(["exe", "bat", "cmd", "com", "lnk"]);
 const LEGACY_EXECUTABLE_RUNTIMES = new Set(["dos", "win16", "legacy-linear"]);
 const RESOURCE_ARCHIVES = new Set(["rpa", "rpi", "xp3", "nsa", "ns2", "sar", "arc", "pck", "dat", "pak", "wolf", "cpk", "pac", "vol", "iro", "ypf", "int", "gxp", "noa", "med", "wsm"]);
@@ -2449,6 +2450,22 @@ function stripLastExtension(path) {
   return path.replace(/\.[^/.]+$/, "");
 }
 
+function getCueReferencedMediaPaths(file) {
+  if (file?.ext !== "cue" || !file.textPreview) return [];
+  const cueDir = getDirectoryName(file.path);
+  const refs = [];
+  const pattern = /^\s*FILE\s+(?:"([^"]+)"|([^\s]+))/gim;
+  let match;
+  while ((match = pattern.exec(file.textPreview))) {
+    const rawReference = match[1] || match[2] || "";
+    const referencePath = normalizePath(rawReference).replace(/^\.\/+/, "");
+    if (!referencePath || !CUE_MEDIA_EXTS.has(getExt(referencePath))) continue;
+    const resolved = normalizePath(cueDir && cueDir !== "." ? `${cueDir}/${referencePath}` : referencePath).toLowerCase();
+    if (!refs.includes(resolved)) refs.push(resolved);
+  }
+  return refs;
+}
+
 function getArchiveFormat(file) {
   const lower = file.lowerPath;
   const compoundFormats = [
@@ -2595,12 +2612,14 @@ function getDiscInfo(file) {
     pdi: "InstantCopy image",
   };
   const family = stripLastExtension(file.lowerPath);
+  const referencedMediaPaths = getCueReferencedMediaPaths(file);
   return {
     kind: "disc",
     format: `${ext.toUpperCase()} disc image`,
     family,
-    role: roleByExt[ext] || "disc image file",
+    role: referencedMediaPaths.length ? "descriptor, references media tracks" : roleByExt[ext] || "disc image file",
     action: ext === "iso" || ext === "nrg" || ext === "isz" || ext === "cdi" ? "桌面版可点挂载/解包并重扫；挂载后从虚拟光驱运行安装器，或使用解包后的完整目录" : "先把配套描述/数据文件放在同一目录，再挂载或解包并重扫",
+    referencedMediaPaths,
     file,
   };
 }
@@ -2707,20 +2726,55 @@ function getPreviewFormatLabel(preview) {
   return preview?.format || "包/镜像";
 }
 
+function buildDiscGroups(discs) {
+  const groups = new Map();
+  const byPath = new Map(discs.map((item) => [item.file.lowerPath, item]));
+  const assigned = new Set();
+  const addToGroup = (key, item) => {
+    if (!groups.has(key)) groups.set(key, []);
+    const group = groups.get(key);
+    if (!group.some((existing) => existing.file.lowerPath === item.file.lowerPath)) {
+      group.push(item);
+    }
+  };
+
+  for (const cue of discs.filter((item) => item.file.ext === "cue")) {
+    addToGroup(cue.family, cue);
+    assigned.add(cue.file.lowerPath);
+    for (const mediaPath of cue.referencedMediaPaths || []) {
+      const media = byPath.get(mediaPath);
+      if (!media) continue;
+      addToGroup(cue.family, media);
+      assigned.add(media.file.lowerPath);
+    }
+  }
+
+  for (const item of discs) {
+    if (assigned.has(item.file.lowerPath)) continue;
+    addToGroup(item.family, item);
+  }
+
+  return groups;
+}
+
 function buildDiscSets(discs) {
-  const groups = groupBy(discs, (item) => item.family);
+  const groups = buildDiscGroups(discs);
   const byExt = countBy(discs, (item) => item.file.ext);
   return [...groups.entries()]
     .map(([family, items]) => {
       const sorted = items.sort((a, b) => a.file.path.localeCompare(b.file.path));
       const archivePreview = getBestArchivePreview(sorted);
       const exts = new Set(items.map((item) => item.file.ext));
+      const referencedMediaPaths = compactEvidence(sorted.flatMap((item) => item.referencedMediaPaths || []), 12);
+      const groupedPaths = new Set(sorted.map((item) => item.file.lowerPath));
+      const missingCueMedia = referencedMediaPaths.filter((mediaPath) => !groupedPaths.has(mediaPath));
+      const matchedCueMedia = referencedMediaPaths.filter((mediaPath) => groupedPaths.has(mediaPath));
       let level = "info";
       let format = items[0].format;
       let summary = archivePreview ? summarizeArchivePreview(archivePreview) : "镜像文件已识别";
       let nextStep = "先挂载或解包镜像，再运行镜像内的安装器或复制完整游戏目录";
 
-      if (exts.has("cue") && exts.has("bin")) {
+      if (exts.has("cue") && (exts.has("bin") || matchedCueMedia.length)) {
         format = "CUE/BIN disc image";
       } else if (exts.has("mds") && exts.has("mdf")) {
         format = "MDS/MDF disc image";
@@ -2734,7 +2788,14 @@ function buildDiscSets(discs) {
         format = "BlindWrite 6 disc image";
       }
 
-      if (exts.has("cue") && !exts.has("bin")) {
+      if (missingCueMedia.length) {
+        level = "warning";
+        summary = `CUE 引用了但没看到：${compactEvidence(missingCueMedia.map(getBaseName), 3).join(", ")}`;
+        nextStep = "把 CUE 里 FILE 声明的 .bin/.img 轨道文件放回同一目录，再挂载或解包并重扫";
+      } else if (matchedCueMedia.length) {
+        summary = archivePreview ? summarizeArchivePreview(archivePreview) : `CUE 轨道清单已匹配：${compactEvidence(matchedCueMedia.map(getBaseName), 3).join(", ")}`;
+        nextStep = "保持 .cue 和它引用的轨道文件同目录；桌面版可点挂载/解包并重扫";
+      } else if (exts.has("cue") && !exts.has("bin")) {
         level = "warning";
         summary = "有 .cue 但没看到同名 .bin";
         nextStep = "把 .cue 和配套 .bin 放在同一目录后再挂载或解包";

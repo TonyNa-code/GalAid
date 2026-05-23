@@ -197,6 +197,74 @@ test("self-extracting EXE packages prepare before launch", async ({ page }) => {
   expect(result.roadmapId).toBe("extract-first");
 });
 
+test("CUE sheets group referenced BIN tracks as one disc image", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const complete = analyze([
+      {
+        name: "MoonlightCafe.cue",
+        path: "Disc/MoonlightCafe.cue",
+        lowerPath: "disc/moonlightcafe.cue",
+        ext: "cue",
+        size: 128,
+        depth: 1,
+        fullPath: "C:\\Downloads\\Disc\\MoonlightCafe.cue",
+        textPreview: 'FILE "Track01.bin" BINARY\n  TRACK 01 MODE1/2352\nFILE "Track02.bin" BINARY\n  TRACK 02 AUDIO\n',
+      },
+      {
+        name: "Track01.bin",
+        path: "Disc/Track01.bin",
+        lowerPath: "disc/track01.bin",
+        ext: "bin",
+        size: 734000000,
+        depth: 1,
+        fullPath: "C:\\Downloads\\Disc\\Track01.bin",
+      },
+      {
+        name: "Track02.bin",
+        path: "Disc/Track02.bin",
+        lowerPath: "disc/track02.bin",
+        ext: "bin",
+        size: 42000000,
+        depth: 1,
+        fullPath: "C:\\Downloads\\Disc\\Track02.bin",
+      },
+    ]);
+    const missing = analyze([
+      {
+        name: "MoonlightCafe.cue",
+        path: "Disc/MoonlightCafe.cue",
+        lowerPath: "disc/moonlightcafe.cue",
+        ext: "cue",
+        size: 128,
+        depth: 1,
+        fullPath: "C:\\Downloads\\Disc\\MoonlightCafe.cue",
+        textPreview: 'FILE "Track01.bin" BINARY\n  TRACK 01 MODE1/2352\n',
+      },
+    ]);
+    return {
+      completeSetCount: complete.packages.discSets.length,
+      completeFormat: complete.packages.discSets[0]?.format,
+      completeLevel: complete.packages.discSets[0]?.level,
+      completeSummary: complete.packages.discSets[0]?.summary,
+      completeFiles: complete.packages.discSets[0]?.files.map((item) => item.file.path),
+      missingLevel: missing.packages.discSets[0]?.level,
+      missingSummary: missing.packages.discSets[0]?.summary,
+      missingRoadmapId: missing.roadmap.steps[0]?.id,
+    };
+  });
+
+  expect(result.completeSetCount).toBe(1);
+  expect(result.completeFormat).toBe("CUE/BIN disc image");
+  expect(result.completeLevel).toBe("info");
+  expect(result.completeSummary).toContain("track01.bin");
+  expect(result.completeFiles).toEqual(["Disc/MoonlightCafe.cue", "Disc/Track01.bin", "Disc/Track02.bin"]);
+  expect(result.missingLevel).toBe("warning");
+  expect(result.missingSummary).toContain("track01.bin");
+  expect(result.missingRoadmapId).toBe("extract-first");
+});
+
 test("desktop one-click flow prepares a package automatically before launch", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

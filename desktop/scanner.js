@@ -367,7 +367,7 @@ async function withTextPreview(file) {
 function shouldReadTextPreview(file) {
   return Boolean(
     file?.fullPath &&
-      file.name?.toLowerCase() === "autorun.inf" &&
+      (file.name?.toLowerCase() === "autorun.inf" || file.ext === "cue") &&
       file.size > 0 &&
       file.size <= TEXT_PREVIEW_MAX_BYTES,
   );

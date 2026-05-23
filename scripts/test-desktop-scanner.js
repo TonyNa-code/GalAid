@@ -13,6 +13,7 @@ async function main() {
     await fs.writeFile(path.join(tempRoot, "WIN32.EXE"), makePeExecutable({ machine: 0x014c, magic: 0x10b }));
     await fs.writeFile(path.join(tempRoot, "WIN64.EXE"), makePeExecutable({ machine: 0x8664, magic: 0x20b }));
     await fs.writeFile(path.join(tempRoot, "WINCOM.COM"), makePeExecutable({ machine: 0x014c, magic: 0x10b }));
+    await fs.writeFile(path.join(tempRoot, "Disc.cue"), 'FILE "Track01.bin" BINARY\n  TRACK 01 MODE1/2352\n');
     await fs.writeFile(
       path.join(tempRoot, "XP32.EXE"),
       makePeExecutable({
@@ -63,6 +64,7 @@ async function main() {
       "legacy-flash",
       "legacy-borland",
     ]);
+    assert.match(byName.get("Disc.cue").textPreview, /Track01\.bin/);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }

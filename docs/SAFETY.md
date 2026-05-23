@@ -42,11 +42,11 @@ The app currently reads:
 - file size
 - extension
 
-The app does not read file contents for diagnosis in the MVP.
+The web file-list mode does not read file contents. The desktop beta may read tiny metadata files such as `autorun.inf` or `.cue` sheets, and small executable headers, only to identify launch/install routes.
 
 Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. The support tab previews the included file list before download.
 
-Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z and detected self-extracting EXE packages can be listed through the bundled or local 7z-compatible command when available, and disc images are treated as media/descriptor files.
+Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z and detected self-extracting EXE packages can be listed through the bundled or local 7z-compatible command when available, small CUE sheets are read only for referenced media filenames, and disc images are treated as media/descriptor files.
 
 Desktop package preparation is separate from preflight. It only starts after a user launch/prepare click, uses an automatic sibling `*-prepared` folder for the one-stop flow or a user-selected output folder for the manual prepare flow, accepts a password the user already knows, and immediately rescans the prepared folder or mounted image. GalAid does not save package passwords, crack passwords, upload package contents, silently mount disc images, or run executables outside the allowlisted launch flow.
 
