@@ -1202,7 +1202,7 @@ test("desktop runtime assistant records local environment checks", async ({ page
               status: "good",
               label: "本机环境检测没有发现明显缺口",
               detail: "如果游戏仍启动失败，继续结合报错截图、路径和游戏完整性排查。",
-              counts: { good: 2, warning: 0, info: 0 },
+              counts: { good: 4, warning: 0, info: 3 },
             },
             checks: [
               {
@@ -1223,6 +1223,51 @@ test("desktop runtime assistant records local environment checks", async ({ page
                 action: "如果报错点名某个 DLL，按报错年份补对应 x86/x64 版本。",
                 evidence: ["Microsoft Visual C++ 2015-2022 Redistributable (x86)"],
               },
+              {
+                id: "dotnet-native",
+                title: ".NET Framework",
+                status: "good",
+                statusLabel: "OK",
+                detail: "检测到 .NET Framework 安装线索。",
+                action: "如果报错指定 .NET 版本，按报错版本补对应 .NET Framework。",
+                evidence: [".NET Framework 4.8"],
+              },
+              {
+                id: "vb6-native",
+                title: "VB6 运行库",
+                status: "good",
+                statusLabel: "OK",
+                detail: "检测到 VB6 运行库 msvbvm60.dll。",
+                action: "如果仍提示 msvbvm60.dll，确认游戏没有加载到错误架构。",
+                evidence: ["msvbvm60.dll (SysWOW64)"],
+              },
+              {
+                id: "quicktime-native",
+                title: "QuickTime/旧视频组件",
+                status: "info",
+                statusLabel: "观察",
+                detail: "没有检测到 QuickTime。",
+                action: "遇到 QuickTime 或片头视频黑屏时，再处理这一项。",
+                evidence: [],
+              },
+              {
+                id: "rtp-native",
+                title: "RPG Maker RTP",
+                status: "info",
+                statusLabel: "观察",
+                detail: "没有检测到 RPG Maker RTP。",
+                action: "如果启动时报 RTP/RGSS，再处理这一项。",
+                evidence: [],
+              },
+              {
+                id: "locale-native",
+                title: "日区与系统区域",
+                status: "info",
+                statusLabel: "观察",
+                detail: "当前 Windows 文化或系统区域未显示为日语。",
+                action: "只有出现乱码或启动即退时，再尝试日区环境。",
+                evidence: ["CurrentCulture=zh-CN"],
+              },
             ],
           };
         }
@@ -1232,9 +1277,9 @@ test("desktop runtime assistant records local environment checks", async ({ page
           checkedAt: "2026-05-17T00:00:00.000Z",
           summary: {
             status: "warning",
-            label: "1 个本机环境建议项",
+            label: "3 个本机环境建议项",
             detail: "遇到 d3dx/xinput 报错时，优先补 DirectX End-User Runtime。",
-            counts: { good: 2, warning: 1, info: 1 },
+            counts: { good: 1, warning: 3, info: 3 },
           },
           checks: [
             {
@@ -1255,6 +1300,51 @@ test("desktop runtime assistant records local environment checks", async ({ page
               action: "如果报错点名某个 DLL，按报错年份补对应 x86/x64 版本。",
               evidence: ["Microsoft Visual C++ 2015-2022 Redistributable (x86)"],
             },
+            {
+              id: "dotnet-native",
+              title: ".NET Framework",
+              status: "warning",
+              statusLabel: "建议处理",
+              detail: "没有在常见注册表位置检测到 .NET Framework。",
+              action: "遇到 mscoree、CLR 或 .NET Framework 报错时，优先安装对应 .NET Framework。",
+              evidence: [],
+            },
+            {
+              id: "vb6-native",
+              title: "VB6 运行库",
+              status: "warning",
+              statusLabel: "建议处理",
+              detail: "没有检测到 msvbvm60.dll。",
+              action: "遇到 msvbvm60.dll 或 Visual Basic 6 相关报错时，补齐 VB6 运行库后重试。",
+              evidence: [],
+            },
+            {
+              id: "quicktime-native",
+              title: "QuickTime/旧视频组件",
+              status: "info",
+              statusLabel: "观察",
+              detail: "没有检测到 QuickTime。",
+              action: "遇到 QuickTime、qtmlclient.dll、mciqtz32 或片头视频黑屏时，再补对应视频组件。",
+              evidence: [],
+            },
+            {
+              id: "rtp-native",
+              title: "RPG Maker RTP",
+              status: "info",
+              statusLabel: "观察",
+              detail: "没有检测到 RPG Maker RTP。",
+              action: "如果启动时报 RTP/RGSS，再处理这一项。",
+              evidence: [],
+            },
+            {
+              id: "locale-native",
+              title: "日区与系统区域",
+              status: "info",
+              statusLabel: "观察",
+              detail: "当前 Windows 文化或系统区域未显示为日语。",
+              action: "只有出现乱码或启动即退时，再尝试日区环境。",
+              evidence: ["CurrentCulture=zh-CN"],
+            },
           ],
         };
       },
@@ -1271,18 +1361,23 @@ test("desktop runtime assistant records local environment checks", async ({ page
   await page.getByRole("button", { name: "检测本机环境" }).click();
   await page.waitForFunction(() => window.__environmentChecks === 1);
 
-  await expect(page.locator("#environmentPanel")).toContainText("1 个本机环境建议项");
+  await expect(page.locator("#environmentPanel")).toContainText("3 个本机环境建议项");
   await expect(page.locator("#environmentPanel")).toContainText("Microsoft Visual C++ 2015-2022 Redistributable");
+  await expect(page.locator("#environmentPanel")).toContainText(".NET Framework");
+  await expect(page.locator("#environmentPanel")).toContainText("VB6 运行库");
 
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).toContainText("本机检测：没有检测到常见 DirectX 9 时代 DLL。");
   await expect(page.locator(".roadmap-list")).toContainText("遇到 d3dx、xinput 相关报错时");
+  await expect(page.locator(".roadmap-list")).toContainText("本机检测：没有在常见注册表位置检测到 .NET Framework。");
+  await expect(page.locator(".roadmap-list")).toContainText("补齐 VB6 运行库后重试");
 
   await page.locator('[data-tab="environment"]').click();
   await page.getByRole("button", { name: "检测本机环境" }).click();
   await page.waitForFunction(() => window.__environmentChecks === 2);
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).not.toContainText("本机检测：没有检测到常见 DirectX 9 时代 DLL。");
+  await expect(page.locator(".roadmap-list")).not.toContainText("本机检测：没有检测到 msvbvm60.dll。");
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.locator(".support-file-list")).toContainText("desktop-environment.json");

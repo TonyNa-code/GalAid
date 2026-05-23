@@ -18,7 +18,7 @@ After a desktop launch action succeeds, the launch tab shows a short follow-up c
 
 When the latest error text, launch-failure symptom, or PE import hint points to DirectX, VC++, .NET, VB6, QuickTime, or RPG Maker RTP and a matching repair tool was found in the scanned folder, the one-stop guide promotes that repair tool as the primary next click. Repair tools still use the same allowlisted desktop launch path and stay separate from game launch follow-up state.
 
-The environment tab can run an explicit local runtime check on Windows. It probes for common legacy DirectX DLLs, installed Microsoft Visual C++ Redistributables, RPG Maker RTP entries, and locale state, folds warning results into the roadmap, then stores the metadata-only result in reports and support bundles.
+The environment tab can run an explicit local runtime check on Windows. It probes for common legacy DirectX DLLs, installed Microsoft Visual C++ Redistributables, .NET Framework registry markers, VB6 runtime DLLs, QuickTime/video component markers, RPG Maker RTP entries, and locale state, folds warning results into the roadmap, then stores the metadata-only result in reports and support bundles.
 
 When an ISO was mounted by GalAid, the same handoff card can request a Windows `Dismount-DiskImage` cleanup for that session's mounted image. GalAid only offers this action for images it mounted during the current desktop session.
 
@@ -54,7 +54,7 @@ The package uses `electron-builder` with a portable x64 Windows target. It does 
 - Disc-image mounting or extraction requires an explicit launch or prepare click.
 - Mounted ISO cleanup is limited to images GalAid mounted in the current session.
 - Launch follow-up is user-marked; GalAid does not watch or inspect the running game process.
-- Runtime environment checks read only system metadata such as registry display names, common DirectX DLL presence, and locale names.
+- Runtime environment checks read only system metadata such as registry display names, common runtime DLL presence, and locale names.
 - Package passwords are not saved to reports, support bundles, or launch history.
 - GalAid does not add hidden arguments, bypass checks, patch files, or run installers automatically.
 - Web mode cannot launch local programs because browsers intentionally block that ability.

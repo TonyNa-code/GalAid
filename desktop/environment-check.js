@@ -19,13 +19,16 @@ async function checkRuntimeEnvironment({ platform = process.platform, spawnImpl 
     return { ok: true, platform, checkedAt, checks, summary: summarizeChecks(checks) };
   }
 
-  const [directx, vcredist, rtp, locale] = await Promise.all([
+  const [directx, vcredist, dotnet, vb6, quicktime, rtp, locale] = await Promise.all([
     inspectDirectX(spawnImpl),
     inspectVisualCpp(spawnImpl),
+    inspectDotNetFramework(spawnImpl),
+    inspectVb6Runtime(spawnImpl),
+    inspectQuickTime(spawnImpl),
     inspectRpgMakerRtp(spawnImpl),
     inspectLocale(spawnImpl),
   ]);
-  const checks = [directx, vcredist, rtp, locale];
+  const checks = [directx, vcredist, dotnet, vb6, quicktime, rtp, locale];
   return { ok: true, platform, checkedAt, checks, summary: summarizeChecks(checks) };
 }
 
@@ -80,6 +83,93 @@ async function inspectVisualCpp(spawnImpl) {
     action: evidence.length
       ? "如果报错点名某个 msvcr/msvcp/vcruntime DLL，按报错年份补对应 x86/x64 版本。"
       : "遇到 msvcr、msvcp、vcruntime 相关报错时，优先安装 Microsoft Visual C++ Redistributable，老游戏常需要 x86。",
+    evidence,
+  });
+}
+
+async function inspectDotNetFramework(spawnImpl) {
+  const result = await runPowerShell(
+    [
+      "$keys=@('HKLM:\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v2.0.50727','HKLM:\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.0\\Setup','HKLM:\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v3.5','HKLM:\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Client','HKLM:\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full');",
+      "foreach($key in $keys){",
+      "  $item=Get-ItemProperty $key -ErrorAction SilentlyContinue;",
+      "  if($item -and ($item.Install -eq 1 -or $item.Version)){",
+      "    $version=$item.Version; if(!$version -and $item.Release){ $version='4.x Release ' + $item.Release }",
+      "    if($version){ Write-Output ('.NET Framework ' + $version) }",
+      "  }",
+      "}",
+    ].join(" "),
+    spawnImpl,
+  );
+  if (!result.ok) return commandProbeCheck("dotnet-native", ".NET Framework", result);
+  const evidence = uniqueLines(result.stdout).slice(0, 8);
+  return makeCheck({
+    id: "dotnet-native",
+    title: ".NET Framework",
+    status: evidence.length ? "good" : "warning",
+    detail: evidence.length
+      ? "检测到 .NET Framework 安装线索。"
+      : "没有在常见注册表位置检测到 .NET Framework。旧启动器、配置工具或补丁工具可能会因此打不开。",
+    action: evidence.length
+      ? "如果报错指定 .NET 2.0/3.5/4.x，按报错版本补对应 .NET Framework。"
+      : "遇到 mscoree、CLR、System.Windows.Forms 或 .NET Framework 报错时，优先安装对应 .NET Framework。",
+    evidence,
+  });
+}
+
+async function inspectVb6Runtime(spawnImpl) {
+  const result = await runPowerShell(
+    [
+      "$roots=@($env:WINDIR + '\\System32',$env:WINDIR + '\\SysWOW64');",
+      "foreach($root in $roots){",
+      "  if(Test-Path (Join-Path $root 'msvbvm60.dll')){ Write-Output ('msvbvm60.dll (' + (Split-Path $root -Leaf) + ')') }",
+      "}",
+    ].join(" "),
+    spawnImpl,
+  );
+  if (!result.ok) return commandProbeCheck("vb6-native", "VB6 运行库", result);
+  const evidence = uniqueLines(result.stdout).slice(0, 4);
+  return makeCheck({
+    id: "vb6-native",
+    title: "VB6 运行库",
+    status: evidence.length ? "good" : "warning",
+    detail: evidence.length
+      ? "检测到 VB6 运行库 msvbvm60.dll。"
+      : "没有检测到 msvbvm60.dll。部分旧启动器、配置工具或游戏本体可能需要 VB6 运行库。",
+    action: evidence.length
+      ? "如果仍提示 msvbvm60.dll，确认游戏没有加载到错误架构或被隔离的副本。"
+      : "遇到 msvbvm60.dll 或 Visual Basic 6 相关报错时，补齐 VB6 运行库后重试。",
+    evidence,
+  });
+}
+
+async function inspectQuickTime(spawnImpl) {
+  const result = await runPowerShell(
+    [
+      "$keys=@('HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*');",
+      "Get-ItemProperty $keys -ErrorAction SilentlyContinue |",
+      "Where-Object { $_.DisplayName -match 'QuickTime' } |",
+      "ForEach-Object { $_.DisplayName } | Sort-Object -Unique;",
+      "$roots=@($env:ProgramFiles + '\\QuickTime\\QTSystem', ${env:ProgramFiles(x86)} + '\\QuickTime\\QTSystem');",
+      "foreach($root in $roots){",
+      "  if($root -and (Test-Path (Join-Path $root 'qtmlclient.dll'))){ Write-Output 'qtmlclient.dll (QuickTime)' }",
+      "  if($root -and (Test-Path (Join-Path $root 'QuickTime.qts'))){ Write-Output 'QuickTime.qts (QuickTime)' }",
+      "}",
+    ].join(" "),
+    spawnImpl,
+  );
+  if (!result.ok) return commandProbeCheck("quicktime-native", "QuickTime/旧视频组件", result);
+  const evidence = uniqueLines(result.stdout).slice(0, 6);
+  return makeCheck({
+    id: "quicktime-native",
+    title: "QuickTime/旧视频组件",
+    status: evidence.length ? "good" : "info",
+    detail: evidence.length
+      ? "检测到 QuickTime 或相关旧视频组件线索。"
+      : "没有检测到 QuickTime。只有报错或游戏入口点名 QuickTime、qtmlclient、MCI/DirectShow 视频组件时才需要处理。",
+    action: evidence.length
+      ? "如果视频播放仍黑屏或卡住，继续结合报错文字、片头跳过选项和游戏完整性排查。"
+      : "遇到 QuickTime、qtmlclient.dll、mciqtz32 或片头视频黑屏时，再补对应视频组件或尝试跳过片头。",
     evidence,
   });
 }
@@ -254,8 +344,11 @@ function compactEvidence(values, limit = 4) {
 module.exports = {
   checkRuntimeEnvironment,
   inspectDirectX,
+  inspectDotNetFramework,
   inspectLocale,
+  inspectQuickTime,
   inspectRpgMakerRtp,
+  inspectVb6Runtime,
   inspectVisualCpp,
   runPowerShell,
 };

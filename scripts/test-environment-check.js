@@ -3,8 +3,11 @@ const { EventEmitter } = require("node:events");
 const {
   checkRuntimeEnvironment,
   inspectDirectX,
+  inspectDotNetFramework,
   inspectLocale,
+  inspectQuickTime,
   inspectRpgMakerRtp,
+  inspectVb6Runtime,
   inspectVisualCpp,
 } = require("../desktop/environment-check");
 
@@ -17,12 +20,15 @@ async function main() {
 
   assert.equal(winResult.ok, true);
   assert.equal(winResult.platform, "win32");
-  assert.equal(winResult.checks.length, 4);
+  assert.equal(winResult.checks.length, 7);
   assert.equal(winResult.checks.find((check) => check.id === "directx-native").status, "good");
   assert.equal(winResult.checks.find((check) => check.id === "vcredist-native").status, "good");
+  assert.equal(winResult.checks.find((check) => check.id === "dotnet-native").status, "good");
+  assert.equal(winResult.checks.find((check) => check.id === "vb6-native").status, "good");
+  assert.equal(winResult.checks.find((check) => check.id === "quicktime-native").status, "info");
   assert.equal(winResult.checks.find((check) => check.id === "rtp-native").status, "info");
   assert.equal(winResult.checks.find((check) => check.id === "locale-native").status, "info");
-  assert.equal(spawned.length, 4);
+  assert.equal(spawned.length, 7);
   assert.equal(JSON.stringify(winResult).includes("C:\\Users"), false);
 
   const missingDirectX = await inspectDirectX(makeStaticSpawn(""));
@@ -30,6 +36,15 @@ async function main() {
 
   const missingVc = await inspectVisualCpp(makeStaticSpawn(""));
   assert.equal(missingVc.status, "warning");
+
+  const missingDotNet = await inspectDotNetFramework(makeStaticSpawn(""));
+  assert.equal(missingDotNet.status, "warning");
+
+  const missingVb6 = await inspectVb6Runtime(makeStaticSpawn(""));
+  assert.equal(missingVb6.status, "warning");
+
+  const quickTime = await inspectQuickTime(makeStaticSpawn("QuickTime 7\nqtmlclient.dll (QuickTime)\n"));
+  assert.equal(quickTime.status, "good");
 
   const rtp = await inspectRpgMakerRtp(makeStaticSpawn("RPG Maker VX Ace RTP\n"));
   assert.equal(rtp.status, "good");
@@ -52,6 +67,15 @@ function makeEnvironmentSpawn({ spawned = [] } = {}) {
     }
     if (script.includes("Microsoft Visual C")) {
       return makeChild({ spawned, command, args, options, stdout: "Microsoft Visual C++ 2015-2022 Redistributable (x86)\n" });
+    }
+    if (script.includes("NET Framework Setup")) {
+      return makeChild({ spawned, command, args, options, stdout: ".NET Framework 4.8\n.NET Framework 3.5\n" });
+    }
+    if (script.includes("msvbvm60.dll")) {
+      return makeChild({ spawned, command, args, options, stdout: "msvbvm60.dll (SysWOW64)\n" });
+    }
+    if (script.includes("QuickTime")) {
+      return makeChild({ spawned, command, args, options, stdout: "" });
     }
     if (script.includes("RPG.*Maker.*RTP")) {
       return makeChild({ spawned, command, args, options, stdout: "" });

@@ -144,7 +144,7 @@ Desktop OCR uses Tesseract.js with English, Japanese, and Simplified Chinese rec
 
 ## Error Recipes
 
-Common startup errors live in `data/error-recipes.json` as small data objects. The app can match pasted logs against recipes for DirectX, VC++ redistributables, RPG Maker RTP, locale issues, missing files, archive damage, web VN local-file restrictions, Unity runtime files, mounted-disc checks, and .NET tools.
+Common startup errors live in `data/error-recipes.json` as small data objects. The app can match pasted logs against recipes for DirectX, VC++ redistributables, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, locale issues, missing files, archive damage, web VN local-file restrictions, Unity runtime files, and mounted-disc checks.
 
 After editing recipes, run:
 
