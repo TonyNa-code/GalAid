@@ -2150,7 +2150,7 @@ function analyze(files, errorText = "", launchFailureInput = getEmptyLaunchFailu
   const launchFailure = normalizeLaunchFailureInput(launchFailureInput);
   const diagnosticErrorText = combineDiagnosticErrorText(errorText, launchFailure);
   const errorDiagnostics = buildErrorDiagnostics(diagnosticErrorText);
-  const runtimeRepairs = buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure);
+  const runtimeRepairs = buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure, launchCandidates);
   const environment = buildEnvironmentDiagnostics(files, engines, packages, launchCandidates, installerCandidates, diagnosticErrorText, errorDiagnostics, launchFailure);
   const findings = buildFindings(files, roots, engines, launchCandidates, installerCandidates, mode, packages, errorDiagnostics, launchFailure);
   const roadmap = buildRoadmap({ packages, launchCandidates, installerCandidates, profiles, environment, errorDiagnostics, findings, engines, mode, launchFailure });
@@ -2309,11 +2309,13 @@ function getBundledRuntimeRepairs(files) {
   };
 }
 
-function buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure = normalizeLaunchFailureInput()) {
+function buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure = normalizeLaunchFailureInput(), launchCandidates = []) {
   const failureSymptoms = new Set(launchFailure.symptoms || []);
   const genericRuntimeSymptom = failureSymptoms.has("missing-dll") || /dll|runtime|ランタイム|运行库|缺少|not found/i.test(launchFailure.note || "");
+  const runtimeImportRoute = getRuntimeImportRoute(files, launchCandidates);
   const recommendedTypes = new Set();
   if (hasErrorRecipe(errorDiagnostics, "directx-legacy") || failureSymptoms.has("black-screen")) recommendedTypes.add("DirectX");
+  if (runtimeImportRoute.hasAny) recommendedTypes.add("DirectX");
   if (hasErrorRecipe(errorDiagnostics, "visual-cpp-redist")) recommendedTypes.add("VC++");
   if (hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp")) recommendedTypes.add("RPG Maker RTP");
   if (genericRuntimeSymptom) {
@@ -3513,6 +3515,26 @@ function getLegacyWin32CompatibilityRoute(files, topLaunch) {
   };
 }
 
+function getRuntimeImportRoute(files, launchCandidates) {
+  const launchPaths = new Set((launchCandidates || []).slice(0, 4).map((candidate) => candidate.file?.path).filter(Boolean));
+  if (!launchPaths.size) return { hasAny: false };
+  const hintFiles = files.filter((file) => launchPaths.has(file.path) && file.executableInfo?.importHints?.length);
+  if (!hintFiles.length) return { hasAny: false };
+  const evidence = compactEvidence(hintFiles.map(formatRuntimeImportEvidence), 4);
+
+  return {
+    hasAny: true,
+    detail: "推荐启动入口导入了旧图形、声音、输入或多媒体 DLL。它不代表一定缺运行库，但黑屏、无声、输入异常和全屏问题会更常见。",
+    action: "先直接启动；如果失败，优先补 DirectX End-User Runtime，并尝试窗口化、禁用全屏优化、兼容模式或 dgVoodoo/dxwrapper 这类用户自选兼容层。",
+    evidence,
+  };
+}
+
+function formatRuntimeImportEvidence(file) {
+  const imports = file.executableInfo?.runtimeImports || [];
+  return `${file.path} imports ${imports.join(", ")}`;
+}
+
 function isLegacyExecutableFile(file) {
   return LEGACY_EXECUTABLE_RUNTIMES.has(file?.executableInfo?.runtime);
 }
@@ -3550,6 +3572,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const topInstaller = installerCandidates[0]?.file;
   const legacyExecutableRoute = getLegacyExecutableRoute(files, topLaunch, topInstaller);
   const legacyWin32Route = getLegacyWin32CompatibilityRoute(files, topLaunch);
+  const runtimeImportRoute = getRuntimeImportRoute(files, launchCandidates);
   const commercialEngine = engines.find((engine) => engine.id === "commercial-proprietary");
   const localeEngineNames = engines
     .filter((engine) => ["kirikiri", "nscript", "siglus", "commercial-proprietary"].includes(engine.id))
@@ -3558,7 +3581,8 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     failureSymptoms.has("mojibake") ||
     hasErrorRecipe(errorDiagnostics, "locale-encoding") ||
     /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
-  const directXError = failureSymptoms.has("black-screen") || hasErrorRecipe(errorDiagnostics, "directx-legacy");
+  const directXRecipeOrSymptom = failureSymptoms.has("black-screen") || hasErrorRecipe(errorDiagnostics, "directx-legacy");
+  const directXError = directXRecipeOrSymptom || runtimeImportRoute.hasAny;
   const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist");
   const rtpError = hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp");
   const runtimeRepairError = directXError || vcError || rtpError || failureSymptoms.has("missing-dll") || failureSymptoms.has("black-screen");
@@ -3746,15 +3770,19 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       id: "directx",
       title: "DirectX 旧组件",
       status: directXError ? "warning" : "info",
-      detail: directXError
+      detail: directXRecipeOrSymptom
         ? "报错里出现 DirectX、D3DX、XInput 或旧声音/输入组件线索。"
-        : directXInstallers.length
-          ? "目录里看到了 DirectX 支持安装器，但它不应当作为游戏主入口。"
+        : runtimeImportRoute.hasAny
+          ? runtimeImportRoute.detail
+          : directXInstallers.length
+            ? "目录里看到了 DirectX 支持安装器，但它不应当作为游戏主入口。"
           : "文件清单和报错里没有发现明确 DirectX 旧组件线索。",
-      action: directXError
+      action: directXRecipeOrSymptom
         ? "安装 DirectX End-User Runtime；老游戏经常需要这个而不是新版 DirectX。"
+        : runtimeImportRoute.hasAny
+          ? runtimeImportRoute.action
         : "只有在报错提到 d3dx、xinput、dsound、dinput 时再处理这一项。",
-      evidence: directXInstallers,
+      evidence: compactEvidence([...directXInstallers, ...(runtimeImportRoute.evidence || [])], 4),
     }),
   );
 

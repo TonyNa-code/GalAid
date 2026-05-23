@@ -33,6 +33,7 @@
 - One-click launch for scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries
 - Legacy executable header detection for DOS/Win16/LE/LX routing
 - Old Win32 subsystem-version hints for XP/Win98 compatibility guidance
+- PE import hints for legacy DirectX and multimedia runtime routing
 - Launch history
 - Create shortcuts
 - Portable Windows release workflow

@@ -13,7 +13,15 @@ async function main() {
     await fs.writeFile(path.join(tempRoot, "WIN32.EXE"), makePeExecutable({ machine: 0x014c, magic: 0x10b }));
     await fs.writeFile(path.join(tempRoot, "WIN64.EXE"), makePeExecutable({ machine: 0x8664, magic: 0x20b }));
     await fs.writeFile(path.join(tempRoot, "WINCOM.COM"), makePeExecutable({ machine: 0x014c, magic: 0x10b }));
-    await fs.writeFile(path.join(tempRoot, "XP32.EXE"), makePeExecutable({ machine: 0x014c, magic: 0x10b, subsystemVersion: [5, 1] }));
+    await fs.writeFile(
+      path.join(tempRoot, "XP32.EXE"),
+      makePeExecutable({
+        machine: 0x014c,
+        magic: 0x10b,
+        subsystemVersion: [5, 1],
+        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "WINMM.dll"],
+      }),
+    );
 
     const result = await scanSelectedPaths([tempRoot]);
     const byName = new Map(result.files.map((file) => [file.name, file]));
@@ -33,6 +41,8 @@ async function main() {
     assert.equal(byName.get("XP32.EXE").executableInfo.runtime, "win32");
     assert.equal(byName.get("XP32.EXE").executableInfo.subsystemVersion, "5.1");
     assert.equal(byName.get("XP32.EXE").executableInfo.targetEra, "win2000-xp-era");
+    assert.deepEqual(byName.get("XP32.EXE").executableInfo.runtimeImports, ["ddraw.dll", "dsound.dll", "winmm.dll"]);
+    assert.deepEqual(byName.get("XP32.EXE").executableInfo.importHints, ["legacy-directdraw", "legacy-directsound", "legacy-winmm"]);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
@@ -54,18 +64,46 @@ function makeNeExecutable() {
   return buffer;
 }
 
-function makePeExecutable({ machine, magic, subsystemVersion = [6, 0] }) {
-  const buffer = Buffer.alloc(256);
+function makePeExecutable({ machine, magic, subsystemVersion = [6, 0], imports = [] }) {
+  const buffer = Buffer.alloc(imports.length ? 2048 : 256);
+  const peOffset = 0x80;
+  const optionalHeaderOffset = 0x98;
   buffer.write("MZ", 0, "ascii");
-  buffer.writeUInt32LE(0x80, 0x3c);
-  buffer.write("PE\0\0", 0x80, "binary");
-  buffer.writeUInt16LE(machine, 0x84);
-  buffer.writeUInt16LE(0xe0, 0x94);
-  buffer.writeUInt16LE(magic, 0x98);
-  buffer.writeUInt16LE(subsystemVersion[0], 0x98 + 48);
-  buffer.writeUInt16LE(subsystemVersion[1], 0x98 + 50);
-  buffer.writeUInt16LE(2, 0x98 + 68);
+  buffer.writeUInt32LE(peOffset, 0x3c);
+  buffer.write("PE\0\0", peOffset, "binary");
+  buffer.writeUInt16LE(machine, peOffset + 4);
+  buffer.writeUInt16LE(imports.length ? 1 : 0, peOffset + 6);
+  buffer.writeUInt16LE(0xe0, peOffset + 20);
+  buffer.writeUInt16LE(magic, optionalHeaderOffset);
+  buffer.writeUInt16LE(subsystemVersion[0], optionalHeaderOffset + 48);
+  buffer.writeUInt16LE(subsystemVersion[1], optionalHeaderOffset + 50);
+  buffer.writeUInt16LE(2, optionalHeaderOffset + 68);
+  buffer.writeUInt32LE(16, optionalHeaderOffset + 92);
+  if (imports.length) writeImportSection(buffer, optionalHeaderOffset, imports);
   return buffer;
+}
+
+function writeImportSection(buffer, optionalHeaderOffset, imports) {
+  const sectionTableOffset = 0x80 + 24 + 0xe0;
+  const rawBase = 0x200;
+  const rvaBase = 0x1000;
+  const descriptorBytes = (imports.length + 1) * 20;
+  buffer.writeUInt32LE(rvaBase, optionalHeaderOffset + 104);
+  buffer.writeUInt32LE(descriptorBytes, optionalHeaderOffset + 108);
+  buffer.write(".idata", sectionTableOffset, "ascii");
+  buffer.writeUInt32LE(0x400, sectionTableOffset + 8);
+  buffer.writeUInt32LE(rvaBase, sectionTableOffset + 12);
+  buffer.writeUInt32LE(0x400, sectionTableOffset + 16);
+  buffer.writeUInt32LE(rawBase, sectionTableOffset + 20);
+
+  let nameOffset = rawBase + descriptorBytes;
+  imports.forEach((dll, index) => {
+    const descriptorOffset = rawBase + index * 20;
+    buffer.writeUInt32LE(rvaBase + 0x300 + index * 8, descriptorOffset + 16);
+    buffer.writeUInt32LE(rvaBase + (nameOffset - rawBase), descriptorOffset + 12);
+    buffer.write(`${dll}\0`, nameOffset, "ascii");
+    nameOffset += Buffer.byteLength(dll, "ascii") + 1;
+  });
 }
 
 main().catch((error) => {

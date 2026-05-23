@@ -4,8 +4,15 @@ const { previewArchiveFile } = require("./archive-preview");
 
 const SCAN_PROGRESS_BATCH = 1000;
 const TEXT_PREVIEW_MAX_BYTES = 16 * 1024;
-const EXECUTABLE_INFO_HEADER_BYTES = 4096;
+const EXECUTABLE_INFO_HEADER_BYTES = 256 * 1024;
 const EXECUTABLE_INFO_EXTS = new Set(["exe", "com"]);
+const RUNTIME_IMPORT_HINTS = [
+  { id: "legacy-directdraw", pattern: /^(ddraw|d3dim)\.dll$/i },
+  { id: "legacy-direct3d", pattern: /^(d3d8|d3d9|d3dx9_\d+)\.dll$/i },
+  { id: "legacy-directsound", pattern: /^(dsound|xaudio2_\d+|xactengine\d+_\d+|x3daudio\d+_\d+)\.dll$/i },
+  { id: "legacy-directinput", pattern: /^dinput8?\.dll$/i },
+  { id: "legacy-winmm", pattern: /^(winmm|msacm32|avifil32)\.dll$/i },
+];
 
 async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
   const files = [];
@@ -156,8 +163,10 @@ function readPeExecutableInfo(header, offset) {
   const architecture = getPeMachineArchitecture(machine);
   const subsystemVersion = readPeVersion(header, optionalHeaderOffset + 48);
   const osVersion = readPeVersion(header, optionalHeaderOffset + 40);
+  const runtimeImports = getRuntimeImportDlls(readPeImportedDlls(header, offset, optionalHeaderOffset, optionalMagic));
+  const importHints = getRuntimeImportHints(runtimeImports);
 
-  return makeExecutableInfo({
+  const info = {
     format: "pe",
     runtime,
     bitness,
@@ -169,11 +178,18 @@ function readPeExecutableInfo(header, offset) {
     label: `${bitness} Windows PE executable`,
     route: "native-windows",
     confidence: "high",
-  });
+  };
+  if (runtimeImports.length) info.runtimeImports = runtimeImports;
+  if (importHints.length) info.importHints = importHints;
+  return makeExecutableInfo(info);
 }
 
 function readUInt16(buffer, offset) {
   return offset + 2 <= buffer.length ? buffer.readUInt16LE(offset) : 0;
+}
+
+function readUInt32(buffer, offset) {
+  return offset + 4 <= buffer.length ? buffer.readUInt32LE(offset) : 0;
 }
 
 function readPeVersion(buffer, offset) {
@@ -189,6 +205,82 @@ function getPeTargetEra(runtime, subsystemVersion) {
   if (major < 5) return "win95-nt4-era";
   if (major === 5) return "win2000-xp-era";
   return "";
+}
+
+function readPeImportedDlls(header, peOffset, optionalHeaderOffset, optionalMagic) {
+  const dataDirectoryOffset = optionalHeaderOffset + (optionalMagic === 0x20b ? 112 : 96);
+  const importDirectoryRva = readUInt32(header, dataDirectoryOffset + 8);
+  if (!importDirectoryRva) return [];
+
+  const sections = readPeSections(header, peOffset, optionalHeaderOffset);
+  const importDirectoryOffset = rvaToFileOffset(importDirectoryRva, sections);
+  if (importDirectoryOffset < 0) return [];
+
+  const dlls = [];
+  for (let index = 0; index < 64; index += 1) {
+    const descriptorOffset = importDirectoryOffset + index * 20;
+    if (descriptorOffset + 20 > header.length) break;
+    const originalFirstThunk = readUInt32(header, descriptorOffset);
+    const timeDateStamp = readUInt32(header, descriptorOffset + 4);
+    const forwarderChain = readUInt32(header, descriptorOffset + 8);
+    const nameRva = readUInt32(header, descriptorOffset + 12);
+    const firstThunk = readUInt32(header, descriptorOffset + 16);
+    if (!originalFirstThunk && !timeDateStamp && !forwarderChain && !nameRva && !firstThunk) break;
+
+    const nameOffset = rvaToFileOffset(nameRva, sections);
+    const name = readNullTerminatedAscii(header, nameOffset, 128).toLowerCase();
+    if (name && /\.dll$/i.test(name) && !dlls.includes(name)) dlls.push(name);
+  }
+  return dlls;
+}
+
+function readPeSections(header, peOffset, optionalHeaderOffset) {
+  const numberOfSections = readUInt16(header, peOffset + 6);
+  const sizeOfOptionalHeader = readUInt16(header, peOffset + 20);
+  const sectionTableOffset = optionalHeaderOffset + sizeOfOptionalHeader;
+  const sections = [];
+  for (let index = 0; index < Math.min(numberOfSections, 32); index += 1) {
+    const sectionOffset = sectionTableOffset + index * 40;
+    if (sectionOffset + 40 > header.length) break;
+    sections.push({
+      virtualSize: readUInt32(header, sectionOffset + 8),
+      virtualAddress: readUInt32(header, sectionOffset + 12),
+      rawSize: readUInt32(header, sectionOffset + 16),
+      rawPointer: readUInt32(header, sectionOffset + 20),
+    });
+  }
+  return sections;
+}
+
+function rvaToFileOffset(rva, sections) {
+  for (const section of sections) {
+    const span = Math.max(section.virtualSize, section.rawSize);
+    if (rva >= section.virtualAddress && rva < section.virtualAddress + span) {
+      return section.rawPointer + (rva - section.virtualAddress);
+    }
+  }
+  return -1;
+}
+
+function readNullTerminatedAscii(buffer, offset, maxLength) {
+  if (offset < 0 || offset >= buffer.length) return "";
+  const end = Math.min(buffer.length, offset + maxLength);
+  let cursor = offset;
+  while (cursor < end && buffer[cursor] !== 0) cursor += 1;
+  if (cursor === offset || cursor >= end) return "";
+  return buffer.toString("ascii", offset, cursor).replace(/[^\w. -]/g, "");
+}
+
+function getRuntimeImportDlls(importedDlls) {
+  return importedDlls
+    .filter((dll) => RUNTIME_IMPORT_HINTS.some((hint) => hint.pattern.test(dll)))
+    .slice(0, 16);
+}
+
+function getRuntimeImportHints(runtimeImports) {
+  return RUNTIME_IMPORT_HINTS
+    .filter((hint) => runtimeImports.some((dll) => hint.pattern.test(dll)))
+    .map((hint) => hint.id);
 }
 
 function getPeMachineArchitecture(machine) {

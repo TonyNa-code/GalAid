@@ -794,6 +794,8 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
           subsystem: "windows-gui",
           subsystemVersion: "5.1",
           targetEra: "win2000-xp-era",
+          runtimeImports: ["ddraw.dll", "dsound.dll", "winmm.dll"],
+          importHints: ["legacy-directdraw", "legacy-directsound", "legacy-winmm"],
           label: "32-bit Windows PE executable",
           route: "native-windows",
           confidence: "high",
@@ -807,19 +809,35 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
         size: 180000000,
         depth: 1,
       },
+      {
+        name: "DXSETUP.exe",
+        path: "XpVN/Support/DirectX/DXSETUP.exe",
+        lowerPath: "xpvn/support/directx/dxsetup.exe",
+        ext: "exe",
+        size: 900000,
+        depth: 3,
+        fullPath: "C:\\Games\\XpVN\\Support\\DirectX\\DXSETUP.exe",
+      },
     ]);
     const compatibilityCheck = analysis.environment.checks.find((check) => check.id === "legacy-win32");
     const compatibilityStep = analysis.roadmap.steps.find((step) => step.id === "env-legacy-win32");
+    const directXCheck = analysis.environment.checks.find((check) => check.id === "directx");
     const topCandidate = analysis.launchCandidates[0];
     const profile = analysis.profiles[0];
+    const directXRepair = analysis.runtimeRepairs.find((repair) => repair.type === "DirectX");
     return {
       topEntry: topCandidate?.file.path,
       canLaunchTop: canDesktopLaunchFile(topCandidate?.file),
       compatibilityStatus: compatibilityCheck?.status,
       compatibilityAction: compatibilityCheck?.action,
       compatibilityEvidence: compatibilityCheck?.evidence || [],
+      directXStatus: directXCheck?.status,
+      directXEvidence: directXCheck?.evidence || [],
+      directXRepairRecommended: directXRepair?.recommended,
+      directXRepairReason: directXRepair?.reason,
       roadmapState: compatibilityStep?.state,
       manifestInfo: buildFileManifest(analysis).files[0]?.executableInfo?.targetEra,
+      manifestImports: buildFileManifest(analysis).files[0]?.executableInfo?.runtimeImports,
       profileInfo: profile?.config?.executableInfo?.subsystemVersion,
     };
   });
@@ -830,8 +848,13 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
   expect(result.compatibilityAction).toContain("XP SP3");
   expect(result.compatibilityAction).toContain("DirectX End-User Runtime");
   expect(result.compatibilityEvidence.join("\n")).toContain("subsystem 5.1");
+  expect(result.directXStatus).toBe("warning");
+  expect(result.directXEvidence.join("\n")).toContain("ddraw.dll");
+  expect(result.directXRepairRecommended).toBe(true);
+  expect(result.directXRepairReason).toContain("旧图形/声音组件");
   expect(result.roadmapState).toBe("todo");
   expect(result.manifestInfo).toBe("win2000-xp-era");
+  expect(result.manifestImports).toContain("ddraw.dll");
   expect(result.profileInfo).toBe("5.1");
 });
 
