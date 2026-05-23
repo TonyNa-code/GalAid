@@ -8,10 +8,17 @@ const EXECUTABLE_INFO_HEADER_BYTES = 256 * 1024;
 const EXECUTABLE_INFO_EXTS = new Set(["exe", "com"]);
 const RUNTIME_IMPORT_HINTS = [
   { id: "legacy-directdraw", pattern: /^(ddraw|d3dim)\.dll$/i },
-  { id: "legacy-direct3d", pattern: /^(d3d8|d3d9|d3dx9_\d+)\.dll$/i },
+  { id: "legacy-direct3d", pattern: /^(d3d8|d3d9|d3drm|d3dx9_\d+)\.dll$/i },
   { id: "legacy-directsound", pattern: /^(dsound|xaudio2_\d+|xactengine\d+_\d+|x3daudio\d+_\d+)\.dll$/i },
   { id: "legacy-directinput", pattern: /^dinput8?\.dll$/i },
   { id: "legacy-winmm", pattern: /^(winmm|msacm32|avifil32)\.dll$/i },
+  { id: "legacy-vc", pattern: /^(msvcr\d+|msvcp\d+|vcruntime\d+)\.dll$/i },
+  { id: "legacy-vb6", pattern: /^msvbvm60\.dll$/i },
+  { id: "legacy-dotnet", pattern: /^mscoree\.dll$/i },
+  { id: "legacy-quicktime", pattern: /^(qtmlclient\.dll|quicktime\.qts)$/i },
+  { id: "legacy-directshow", pattern: /^(quartz|amstream|msvfw32|mciavi32|mciqtz32)\.dll$/i },
+  { id: "legacy-flash", pattern: /^(flash|flash\d+|swflash)\.ocx$/i },
+  { id: "legacy-borland", pattern: /^(borlndmm|cc3260mt)\.dll$|^(rtl|vcl|vclx|vcldb|vcljpg)\d+\.bpl$/i },
 ];
 
 async function scanSelectedPaths(selectedPaths, onProgress = () => {}) {
@@ -229,7 +236,7 @@ function readPeImportedDlls(header, peOffset, optionalHeaderOffset, optionalMagi
 
     const nameOffset = rvaToFileOffset(nameRva, sections);
     const name = readNullTerminatedAscii(header, nameOffset, 128).toLowerCase();
-    if (name && /\.dll$/i.test(name) && !dlls.includes(name)) dlls.push(name);
+    if (name && /\.(dll|ocx|bpl|qts)$/i.test(name) && !dlls.includes(name)) dlls.push(name);
   }
   return dlls;
 }
@@ -274,7 +281,7 @@ function readNullTerminatedAscii(buffer, offset, maxLength) {
 function getRuntimeImportDlls(importedDlls) {
   return importedDlls
     .filter((dll) => RUNTIME_IMPORT_HINTS.some((hint) => hint.pattern.test(dll)))
-    .slice(0, 16);
+    .slice(0, 24);
 }
 
 function getRuntimeImportHints(runtimeImports) {

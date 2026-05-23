@@ -22,7 +22,7 @@ GalAid 是一个本地优先的视觉小说 / galgame 启动诊断工具。
 - 压缩包没有完整解压
 - `.iso`、`.cue/.bin`、`.mds/.mdf` 镜像不知道怎么处理
 - 日区、字体、路径编码导致乱码或闪退
-- 缺少旧 DirectX、VC++ 运行库或 RPG Maker RTP
+- 缺少旧 DirectX、VC++、VB6、.NET、QuickTime/视频组件或 RPG Maker RTP
 - 文件夹里有很多 `.exe`，不知道哪个才是主程序
 - Win95/Win98/WinXP 时代的入口可能其实是 DOS、Win16、旧安装盘或普通 Win32
 
@@ -69,7 +69,7 @@ GalAid 的网页版本只读取文件名、相对路径、扩展名和大小，�
 - 20,000+ 文件：大文件夹模式
 - 50,000+ 文件：跳过完整路径排序，保持页面响应
 
-单个 `.zip/.rar/.7z/.lzh/.lha/.arj/.cab/.tar/.tgz/.tar.gz/.iso/.cue/.bin` 可以在网页里被识别为包或镜像阶段，也包括 `.mds/.mdf`、`.ccd/.img/.sub`、`.nrg`、BlindWrite、`.mdx`、`.daa`、`.uif`、`.pdi` 这类古早镜像。桌面 beta 可以额外预检 ZIP 目录元数据、通过内置或本机 7z 工具列出 RAR/7z/LZH/LHA/ARJ/CAB/TAR 类目录元数据，并识别安装盘、补丁包、特典盘、DirectX/VC++/RPG Maker RTP 修复项、分卷、镜像介质角色、DOS/Win16/Win32/Win64 可执行头、旧 Win32 subsystem 版本线索，以及 DirectDraw/DirectSound/DirectInput/WinMM 这类旧导入 DLL。用户点击启动页主按钮后，GalAid 会默认在压缩包旁边创建新的 `*-prepared` 目录，必要时提示输入已知密码，然后本地解压；遇到 `.tar.gz/.tgz` 这类压缩 tar 会二段展开；在 Windows 上挂载 `.iso`，或尽力解包常见镜像，重扫后直接启动推荐入口。如果推荐入口是 DOS COM/MZ、Win16 NE 或 LE/LX 旧格式，GalAid 会改走 DOSBox、旧系统或虚拟机路线，而不是直接启动。如果是 Win95/Win2000/XP 时代的 Win32 入口，则仍然可以先点启动，但路线会提示失败后优先检查 XP/Win98 兼容模式、禁用全屏优化、英文短路径和旧 DirectX。如果处理后的内容只有 `setup.exe/install.exe/autorun.exe/.msi`，或 `autorun.inf` 指向 `Start.exe/SetupJP.exe/Setup.cmd` 这类安装盘入口，GalAid 会打开安装器，并提示安装完成后把安装目录拖回来。手动的“解压并重扫”或“挂载/解包并重扫”仍然保留，适合想自己选择输出位置的用户。如果启动仍失败，也可以直接勾选现象来更新路线。
+单个 `.zip/.rar/.7z/.lzh/.lha/.arj/.cab/.tar/.tgz/.tar.gz/.iso/.cue/.bin` 可以在网页里被识别为包或镜像阶段，也包括 `.mds/.mdf`、`.ccd/.img/.sub`、`.nrg`、BlindWrite、`.mdx`、`.daa`、`.uif`、`.pdi` 这类古早镜像。桌面 beta 可以额外预检 ZIP 目录元数据、通过内置或本机 7z 工具列出 RAR/7z/LZH/LHA/ARJ/CAB/TAR 类目录元数据，并识别安装盘、补丁包、特典盘、DirectX/VC++/.NET/VB6/QuickTime/RPG Maker RTP 修复项、分卷、镜像介质角色、DOS/Win16/Win32/Win64 可执行头、旧 Win32 subsystem 版本线索，以及 DirectDraw/DirectSound/DirectInput/WinMM/VC++/VB6/.NET/QuickTime/Borland 这类旧导入线索。用户点击启动页主按钮后，GalAid 会默认在压缩包旁边创建新的 `*-prepared` 目录，必要时提示输入已知密码，然后本地解压；遇到 `.tar.gz/.tgz` 这类压缩 tar 会二段展开；在 Windows 上挂载 `.iso`，或尽力解包常见镜像，重扫后直接启动推荐入口。如果推荐入口是 DOS COM/MZ、Win16 NE 或 LE/LX 旧格式，GalAid 会改走 DOSBox、旧系统或虚拟机路线，而不是直接启动。如果是 Win95/Win2000/XP 时代的 Win32 入口，则仍然可以先点启动，但路线会提示失败后优先检查 XP/Win98 兼容模式、禁用全屏优化、英文短路径和旧 DirectX/运行库/视频组件。如果处理后的内容只有 `setup.exe/install.exe/autorun.exe/.msi`，或 `autorun.inf` 指向 `Start.exe/SetupJP.exe/Setup.cmd` 这类安装盘入口，GalAid 会打开安装器，并提示安装完成后把安装目录拖回来。手动的“解压并重扫”或“挂载/解包并重扫”仍然保留，适合想自己选择输出位置的用户。如果启动仍失败，也可以直接勾选现象来更新路线。
 
 ## 报错截图 OCR
 

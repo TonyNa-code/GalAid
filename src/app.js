@@ -600,7 +600,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyStepFixBody: "截图 OCR 或粘贴报错后给出下一步。",
       launchCandidates: "启动候选",
       runtimeRepairsTitle: "运行库修复工具",
-      runtimeRepairsBody: "这些是包内或目录内看到的 DirectX、VC++、RPG Maker RTP 修复项；它们不是主游戏入口。",
+      runtimeRepairsBody: "这些是包内或目录内看到的 DirectX、VC++、.NET、VB6、QuickTime 或 RPG Maker RTP 修复项；它们不是主游戏入口。",
       runtimeRepairRecommended: "当前报错相关",
       runtimeRepairReference: "备用修复项",
       openRepairTool: "打开修复工具",
@@ -962,7 +962,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyStepFixBody: "Use screenshot OCR or pasted logs to get the next concrete step.",
       launchCandidates: "Launch candidates",
       runtimeRepairsTitle: "Runtime repair tools",
-      runtimeRepairsBody: "Bundled DirectX, VC++, or RPG Maker RTP repair tools found in the package or folder. They are not the main game launcher.",
+      runtimeRepairsBody: "Bundled DirectX, VC++, .NET, VB6, QuickTime, or RPG Maker RTP repair tools found in the package or folder. They are not the main game launcher.",
       runtimeRepairRecommended: "Relevant to current error",
       runtimeRepairReference: "Backup repair tool",
       openRepairTool: "Open repair tool",
@@ -1324,7 +1324,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       emptyStepFixBody: "画像 OCR や貼り付けたログから次の手順を出します。",
       launchCandidates: "起動候補",
       runtimeRepairsTitle: "ランタイム修復ツール",
-      runtimeRepairsBody: "パッケージまたはフォルダ内の DirectX、VC++、RPG Maker RTP 修復項目です。ゲーム本体の起動入口ではありません。",
+      runtimeRepairsBody: "パッケージまたはフォルダ内の DirectX、VC++、.NET、VB6、QuickTime、RPG Maker RTP 修復項目です。ゲーム本体の起動入口ではありません。",
       runtimeRepairRecommended: "現在のエラーに関連",
       runtimeRepairReference: "予備の修復項目",
       openRepairTool: "修復ツールを開く",
@@ -2240,6 +2240,20 @@ function samplePaths(files, predicate, limit = 4) {
 }
 
 const RUNTIME_REPAIR_EXTS = new Set(["exe", "msi", "zip", "rar", "7z"]);
+const RUNTIME_IMPORT_HINT_META = {
+  "legacy-directdraw": { family: "directx", label: "DirectDraw" },
+  "legacy-direct3d": { family: "directx", label: "Direct3D" },
+  "legacy-directsound": { family: "directx", label: "DirectSound" },
+  "legacy-directinput": { family: "directx", label: "DirectInput" },
+  "legacy-winmm": { family: "media", label: "WinMM/MCI" },
+  "legacy-vc": { family: "vc", label: "VC++ runtime" },
+  "legacy-vb6": { family: "vb6", label: "VB6 runtime" },
+  "legacy-dotnet": { family: "dotnet", label: ".NET Framework" },
+  "legacy-quicktime": { family: "quicktime", label: "QuickTime" },
+  "legacy-directshow": { family: "media", label: "DirectShow / MCI video" },
+  "legacy-flash": { family: "flash", label: "Flash / ActiveX" },
+  "legacy-borland": { family: "borland", label: "Borland / Delphi runtime" },
+};
 
 function getRuntimeRepairType(pathValue, ext = getExt(getBaseName(String(pathValue || "")))) {
   const lowerPath = normalizePath(pathValue).toLowerCase();
@@ -2258,6 +2272,18 @@ function getRuntimeRepairType(pathValue, ext = getExt(getBaseName(String(pathVal
     /(?:vcredist|vc_redist|visual.?c|microsoft.*c\+\+|msvc|redist\/vc)/.test(lowerPath)
   ) {
     return "VC++";
+  }
+
+  if (/(?:dotnetfx|dotnet.?framework|\.net.?framework|netfx|ndp\d|fxredist).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath)) {
+    return ".NET Framework";
+  }
+
+  if (/(?:vbrun|vb6run|vb6.?runtime|msvbvm60).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath)) {
+    return "VB6 Runtime";
+  }
+
+  if (/(?:quicktime|qt.?runtime|qtlite).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath)) {
+    return "QuickTime";
   }
 
   const hasRtpMarker = /(^|[\/_. -])rtp([\/_. -]|$)|runtime package|ランタイム/.test(lowerPath);
@@ -2283,6 +2309,18 @@ function isRtpRuntimeRepair(file) {
   return getRuntimeRepairTypeForFile(file) === "RPG Maker RTP";
 }
 
+function isDotNetRuntimeRepair(file) {
+  return getRuntimeRepairTypeForFile(file) === ".NET Framework";
+}
+
+function isVb6RuntimeRepair(file) {
+  return getRuntimeRepairTypeForFile(file) === "VB6 Runtime";
+}
+
+function isQuickTimeRuntimeRepair(file) {
+  return getRuntimeRepairTypeForFile(file) === "QuickTime";
+}
+
 function labelRuntimeRepairEvidence(label, paths) {
   return paths.map((path) => `${label}: ${path}`);
 }
@@ -2291,19 +2329,28 @@ function getBundledRuntimeRepairs(files) {
   const directX = samplePaths(files, isDirectXRuntimeRepair, 3);
   const vc = samplePaths(files, isVcRuntimeRepair, 3);
   const rtp = samplePaths(files, isRtpRuntimeRepair, 3);
+  const dotnet = samplePaths(files, isDotNetRuntimeRepair, 3);
+  const vb6 = samplePaths(files, isVb6RuntimeRepair, 3);
+  const quickTime = samplePaths(files, isQuickTimeRuntimeRepair, 3);
   const evidence = compactEvidence(
     [
       ...labelRuntimeRepairEvidence("DirectX", directX),
       ...labelRuntimeRepairEvidence("VC++", vc),
       ...labelRuntimeRepairEvidence("RPG Maker RTP", rtp),
+      ...labelRuntimeRepairEvidence(".NET Framework", dotnet),
+      ...labelRuntimeRepairEvidence("VB6 Runtime", vb6),
+      ...labelRuntimeRepairEvidence("QuickTime", quickTime),
     ],
-    6,
+    8,
   );
 
   return {
     directX,
     vc,
     rtp,
+    dotnet,
+    vb6,
+    quickTime,
     evidence,
     hasAny: Boolean(evidence.length),
   };
@@ -2315,7 +2362,11 @@ function buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure = n
   const runtimeImportRoute = getRuntimeImportRoute(files, launchCandidates);
   const recommendedTypes = new Set();
   if (hasErrorRecipe(errorDiagnostics, "directx-legacy") || failureSymptoms.has("black-screen")) recommendedTypes.add("DirectX");
-  if (runtimeImportRoute.hasAny) recommendedTypes.add("DirectX");
+  if (runtimeImportRoute.hasDirectX) recommendedTypes.add("DirectX");
+  if (runtimeImportRoute.hasVc) recommendedTypes.add("VC++");
+  if (runtimeImportRoute.hasDotNet || hasErrorRecipe(errorDiagnostics, "dotnet-runtime")) recommendedTypes.add(".NET Framework");
+  if (runtimeImportRoute.hasVb6 || hasErrorRecipe(errorDiagnostics, "vb6-runtime")) recommendedTypes.add("VB6 Runtime");
+  if (runtimeImportRoute.hasQuickTime || hasErrorRecipe(errorDiagnostics, "quicktime-runtime")) recommendedTypes.add("QuickTime");
   if (hasErrorRecipe(errorDiagnostics, "visual-cpp-redist")) recommendedTypes.add("VC++");
   if (hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp")) recommendedTypes.add("RPG Maker RTP");
   if (genericRuntimeSymptom) {
@@ -2351,6 +2402,9 @@ function getRuntimeRepairTitle(type) {
     DirectX: "DirectX 旧组件修复",
     "VC++": "VC++ 运行库修复",
     "RPG Maker RTP": "RPG Maker RTP 修复",
+    ".NET Framework": ".NET Framework 修复",
+    "VB6 Runtime": "VB6 运行库修复",
+    QuickTime: "QuickTime/视频组件修复",
   };
   return titles[type] || "运行库修复工具";
 }
@@ -2360,6 +2414,9 @@ function getRuntimeRepairRecommendedReason(type) {
     DirectX: "当前报错或现象指向 DirectX、D3DX、XInput、黑屏或旧图形/声音组件。",
     "VC++": "当前报错或现象指向 msvcr、msvcp、vcruntime 或缺 DLL。",
     "RPG Maker RTP": "当前报错或现象指向 RPG Maker RTP、RGSS 或缺运行环境。",
+    ".NET Framework": "当前报错或入口导入指向 .NET Framework。",
+    "VB6 Runtime": "当前报错或入口导入指向 VB6 运行库。",
+    QuickTime: "当前报错或入口导入指向 QuickTime/旧视频播放组件。",
   };
   return reasons[type] || "当前报错或现象指向运行环境缺口。";
 }
@@ -2369,6 +2426,9 @@ function getRuntimeRepairAction(type) {
     DirectX: "打开后按安装器提示补 DirectX 旧组件，完成后回到推荐游戏入口重试。",
     "VC++": "打开后按安装器提示补 VC++ 运行库；老游戏常需要 x86，完成后回到推荐游戏入口重试。",
     "RPG Maker RTP": "打开后按版本补 RPG Maker RTP，完成后回到推荐游戏入口重试。",
+    ".NET Framework": "打开后按安装器提示补 .NET Framework，完成后回到推荐游戏入口重试。",
+    "VB6 Runtime": "打开后按安装器提示补 VB6 运行库，完成后回到推荐游戏入口重试。",
+    QuickTime: "打开后按安装器提示补 QuickTime 或旧视频组件，完成后回到推荐游戏入口重试。",
   };
   return actions[type] || "处理完成后回到推荐游戏入口重试。";
 }
@@ -2378,6 +2438,9 @@ function getRuntimeRepairPriority(type) {
     DirectX: 10,
     "VC++": 20,
     "RPG Maker RTP": 30,
+    ".NET Framework": 40,
+    "VB6 Runtime": 45,
+    QuickTime: 50,
   };
   return priorities[type] || 90;
 }
@@ -3520,12 +3583,43 @@ function getRuntimeImportRoute(files, launchCandidates) {
   if (!launchPaths.size) return { hasAny: false };
   const hintFiles = files.filter((file) => launchPaths.has(file.path) && file.executableInfo?.importHints?.length);
   if (!hintFiles.length) return { hasAny: false };
+  const families = new Set();
+  const labels = new Set();
+  for (const file of hintFiles) {
+    for (const hint of file.executableInfo?.importHints || []) {
+      const meta = RUNTIME_IMPORT_HINT_META[hint];
+      if (!meta) continue;
+      families.add(meta.family);
+      labels.add(meta.label);
+    }
+  }
   const evidence = compactEvidence(hintFiles.map(formatRuntimeImportEvidence), 4);
+  const hasDirectX = families.has("directx");
+  const hasVc = families.has("vc");
+  const hasDotNet = families.has("dotnet");
+  const hasVb6 = families.has("vb6");
+  const hasQuickTime = families.has("quicktime");
+  const hasMedia = families.has("media");
+  const hasFlash = families.has("flash");
+  const hasBorland = families.has("borland");
+  const hasLegacyRuntime = [...families].some((family) => family !== "directx" && family !== "vc");
+  const labelText = [...labels].slice(0, 5).join("、");
 
   return {
     hasAny: true,
-    detail: "推荐启动入口导入了旧图形、声音、输入或多媒体 DLL。它不代表一定缺运行库，但黑屏、无声、输入异常和全屏问题会更常见。",
-    action: "先直接启动；如果失败，优先补 DirectX End-User Runtime，并尝试窗口化、禁用全屏优化、兼容模式或 dgVoodoo/dxwrapper 这类用户自选兼容层。",
+    hasDirectX,
+    hasVc,
+    hasDotNet,
+    hasVb6,
+    hasQuickTime,
+    hasMedia,
+    hasFlash,
+    hasBorland,
+    hasLegacyRuntime,
+    families: [...families],
+    labels: [...labels],
+    detail: `推荐启动入口导入了${labelText || "旧运行库"}相关组件。它不代表一定缺运行库，但启动即退、缺 DLL、黑屏、无声、视频播放失败或输入异常会更常见。`,
+    action: "先直接启动；如果失败，按缺失 DLL 名优先补对应运行库或视频组件，再尝试窗口化、兼容模式和英文短路径。",
     evidence,
   };
 }
@@ -3582,15 +3676,21 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     hasErrorRecipe(errorDiagnostics, "locale-encoding") ||
     /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
   const directXRecipeOrSymptom = failureSymptoms.has("black-screen") || hasErrorRecipe(errorDiagnostics, "directx-legacy");
-  const directXError = directXRecipeOrSymptom || runtimeImportRoute.hasAny;
-  const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist");
+  const directXError = directXRecipeOrSymptom || runtimeImportRoute.hasDirectX;
+  const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist") || runtimeImportRoute.hasVc;
+  const dotNetError = hasErrorRecipe(errorDiagnostics, "dotnet-runtime") || runtimeImportRoute.hasDotNet;
+  const vb6Error = hasErrorRecipe(errorDiagnostics, "vb6-runtime") || runtimeImportRoute.hasVb6;
+  const quickTimeError = hasErrorRecipe(errorDiagnostics, "quicktime-runtime") || runtimeImportRoute.hasQuickTime;
   const rtpError = hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp");
-  const runtimeRepairError = directXError || vcError || rtpError || failureSymptoms.has("missing-dll") || failureSymptoms.has("black-screen");
+  const runtimeRepairError = directXError || vcError || dotNetError || vb6Error || quickTimeError || rtpError || failureSymptoms.has("missing-dll") || failureSymptoms.has("black-screen");
   const permissionError = hasErrorRecipe(errorDiagnostics, "permission-write");
   const webFileError = hasErrorRecipe(errorDiagnostics, "web-local-files");
   const bundledRuntimeRepairs = getBundledRuntimeRepairs(files);
   const directXInstallers = bundledRuntimeRepairs.directX;
   const vcInstallers = bundledRuntimeRepairs.vc;
+  const dotNetInstallers = bundledRuntimeRepairs.dotnet;
+  const vb6Installers = bundledRuntimeRepairs.vb6;
+  const quickTimeInstallers = bundledRuntimeRepairs.quickTime;
   const rtpEvidence = compactEvidence(
     [
       ...bundledRuntimeRepairs.rtp,
@@ -3765,6 +3865,27 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     );
   }
 
+  if (runtimeImportRoute.hasLegacyRuntime) {
+    checks.push(
+      makeEnvironmentCheck({
+        id: "legacy-runtime-imports",
+        title: "旧运行库/多媒体组件",
+        status: "warning",
+        detail: runtimeImportRoute.detail,
+        action: runtimeImportRoute.action,
+        evidence: compactEvidence(
+          [
+            ...(runtimeImportRoute.evidence || []),
+            ...labelRuntimeRepairEvidence(".NET Framework", dotNetInstallers),
+            ...labelRuntimeRepairEvidence("VB6 Runtime", vb6Installers),
+            ...labelRuntimeRepairEvidence("QuickTime", quickTimeInstallers),
+          ],
+          6,
+        ),
+      }),
+    );
+  }
+
   checks.push(
     makeEnvironmentCheck({
       id: "directx",
@@ -3772,17 +3893,17 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       status: directXError ? "warning" : "info",
       detail: directXRecipeOrSymptom
         ? "报错里出现 DirectX、D3DX、XInput 或旧声音/输入组件线索。"
-        : runtimeImportRoute.hasAny
-          ? runtimeImportRoute.detail
+        : runtimeImportRoute.hasDirectX
+          ? "推荐启动入口导入了旧 DirectDraw、Direct3D、DirectSound、DirectInput 或 WinMM 组件。它不代表一定缺运行库，但黑屏、无声、输入异常和全屏问题会更常见。"
           : directXInstallers.length
             ? "目录里看到了 DirectX 支持安装器，但它不应当作为游戏主入口。"
           : "文件清单和报错里没有发现明确 DirectX 旧组件线索。",
       action: directXRecipeOrSymptom
         ? "安装 DirectX End-User Runtime；老游戏经常需要这个而不是新版 DirectX。"
-        : runtimeImportRoute.hasAny
-          ? runtimeImportRoute.action
+        : runtimeImportRoute.hasDirectX
+          ? "先直接启动；如果失败，优先补 DirectX End-User Runtime，并尝试窗口化、禁用全屏优化、兼容模式或 dgVoodoo/dxwrapper 这类用户自选兼容层。"
         : "只有在报错提到 d3dx、xinput、dsound、dinput 时再处理这一项。",
-      evidence: compactEvidence([...directXInstallers, ...(runtimeImportRoute.evidence || [])], 4),
+      evidence: compactEvidence([...directXInstallers, ...(runtimeImportRoute.hasDirectX ? runtimeImportRoute.evidence || [] : [])], 4),
     }),
   );
 
@@ -3791,15 +3912,17 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
       id: "vcredist",
       title: "VC++ 运行库",
       status: vcError ? "warning" : "info",
-      detail: vcError
+      detail: hasErrorRecipe(errorDiagnostics, "visual-cpp-redist")
         ? "报错里出现 msvcr、msvcp、vcruntime 或 Visual C++ 线索。"
+        : runtimeImportRoute.hasVc
+          ? "推荐启动入口导入了 msvcr/msvcp/vcruntime 这类 VC++ 运行库 DLL。它不代表本机一定缺失，但缺 DLL 或启动即退时应优先复查。"
         : vcInstallers.length
           ? "目录里看到了 VC++/redist 支持安装器，但它不应当作为游戏主入口。"
           : "文件清单和报错里没有发现明确 VC++ 运行库线索。",
       action: vcError
         ? "安装 Microsoft Visual C++ Redistributable；老游戏在 64 位系统上也常需要 x86。"
         : "只有在报错点名 msvcr、msvcp、vcruntime 时再处理这一项。",
-      evidence: vcInstallers,
+      evidence: compactEvidence([...vcInstallers, ...(runtimeImportRoute.hasVc ? runtimeImportRoute.evidence || [] : [])], 4),
     }),
   );
 
@@ -4361,7 +4484,7 @@ function buildRoadmap({ packages, launchCandidates, installerCandidates, profile
     }
   }
 
-  for (const checkId of ["legacy-runtime", "legacy-win32", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "rtp", "permission", "web-vn"]) {
+  for (const checkId of ["legacy-runtime", "legacy-win32", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "legacy-runtime-imports", "rtp", "permission", "web-vn"]) {
     const check = envChecks.get(checkId);
     if (!check || !["blocker", "warning"].includes(check.status)) continue;
     const recipeId = getEnvironmentRecipeId(check.id);
@@ -4539,6 +4662,7 @@ function getEnvironmentRoadmapPriority(id) {
     "bundled-runtime": 58,
     directx: 60,
     vcredist: 70,
+    "legacy-runtime-imports": 75,
     rtp: 80,
     permission: 90,
     "web-vn": 100,

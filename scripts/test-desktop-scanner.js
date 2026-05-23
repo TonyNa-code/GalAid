@@ -19,7 +19,7 @@ async function main() {
         machine: 0x014c,
         magic: 0x10b,
         subsystemVersion: [5, 1],
-        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "WINMM.dll"],
+        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "WINMM.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "rtl60.bpl"],
       }),
     );
 
@@ -41,8 +41,28 @@ async function main() {
     assert.equal(byName.get("XP32.EXE").executableInfo.runtime, "win32");
     assert.equal(byName.get("XP32.EXE").executableInfo.subsystemVersion, "5.1");
     assert.equal(byName.get("XP32.EXE").executableInfo.targetEra, "win2000-xp-era");
-    assert.deepEqual(byName.get("XP32.EXE").executableInfo.runtimeImports, ["ddraw.dll", "dsound.dll", "winmm.dll"]);
-    assert.deepEqual(byName.get("XP32.EXE").executableInfo.importHints, ["legacy-directdraw", "legacy-directsound", "legacy-winmm"]);
+    assert.deepEqual(byName.get("XP32.EXE").executableInfo.runtimeImports, [
+      "ddraw.dll",
+      "dsound.dll",
+      "winmm.dll",
+      "msvcr71.dll",
+      "msvbvm60.dll",
+      "mscoree.dll",
+      "qtmlclient.dll",
+      "flash.ocx",
+      "rtl60.bpl",
+    ]);
+    assert.deepEqual(byName.get("XP32.EXE").executableInfo.importHints, [
+      "legacy-directdraw",
+      "legacy-directsound",
+      "legacy-winmm",
+      "legacy-vc",
+      "legacy-vb6",
+      "legacy-dotnet",
+      "legacy-quicktime",
+      "legacy-flash",
+      "legacy-borland",
+    ]);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }

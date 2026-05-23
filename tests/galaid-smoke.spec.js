@@ -794,8 +794,8 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
           subsystem: "windows-gui",
           subsystemVersion: "5.1",
           targetEra: "win2000-xp-era",
-          runtimeImports: ["ddraw.dll", "dsound.dll", "winmm.dll"],
-          importHints: ["legacy-directdraw", "legacy-directsound", "legacy-winmm"],
+          runtimeImports: ["ddraw.dll", "dsound.dll", "winmm.dll", "msvcr71.dll", "msvbvm60.dll", "mscoree.dll", "qtmlclient.dll"],
+          importHints: ["legacy-directdraw", "legacy-directsound", "legacy-winmm", "legacy-vc", "legacy-vb6", "legacy-dotnet", "legacy-quicktime"],
           label: "32-bit Windows PE executable",
           route: "native-windows",
           confidence: "high",
@@ -818,13 +818,55 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
         depth: 3,
         fullPath: "C:\\Games\\XpVN\\Support\\DirectX\\DXSETUP.exe",
       },
+      {
+        name: "vcredist_x86.exe",
+        path: "XpVN/Support/VC/vcredist_x86.exe",
+        lowerPath: "xpvn/support/vc/vcredist_x86.exe",
+        ext: "exe",
+        size: 6200000,
+        depth: 3,
+        fullPath: "C:\\Games\\XpVN\\Support\\VC\\vcredist_x86.exe",
+      },
+      {
+        name: "dotnetfx.exe",
+        path: "XpVN/Support/DotNet/dotnetfx.exe",
+        lowerPath: "xpvn/support/dotnet/dotnetfx.exe",
+        ext: "exe",
+        size: 32000000,
+        depth: 3,
+        fullPath: "C:\\Games\\XpVN\\Support\\DotNet\\dotnetfx.exe",
+      },
+      {
+        name: "vbrun60sp6.exe",
+        path: "XpVN/Support/VB6/vbrun60sp6.exe",
+        lowerPath: "xpvn/support/vb6/vbrun60sp6.exe",
+        ext: "exe",
+        size: 1100000,
+        depth: 3,
+        fullPath: "C:\\Games\\XpVN\\Support\\VB6\\vbrun60sp6.exe",
+      },
+      {
+        name: "QuickTimeInstaller.exe",
+        path: "XpVN/Support/QuickTime/QuickTimeInstaller.exe",
+        lowerPath: "xpvn/support/quicktime/quicktimeinstaller.exe",
+        ext: "exe",
+        size: 18000000,
+        depth: 3,
+        fullPath: "C:\\Games\\XpVN\\Support\\QuickTime\\QuickTimeInstaller.exe",
+      },
     ]);
     const compatibilityCheck = analysis.environment.checks.find((check) => check.id === "legacy-win32");
     const compatibilityStep = analysis.roadmap.steps.find((step) => step.id === "env-legacy-win32");
     const directXCheck = analysis.environment.checks.find((check) => check.id === "directx");
+    const vcCheck = analysis.environment.checks.find((check) => check.id === "vcredist");
+    const legacyRuntimeCheck = analysis.environment.checks.find((check) => check.id === "legacy-runtime-imports");
     const topCandidate = analysis.launchCandidates[0];
     const profile = analysis.profiles[0];
     const directXRepair = analysis.runtimeRepairs.find((repair) => repair.type === "DirectX");
+    const vcRepair = analysis.runtimeRepairs.find((repair) => repair.type === "VC++");
+    const dotNetRepair = analysis.runtimeRepairs.find((repair) => repair.type === ".NET Framework");
+    const vb6Repair = analysis.runtimeRepairs.find((repair) => repair.type === "VB6 Runtime");
+    const quickTimeRepair = analysis.runtimeRepairs.find((repair) => repair.type === "QuickTime");
     return {
       topEntry: topCandidate?.file.path,
       canLaunchTop: canDesktopLaunchFile(topCandidate?.file),
@@ -835,6 +877,13 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
       directXEvidence: directXCheck?.evidence || [],
       directXRepairRecommended: directXRepair?.recommended,
       directXRepairReason: directXRepair?.reason,
+      vcStatus: vcCheck?.status,
+      vcRepairRecommended: vcRepair?.recommended,
+      legacyRuntimeStatus: legacyRuntimeCheck?.status,
+      legacyRuntimeEvidence: legacyRuntimeCheck?.evidence || [],
+      dotNetRepairRecommended: dotNetRepair?.recommended,
+      vb6RepairRecommended: vb6Repair?.recommended,
+      quickTimeRepairRecommended: quickTimeRepair?.recommended,
       roadmapState: compatibilityStep?.state,
       manifestInfo: buildFileManifest(analysis).files[0]?.executableInfo?.targetEra,
       manifestImports: buildFileManifest(analysis).files[0]?.executableInfo?.runtimeImports,
@@ -852,9 +901,17 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
   expect(result.directXEvidence.join("\n")).toContain("ddraw.dll");
   expect(result.directXRepairRecommended).toBe(true);
   expect(result.directXRepairReason).toContain("旧图形/声音组件");
+  expect(result.vcStatus).toBe("warning");
+  expect(result.vcRepairRecommended).toBe(true);
+  expect(result.legacyRuntimeStatus).toBe("warning");
+  expect(result.legacyRuntimeEvidence.join("\n")).toContain("msvbvm60.dll");
+  expect(result.dotNetRepairRecommended).toBe(true);
+  expect(result.vb6RepairRecommended).toBe(true);
+  expect(result.quickTimeRepairRecommended).toBe(true);
   expect(result.roadmapState).toBe("todo");
   expect(result.manifestInfo).toBe("win2000-xp-era");
   expect(result.manifestImports).toContain("ddraw.dll");
+  expect(result.manifestImports).toContain("msvbvm60.dll");
   expect(result.profileInfo).toBe("5.1");
 });
 

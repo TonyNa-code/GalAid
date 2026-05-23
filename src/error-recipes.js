@@ -257,5 +257,45 @@ window.GALAID_ERROR_RECIPES = [
       "安装指定 .NET Framework",
       "尝试直接运行主程序"
     ]
+  },
+  {
+    "id": "vb6-runtime",
+    "title": "VB6 运行库",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "msvbvm60\\.dll",
+      "visual basic",
+      "vb6 runtime",
+      "vbrun"
+    ],
+    "cause": "部分旧启动器、配置工具或游戏本体依赖 Visual Basic 6 运行库。",
+    "action": "补齐 VB6 运行库后，从推荐游戏入口重试；如果报错来自配置工具，可先绕过工具直接运行主程序。",
+    "checklist": [
+      "确认报错是否点名 msvbvm60.dll",
+      "补齐 VB6 运行库",
+      "回到推荐入口重试"
+    ]
+  },
+  {
+    "id": "quicktime-runtime",
+    "title": "QuickTime/旧视频组件",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "qtmlclient\\.dll",
+      "quicktime\\.qts",
+      "quicktime",
+      "mciqtz32\\.dll",
+      "quartz\\.dll",
+      "directshow"
+    ],
+    "cause": "部分老游戏的 OP、ED 或过场动画依赖 QuickTime、DirectShow、MCI 或旧视频组件。",
+    "action": "如果游戏在播放视频前后黑屏、无响应或报 DLL 缺失，先补对应视频组件；也可以临时跳过片头后再验证主流程。",
+    "checklist": [
+      "确认报错是否点名 QuickTime、DirectShow 或 MCI",
+      "检查游戏包是否自带视频组件安装器",
+      "补齐后从推荐入口重试"
+    ]
   }
 ];
