@@ -18,7 +18,7 @@ After a desktop launch action succeeds, the launch tab shows a short follow-up c
 
 When the latest error text, launch-failure symptom, or PE import hint points to DirectX, VC++, .NET, VB6, QuickTime, or RPG Maker RTP and a matching repair tool was found in the scanned folder, the one-stop guide promotes that repair tool as the primary next click. Repair tools still use the same allowlisted desktop launch path and stay separate from game launch follow-up state.
 
-The environment tab can run an explicit local runtime check on Windows. It probes for common legacy DirectX DLLs, installed Microsoft Visual C++ Redistributables, .NET Framework registry markers, VB6 runtime DLLs, QuickTime/video component markers, RPG Maker RTP entries, and locale state, folds warning results into the roadmap, then stores the metadata-only result in reports and support bundles.
+The environment tab can run an explicit local runtime check on Windows. It probes for common legacy DirectX DLLs, installed Microsoft Visual C++ Redistributables, .NET Framework registry markers, VB6 runtime DLLs, QuickTime/video component markers, RPG Maker RTP entries, and locale state. The environment page shows the full result, while the roadmap promotes optional runtime gaps only when the current folder, PE imports, engine clues, pasted error, or launch-failure symptoms make that check relevant. The metadata-only result is still stored in reports and support bundles.
 
 When an ISO was mounted by GalAid, the same handoff card can request a Windows `Dismount-DiskImage` cleanup for that session's mounted image. GalAid only offers this action for images it mounted during the current desktop session.
 

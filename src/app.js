@@ -4570,7 +4570,7 @@ function dedupeRoadmapSteps(steps) {
 function applyDesktopEnvironmentToAnalysis(analysis, desktopEnvironment) {
   if (!analysis || !desktopEnvironment?.checks?.length) return analysis;
   analysis.desktopEnvironment = desktopEnvironment;
-  const nativeSteps = buildDesktopEnvironmentRoadmapSteps(desktopEnvironment);
+  const nativeSteps = buildDesktopEnvironmentRoadmapSteps(desktopEnvironment, analysis);
   const baseSteps = analysis.roadmap.steps.filter((step) => step.source !== "desktop-environment");
   const normalized = dedupeRoadmapSteps([...baseSteps, ...nativeSteps])
     .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title));
@@ -4581,9 +4581,10 @@ function applyDesktopEnvironmentToAnalysis(analysis, desktopEnvironment) {
   return analysis;
 }
 
-function buildDesktopEnvironmentRoadmapSteps(desktopEnvironment) {
+function buildDesktopEnvironmentRoadmapSteps(desktopEnvironment, analysis = null) {
+  const context = getDesktopEnvironmentRoadmapContext(analysis);
   return (desktopEnvironment.checks || [])
-    .filter((check) => check.status === "warning")
+    .filter((check) => shouldPromoteDesktopEnvironmentCheck(check, context))
     .map((check) => ({
       id: `native-${check.id}`,
       title: check.title,
@@ -4595,6 +4596,42 @@ function buildDesktopEnvironmentRoadmapSteps(desktopEnvironment) {
       evidence: compactEvidence(check.evidence || [], 4),
       source: "desktop-environment",
     }));
+}
+
+function getDesktopEnvironmentRoadmapContext(analysis) {
+  if (!analysis) return {};
+  const route = getRuntimeImportRoute(analysis.files || [], analysis.launchCandidates || []);
+  const engineIds = new Set((analysis.engines || []).map((engine) => engine.id));
+  const symptoms = new Set(analysis.launchFailure?.symptoms || []);
+  return {
+    directx: route.hasDirectX || hasErrorRecipe(analysis.errorDiagnostics, "directx-legacy") || symptoms.has("black-screen"),
+    vc: route.hasVc || hasErrorRecipe(analysis.errorDiagnostics, "visual-cpp-redist") || symptoms.has("missing-dll"),
+    dotnet: route.hasDotNet || hasErrorRecipe(analysis.errorDiagnostics, "dotnet-runtime"),
+    vb6: route.hasVb6 || hasErrorRecipe(analysis.errorDiagnostics, "vb6-runtime"),
+    quicktime: route.hasQuickTime || hasErrorRecipe(analysis.errorDiagnostics, "quicktime-runtime"),
+    rtp: hasErrorRecipe(analysis.errorDiagnostics, "rpgmaker-rtp") || engineIds.has("rpgmaker"),
+    locale:
+      hasErrorRecipe(analysis.errorDiagnostics, "locale-encoding") ||
+      engineIds.has("kirikiri") ||
+      engineIds.has("nscript") ||
+      engineIds.has("siglus") ||
+      engineIds.has("commercial-proprietary") ||
+      symptoms.has("mojibake"),
+  };
+}
+
+function shouldPromoteDesktopEnvironmentCheck(check, context = {}) {
+  if (!check) return false;
+  const contextualChecks = {
+    "dotnet-native": "dotnet",
+    "vb6-native": "vb6",
+    "quicktime-native": "quicktime",
+    "rtp-native": "rtp",
+    "locale-native": "locale",
+  };
+  const contextKey = contextualChecks[check.id];
+  if (contextKey) return Boolean(context[contextKey]) && check.status !== "good";
+  return check.status === "warning";
 }
 
 function summarizeRoadmap(steps, findings, launchCandidates) {

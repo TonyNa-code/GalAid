@@ -867,6 +867,51 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
     const dotNetRepair = analysis.runtimeRepairs.find((repair) => repair.type === ".NET Framework");
     const vb6Repair = analysis.runtimeRepairs.find((repair) => repair.type === "VB6 Runtime");
     const quickTimeRepair = analysis.runtimeRepairs.find((repair) => repair.type === "QuickTime");
+    const contextualAnalysis = applyDesktopEnvironmentToAnalysis(analysis, {
+      ok: true,
+      platform: "win32",
+      checkedAt: "2026-05-23T00:00:00.000Z",
+      summary: { status: "warning", label: "本机环境检测", detail: "contextual", counts: { good: 0, warning: 3, info: 1 } },
+      checks: [
+        {
+          id: "directx-native",
+          title: "DirectX 旧组件",
+          status: "warning",
+          statusLabel: "建议处理",
+          detail: "没有检测到常见 DirectX 9 时代 DLL。",
+          action: "补 DirectX End-User Runtime。",
+          evidence: [],
+        },
+        {
+          id: "dotnet-native",
+          title: ".NET Framework",
+          status: "warning",
+          statusLabel: "建议处理",
+          detail: "没有在常见注册表位置检测到 .NET Framework。",
+          action: "补 .NET Framework。",
+          evidence: [],
+        },
+        {
+          id: "vb6-native",
+          title: "VB6 运行库",
+          status: "warning",
+          statusLabel: "建议处理",
+          detail: "没有检测到 msvbvm60.dll。",
+          action: "补 VB6 运行库。",
+          evidence: [],
+        },
+        {
+          id: "quicktime-native",
+          title: "QuickTime/旧视频组件",
+          status: "info",
+          statusLabel: "观察",
+          detail: "没有检测到 QuickTime。",
+          action: "补 QuickTime 或跳过片头。",
+          evidence: [],
+        },
+      ],
+    });
+    const nativeSteps = contextualAnalysis.roadmap.steps.filter((step) => step.source === "desktop-environment");
     return {
       topEntry: topCandidate?.file.path,
       canLaunchTop: canDesktopLaunchFile(topCandidate?.file),
@@ -887,6 +932,8 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
       roadmapState: compatibilityStep?.state,
       manifestInfo: buildFileManifest(analysis).files[0]?.executableInfo?.targetEra,
       manifestImports: buildFileManifest(analysis).files[0]?.executableInfo?.runtimeImports,
+      nativeStepIds: nativeSteps.map((step) => step.id),
+      nativeStepText: nativeSteps.map((step) => `${step.title}: ${step.detail}`).join("\n"),
       profileInfo: profile?.config?.executableInfo?.subsystemVersion,
     };
   });
@@ -912,6 +959,8 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
   expect(result.manifestInfo).toBe("win2000-xp-era");
   expect(result.manifestImports).toContain("ddraw.dll");
   expect(result.manifestImports).toContain("msvbvm60.dll");
+  expect(result.nativeStepIds).toEqual(expect.arrayContaining(["native-directx-native", "native-dotnet-native", "native-vb6-native", "native-quicktime-native"]));
+  expect(result.nativeStepText).toContain("没有检测到 QuickTime");
   expect(result.profileInfo).toBe("5.1");
 });
 
@@ -1369,8 +1418,8 @@ test("desktop runtime assistant records local environment checks", async ({ page
   await page.locator('[data-tab="roadmap"]').click();
   await expect(page.locator(".roadmap-list")).toContainText("本机检测：没有检测到常见 DirectX 9 时代 DLL。");
   await expect(page.locator(".roadmap-list")).toContainText("遇到 d3dx、xinput 相关报错时");
-  await expect(page.locator(".roadmap-list")).toContainText("本机检测：没有在常见注册表位置检测到 .NET Framework。");
-  await expect(page.locator(".roadmap-list")).toContainText("补齐 VB6 运行库后重试");
+  await expect(page.locator(".roadmap-list")).not.toContainText("本机检测：没有在常见注册表位置检测到 .NET Framework。");
+  await expect(page.locator(".roadmap-list")).not.toContainText("补齐 VB6 运行库后重试");
 
   await page.locator('[data-tab="environment"]').click();
   await page.getByRole("button", { name: "检测本机环境" }).click();
