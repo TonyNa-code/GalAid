@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { EventEmitter } = require("node:events");
 const path = require("node:path");
 const {
   buildLaunchAllowlist,
@@ -180,6 +181,60 @@ async function main() {
     platform: "darwin",
   });
   assert.deepEqual(unsupported, { ok: false, errorCode: "unsupported-platform" });
+
+  const vanished = await launchAllowedEntry({
+    allowlist,
+    entryFullPath: gamePath,
+    platform: "win32",
+    statImpl: async () => {
+      throw Object.assign(new Error("missing"), { code: "ENOENT" });
+    },
+    spawnImpl: () => {
+      throw new Error("spawn should not run when the file vanished");
+    },
+  });
+  assert.equal(vanished.ok, false);
+  assert.equal(vanished.errorCode, "not-found");
+  assert.match(vanished.message, /Rescan the prepared folder/);
+
+  const immediateSpawnFailure = await launchAllowedEntry({
+    allowlist,
+    entryFullPath: gamePath,
+    platform: "win32",
+    statImpl: async () => ({ isFile: () => true }),
+    launchSettleMs: 50,
+    spawnImpl: () => {
+      const child = new EventEmitter();
+      child.pid = null;
+      child.unref = () => {};
+      process.nextTick(() => {
+        child.emit("error", Object.assign(new Error("The system cannot execute this file."), { code: "ENOENT" }));
+      });
+      return child;
+    },
+  });
+  assert.equal(immediateSpawnFailure.ok, false);
+  assert.equal(immediateSpawnFailure.errorCode, "launch-spawn-failed");
+  assert.match(immediateSpawnFailure.message, /could not start/);
+
+  const spawnedEventLaunch = await launchAllowedEntry({
+    allowlist,
+    entryFullPath: gamePath,
+    platform: "win32",
+    statImpl: async () => ({ isFile: () => true }),
+    launchSettleMs: 50,
+    spawnImpl: () => {
+      const child = new EventEmitter();
+      child.pid = 2468;
+      child.unref = () => {
+        child.didUnref = true;
+      };
+      process.nextTick(() => child.emit("spawn"));
+      return child;
+    },
+  });
+  assert.equal(spawnedEventLaunch.ok, true);
+  assert.equal(spawnedEventLaunch.pid, 2468);
 
   const shortcuts = [];
   const shortcutResult = await createShortcutForAllowedEntry({

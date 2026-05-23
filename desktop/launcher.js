@@ -5,6 +5,7 @@ const { spawn } = require("node:child_process");
 const WINDOWS_LAUNCH_EXTS = new Set(["exe", "com", "bat", "cmd", "lnk", "msi"]);
 const WINDOWS_SCRIPT_EXTS = new Set(["bat", "cmd"]);
 const SHORTCUT_EXT = ".lnk";
+const DEFAULT_LAUNCH_SETTLE_MS = 250;
 
 function buildLaunchAllowlist(files) {
   const allowlist = new Map();
@@ -58,18 +59,23 @@ async function launchAllowedEntry({
   platform = process.platform,
   spawnImpl = spawn,
   statImpl = fs.stat,
+  launchSettleMs = DEFAULT_LAUNCH_SETTLE_MS,
 } = {}) {
   const resolved = await resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform, statImpl });
   if (!resolved.ok) return resolved;
   const { entry } = resolved;
   const launch = getLaunchCommand(entry);
 
-  const child = spawnImpl(launch.command, launch.args, {
+  const started = await startDetachedLaunchProcess({
+    command: launch.command,
+    args: launch.args,
     cwd: entry.workingDirectoryFull,
-    detached: true,
-    stdio: "ignore",
-    windowsHide: false,
+    spawnImpl,
+    launchSettleMs,
   });
+
+  if (!started.ok) return started;
+  const { child } = started;
   child?.unref?.();
 
   return {
@@ -79,6 +85,51 @@ async function launchAllowedEntry({
     relativePath: entry.relativePath,
     entryFullPath: entry.entryFullPath,
     workingDirectory: entry.workingDirectoryFull,
+  };
+}
+
+async function startDetachedLaunchProcess({ command, args, cwd, spawnImpl, launchSettleMs = DEFAULT_LAUNCH_SETTLE_MS }) {
+  let child;
+  try {
+    child = spawnImpl(command, args, {
+      cwd,
+      detached: true,
+      stdio: "ignore",
+      windowsHide: false,
+    });
+  } catch (error) {
+    return makeLaunchSpawnFailure(error);
+  }
+
+  if (!child || typeof child.once !== "function") {
+    return { ok: true, child };
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer;
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve(result);
+    };
+
+    child.once("error", (error) => finish(makeLaunchSpawnFailure(error)));
+    child.once("spawn", () => finish({ ok: true, child }));
+
+    timer = setTimeout(() => finish({ ok: true, child }), Math.max(0, launchSettleMs));
+    timer.unref?.();
+  });
+}
+
+function makeLaunchSpawnFailure(error) {
+  const detail = error?.message ? ` ${error.message}` : "";
+  return {
+    ok: false,
+    errorCode: "launch-spawn-failed",
+    message: `Windows could not start this entry.${detail}`,
   };
 }
 
@@ -132,7 +183,17 @@ async function resolveAllowedLaunchEntry({ allowlist, entryFullPath, platform = 
     return { ok: false, errorCode: "unsupported-entry" };
   }
 
-  const stat = await statImpl(entry.entryFullPath);
+  let stat;
+  try {
+    stat = await statImpl(entry.entryFullPath);
+  } catch {
+    return {
+      ok: false,
+      errorCode: "not-found",
+      message: "Launch entry was not found. Rescan the prepared folder and try again.",
+    };
+  }
+
   if (!stat?.isFile?.()) {
     return { ok: false, errorCode: "not-a-file" };
   }
