@@ -108,21 +108,51 @@ async function main() {
 
   const isoPath = path.join(tempDir, "MoonlightCafe_Bonus.iso");
   await fs.writeFile(isoPath, Buffer.alloc(32));
-  const isoPreview = await previewDiscImageFile(isoPath, "iso");
+  const isoPreview = await previewDiscImageFile(isoPath, "iso", { runExternalListImpl: async () => ({ missing: true }) });
   assert.equal(isoPreview.status, "ok");
   assert.equal(isoPreview.packageKind, "disc-image");
   assert.equal(isoPreview.fileCount, 1);
   assert.match(isoPreview.warnings[0], /metadata only/);
 
+  const listedIsoPreview = await previewDiscImageFile(isoPath, "iso", {
+    runExternalListImpl: async () => ({
+      code: 0,
+      stdout: [
+        "Path = MoonlightCafe_Bonus.iso",
+        "Type = Iso",
+        "",
+        "Path = Install/SetupJP.exe",
+        "Size = 2412000",
+        "Packed Size = 2412000",
+        "",
+        "Path = Game/Game.exe",
+        "Size = 1422000",
+        "Packed Size = 1422000",
+        "",
+        "Path = Game/data.xp3",
+        "Size = 420000000",
+        "Packed Size = 420000000",
+        "",
+      ].join("\n"),
+      stderr: "",
+    }),
+  });
+  assert.equal(listedIsoPreview.status, "ok");
+  assert.equal(listedIsoPreview.packageKind, "disc-image");
+  assert.equal(listedIsoPreview.fileCount, 3);
+  assert.deepEqual(listedIsoPreview.signals.launchSamples, ["Game/Game.exe"]);
+  assert.deepEqual(listedIsoPreview.signals.installerSamples, ["Install/SetupJP.exe"]);
+  assert.match(listedIsoPreview.warnings[0], /Disc image directory listed/);
+
   const blindWritePath = path.join(tempDir, "AsterOld.b6t");
   await fs.writeFile(blindWritePath, Buffer.alloc(32));
-  const blindWritePreview = await previewDiscImageFile(blindWritePath, "b6t");
+  const blindWritePreview = await previewDiscImageFile(blindWritePath, "b6t", { runExternalListImpl: async () => ({ missing: true }) });
   assert.equal(blindWritePreview.packageKind, "disc-image");
   assert.match(blindWritePreview.warnings[0], /Descriptor metadata/);
 
   const neroPath = path.join(tempDir, "Tokuten.nrg");
   await fs.writeFile(neroPath, Buffer.alloc(32));
-  const neroPreview = await previewDiscImageFile(neroPath, "nrg");
+  const neroPreview = await previewDiscImageFile(neroPath, "nrg", { runExternalListImpl: async () => ({ missing: true }) });
   assert.equal(neroPreview.packageKind, "disc-image");
   assert.match(neroPreview.warnings[0], /Legacy disc image/);
 

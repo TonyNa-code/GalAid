@@ -173,22 +173,13 @@ async function previewExternalArchiveFile(filePath, format, options = {}) {
   return preview;
 }
 
-async function previewDiscImageFile(filePath, ext) {
+async function previewDiscImageFile(filePath, ext, options = {}) {
   try {
     const stat = await fs.stat(filePath);
     if (!stat.isFile()) return null;
     const format = `${String(ext || "disc").toUpperCase()} disc image`;
-    const preview = makeBasePreview(format, {
-      packageKind: "disc-image",
-      totalEntries: 1,
-      warnings: getDiscImageWarnings(ext),
-    });
-    const entry = makeEntry(path.basename(filePath), stat.size, stat.size);
-    preview.scannedEntries = 1;
-    preview.fileCount = 1;
-    preview.sampleFiles.push(entry);
-    collectSignals(preview.signals, new Map(), entry);
-    return preview;
+    const listedPreview = await previewDiscImageDirectory(filePath, format, ext, options);
+    return listedPreview || makeDiscImageMetadataPreview(filePath, ext, stat.size, format);
   } catch (error) {
     return makeUnavailablePreview(
       "error",
@@ -197,6 +188,42 @@ async function previewDiscImageFile(filePath, ext) {
       "disc-image",
     );
   }
+}
+
+async function previewDiscImageDirectory(filePath, format, ext, options = {}) {
+  const runList = options.runExternalListImpl || runExternalList;
+  const result = await runList(filePath);
+  if (result.missing || result.timedOut || result.error) return null;
+
+  const warnings = [
+    "Disc image directory listed with a local 7z-compatible command; no files were extracted.",
+    ...getDiscImageWarnings(ext),
+  ];
+  if (result.truncated) warnings.push("Disc image listing output was truncated.");
+  if (result.code !== 0) warnings.push(`7z-compatible listing exited with code ${result.code}.`);
+  if (result.stderr && result.code !== 0) warnings.push(trimMessage(result.stderr));
+
+  const preview = parseSevenZipListOutput(result.stdout, format, {
+    packageKind: "disc-image",
+    warnings,
+    truncated: result.truncated,
+  });
+
+  return preview.scannedEntries ? preview : null;
+}
+
+function makeDiscImageMetadataPreview(filePath, ext, size, format = `${String(ext || "disc").toUpperCase()} disc image`) {
+  const preview = makeBasePreview(format, {
+    packageKind: "disc-image",
+    totalEntries: 1,
+    warnings: getDiscImageWarnings(ext),
+  });
+  const entry = makeEntry(path.basename(filePath), size, size);
+  preview.scannedEntries = 1;
+  preview.fileCount = 1;
+  preview.sampleFiles.push(entry);
+  collectSignals(preview.signals, new Map(), entry);
+  return preview;
 }
 
 async function readZipPreview(handle, fileSize) {
@@ -494,7 +521,7 @@ function isSetupLike(lowerPath) {
 function isInstallerLike(lowerPath, ext) {
   return (
     INSTALLER_EXTS.has(ext) ||
-    /(^|\/)(setup|install|installer|autorun|dxsetup|vcredist|vc_redist|directx|patch|update|append|bonus|extra|tokuten|serial|keygen|crack|no.?dvd|no.?cd)(\.[a-z0-9]+)?$/i.test(lowerPath) ||
+    /(^|\/)(setup|install|installer|autorun|dxsetup|vcredist|vc_redist|directx|patch|update|append|bonus|extra|tokuten|serial|keygen|crack|no.?dvd|no.?cd)[\w.-]*(\.[a-z0-9]+)?$/i.test(lowerPath) ||
     /(\/redist\/|\/support\/|\/directx\/|\/patch\/|\/update\/|\/bonus\/|\/extra\/|\/tokuten\/|\/特典\/|\/追加\/|data\d+\.cab$|autorun\.inf$|免dvd|免cd|no.?dvd|no.?cd)/i.test(lowerPath)
   );
 }

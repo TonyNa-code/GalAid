@@ -1743,26 +1743,32 @@ const PACKAGE_SAMPLE_FILES = [
         format: "ISO disc image",
         packageKind: "disc-image",
         status: "ok",
-        totalEntries: 1,
-        scannedEntries: 1,
-        fileCount: 1,
+        totalEntries: 3,
+        scannedEntries: 3,
+        fileCount: 3,
         directoryCount: 0,
         encryptedEntries: 0,
         truncated: false,
-        warnings: ["Disc image preflight; use the desktop prepare action to mount or extract and rescan when available."],
-        sampleFiles: [{ path: "MoonlightCafe_Bonus.iso", name: "MoonlightCafe_Bonus.iso", ext: "iso", size: 4810000000, compressedSize: 4810000000, depth: 0 }],
+        warnings: ["Disc image directory listed with a local 7z-compatible command; no files were extracted."],
+        sampleFiles: [
+          { path: "MoonlightCafe_Bonus/SetupJP.exe", name: "SetupJP.exe", ext: "exe", size: 2412000, compressedSize: 2412000, depth: 1 },
+          { path: "MoonlightCafe_Bonus/Game.exe", name: "Game.exe", ext: "exe", size: 1422000, compressedSize: 1422000, depth: 1 },
+          { path: "MoonlightCafe_Bonus/data.xp3", name: "data.xp3", ext: "xp3", size: 420000000, compressedSize: 420000000, depth: 1 },
+        ],
         signals: {
-          launchCandidateCount: 0,
-          launchSamples: [],
-          installerCount: 0,
-          installerSamples: [],
-          engineHints: [],
+          launchCandidateCount: 1,
+          launchSamples: ["MoonlightCafe_Bonus/Game.exe"],
+          installerCount: 1,
+          installerSamples: ["MoonlightCafe_Bonus/SetupJP.exe"],
+          runtimeRepairCount: 0,
+          runtimeRepairSamples: [],
+          engineHints: [{ id: "kirikiri", name: "KiriKiri / 吉里吉里", count: 1, samples: ["MoonlightCafe_Bonus/data.xp3"] }],
           assetCounts: {
             images: 0,
             audio: 0,
             video: 0,
             scripts: 0,
-            resourceArchives: 0,
+            resourceArchives: 1,
             commercialArchives: 0,
           },
         },
@@ -2769,6 +2775,8 @@ function buildDiscSets(discs) {
       const groupedPaths = new Set(sorted.map((item) => item.file.lowerPath));
       const missingCueMedia = referencedMediaPaths.filter((mediaPath) => !groupedPaths.has(mediaPath));
       const matchedCueMedia = referencedMediaPaths.filter((mediaPath) => groupedPaths.has(mediaPath));
+      const previewLaunchSample = archivePreview?.signals?.launchSamples?.[0];
+      const previewInstallerSample = archivePreview?.signals?.installerSamples?.[0];
       let level = "info";
       let format = items[0].format;
       let summary = archivePreview ? summarizeArchivePreview(archivePreview) : "镜像文件已识别";
@@ -2828,6 +2836,12 @@ function buildDiscSets(discs) {
       } else if (["nrg", "isz", "cdi", "mdx", "daa", "uif", "pdi"].some((ext) => exts.has(ext))) {
         summary = archivePreview ? summarizeArchivePreview(archivePreview) : "古早镜像已识别，通常需要挂载或用 7z/专用工具解包";
         nextStep = "桌面版会先尝试 7z 兼容解包；如果失败，再用对应镜像工具挂载后重扫安装目录";
+      }
+
+      if (level !== "warning" && archivePreview?.status === "ok" && previewLaunchSample) {
+        nextStep = `点击挂载/解包并重扫或手动处理镜像，再优先检查 ${previewLaunchSample}`;
+      } else if (level !== "warning" && archivePreview?.status === "ok" && previewInstallerSample) {
+        nextStep = `点击挂载/解包并重扫或手动处理镜像，再先打开安装/介质入口 ${previewInstallerSample}`;
       }
 
       return {

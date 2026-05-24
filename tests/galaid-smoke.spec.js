@@ -72,6 +72,7 @@ test("package sample shows archive and image preflight without treating it as ru
   await expect(packagesPanel).toContainText("RAR 包/镜像预检");
   await expect(packagesPanel).toContainText("MoonlightCafe/Game.exe");
   await expect(packagesPanel).toContainText("ISO disc image 包/镜像预检");
+  await expect(packagesPanel).toContainText("MoonlightCafe_Bonus/Game.exe");
   await expect(packagesPanel).toContainText("CCD/IMG disc image");
   await expect(packagesPanel).toContainText("MDS/MDF disc image");
   await expect(packagesPanel).toContainText("BlindWrite 6 disc image");
@@ -263,6 +264,92 @@ test("CUE sheets group referenced BIN tracks as one disc image", async ({ page }
   expect(result.missingLevel).toBe("warning");
   expect(result.missingSummary).toContain("track01.bin");
   expect(result.missingRoadmapId).toBe("extract-first");
+});
+
+test("disc image directory preflight exposes internal launch clues", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async () => ({ ok: false, errorCode: "canceled" }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    await setFiles([
+      {
+        name: "InstallDisc.iso",
+        path: "InstallDisc.iso",
+        lowerPath: "installdisc.iso",
+        ext: "iso",
+        size: 950000000,
+        depth: 0,
+        fullPath: "C:\\Downloads\\InstallDisc.iso",
+        archivePreview: {
+          schema: "galaid.archivePreview.v1",
+          format: "ISO disc image",
+          packageKind: "disc-image",
+          status: "ok",
+          totalEntries: 3,
+          scannedEntries: 3,
+          fileCount: 3,
+          directoryCount: 0,
+          encryptedEntries: 0,
+          truncated: false,
+          warnings: ["Disc image directory listed with a local 7z-compatible command; no files were extracted."],
+          sampleFiles: [
+            { path: "Install/SetupJP.exe", name: "SetupJP.exe", ext: "exe", size: 2412000, compressedSize: 2412000, depth: 1 },
+            { path: "Game/Game.exe", name: "Game.exe", ext: "exe", size: 1422000, compressedSize: 1422000, depth: 1 },
+            { path: "Game/data.xp3", name: "data.xp3", ext: "xp3", size: 420000000, compressedSize: 420000000, depth: 1 },
+          ],
+          signals: {
+            launchCandidateCount: 1,
+            launchSamples: ["Game/Game.exe"],
+            installerCount: 1,
+            installerSamples: ["Install/SetupJP.exe"],
+            runtimeRepairCount: 0,
+            runtimeRepairSamples: [],
+            engineHints: [{ id: "kirikiri", name: "KiriKiri / 吉里吉里", count: 1, samples: ["Game/data.xp3"] }],
+            assetCounts: {
+              images: 0,
+              audio: 0,
+              video: 0,
+              scripts: 0,
+              resourceArchives: 1,
+              commercialArchives: 0,
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  await page.locator('[data-tab="packages"]').click();
+  await expect(page.locator("#packagesPanel")).toContainText("ISO disc image 包/镜像预检");
+  await expect(page.locator("#packagesPanel")).toContainText("Game/Game.exe");
+  await expect(page.locator("#packagesPanel")).toContainText("Install/SetupJP.exe");
+  await expect(page.locator("#packagesPanel")).toContainText("挂载/解包并重扫");
+  await expect(page.locator(".package-roadmap")).toContainText("包里看到启动线索");
+
+  await page.locator('[data-tab="launch"]').click();
+  await expect(page.locator(".one-stop-wizard")).toContainText("一键准备并启动");
+
+  const result = await page.evaluate(() => ({
+    launchCandidates: currentAnalysis.launchCandidates.map((candidate) => candidate.file.path),
+    nextStep: currentAnalysis.packages.discSets[0]?.nextStep,
+    preparePath: getOneClickPrepareTarget(currentAnalysis)?.file?.path,
+  }));
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.nextStep).toContain("Game/Game.exe");
+  expect(result.preparePath).toBe("InstallDisc.iso");
 });
 
 test("desktop one-click flow prepares a package automatically before launch", async ({ page }) => {
