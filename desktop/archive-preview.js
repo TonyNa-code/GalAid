@@ -307,6 +307,7 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
     truncated: Boolean(directoryBytesTruncated),
   });
   const engineHints = new Map();
+  const entries = [];
   let offset = 0;
 
   while (offset + 46 <= buffer.length && preview.scannedEntries < MAX_PARSED_ENTRIES) {
@@ -336,6 +337,7 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
         preview.directoryCount += 1;
       } else {
         const entry = makeEntry(entryPath, uncompressedSize, compressedSize);
+        entries.push(entry);
         preview.fileCount += 1;
         if (preview.sampleFiles.length < MAX_SAMPLE_FILES) preview.sampleFiles.push(entry);
         collectSignals(preview.signals, engineHints, entry);
@@ -347,12 +349,7 @@ function parseCentralDirectory(buffer, totalEntries, directoryBytesTruncated) {
   }
 
   if (preview.scannedEntries < totalEntries) preview.truncated = true;
-  if (preview.encryptedEntries) preview.warnings.push(`${preview.encryptedEntries} encrypted entries were detected.`);
-  if (preview.signals.launchCandidateCount && preview.signals.assetCounts.commercialArchives >= 2) {
-    addEngineHint(engineHints, "commercial-proprietary", "商业/自研引擎（文件结构）", preview.signals.launchSamples[0]);
-  }
-  preview.signals.engineHints = [...engineHints.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  return preview;
+  return finalizePreviewSignals(preview, engineHints, entries);
 }
 
 function parseSevenZipListOutput(output, format = "7Z", options = {}) {
@@ -362,6 +359,7 @@ function parseSevenZipListOutput(output, format = "7Z", options = {}) {
     truncated: Boolean(options.truncated),
   });
   const engineHints = new Map();
+  const entries = [];
   const records = parseKeyValueRecords(output);
 
   for (const record of records) {
@@ -384,18 +382,14 @@ function parseSevenZipListOutput(output, format = "7Z", options = {}) {
     }
 
     const entry = makeEntry(entryPath, parseDecimalSize(record.Size), parseDecimalSize(record["Packed Size"]));
+    entries.push(entry);
     preview.fileCount += 1;
     if (preview.sampleFiles.length < MAX_SAMPLE_FILES) preview.sampleFiles.push(entry);
     collectSignals(preview.signals, engineHints, entry);
   }
 
   if (records.length > MAX_PARSED_ENTRIES) preview.truncated = true;
-  if (preview.encryptedEntries) preview.warnings.push(`${preview.encryptedEntries} encrypted entries were detected.`);
-  if (preview.signals.launchCandidateCount && preview.signals.assetCounts.commercialArchives >= 2) {
-    addEngineHint(engineHints, "commercial-proprietary", "商业/自研引擎（文件结构）", preview.signals.launchSamples[0]);
-  }
-  preview.signals.engineHints = [...engineHints.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  return preview;
+  return finalizePreviewSignals(preview, engineHints, entries);
 }
 
 function parseKeyValueRecords(output) {
@@ -467,6 +461,64 @@ function collectSignals(signals, engineHints, entry) {
   }
 }
 
+function finalizePreviewSignals(preview, engineHints, entries = []) {
+  reclassifyAutorunInstallMedia(preview, entries);
+  if (preview.encryptedEntries) pushUniqueWarning(preview.warnings, `${preview.encryptedEntries} encrypted entries were detected.`);
+  if (preview.signals.launchCandidateCount && preview.signals.assetCounts.commercialArchives >= 2) {
+    const sample = preview.signals.launchSamples[0] || entries.find((entry) => LAUNCH_EXTS.has(entry.ext) && !isSetupLike(entry.path.toLowerCase()))?.path;
+    if (sample) addEngineHint(engineHints, "commercial-proprietary", "商业/自研引擎（文件结构）", sample);
+  }
+  preview.signals.engineHints = [...engineHints.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  return preview;
+}
+
+function reclassifyAutorunInstallMedia(preview, entries) {
+  if (!entries.length) return;
+  const context = getAutorunInstallMediaContext(entries);
+  if (!context.hasInstallMediaLayout) return;
+
+  const reclassified = entries.filter((entry) => isAutorunLaunchStub(entry, context));
+  if (!reclassified.length) return;
+
+  const reclassifiedPaths = new Set(reclassified.map((entry) => entry.path));
+  const remainingLaunchEntries = entries.filter((entry) => LAUNCH_EXTS.has(entry.ext) && !isSetupLike(entry.path.toLowerCase()) && !reclassifiedPaths.has(entry.path));
+  const installerEntries = [
+    ...reclassified,
+    ...entries.filter((entry) => !reclassifiedPaths.has(entry.path) && isInstallerLike(entry.path.toLowerCase(), entry.ext)),
+  ];
+
+  preview.signals.launchCandidateCount = remainingLaunchEntries.length;
+  preview.signals.launchSamples = remainingLaunchEntries.map((entry) => entry.path).slice(0, MAX_SIGNAL_SAMPLES);
+  preview.signals.installerCount = installerEntries.length;
+  preview.signals.installerSamples = installerEntries.map((entry) => entry.path).slice(0, MAX_SIGNAL_SAMPLES);
+  pushUniqueWarning(preview.warnings, "Autorun/install-media layout detected; likely autorun stubs are treated as installer entries.");
+}
+
+function getAutorunInstallMediaContext(entries) {
+  const hasAutorun = entries.some((entry) => /(^|\/)autorun\.inf$/i.test(entry.path));
+  const hasInstallPayload = entries.some((entry) => isInstallMediaPayloadEntry(entry.path));
+  return {
+    hasAutorun,
+    hasInstallPayload,
+    hasInstallMediaLayout: hasAutorun && hasInstallPayload,
+  };
+}
+
+function isInstallMediaPayloadEntry(entryPath) {
+  const lower = normalizeZipPath(entryPath).toLowerCase();
+  return (
+    /(^|\/)(data\d*\.cab|data\d*\.hdr|setup\.(ini|ins|iss|inx|lst|ibt)|layout\.bin|isdata\.(dat|cab|hdr)|ikernel\.ex_|_setup\.dll|instmsi[aw]\.exe)$/i.test(lower) ||
+    /(^|\/)(disk\d+|instdata|setup|install)\//i.test(lower)
+  );
+}
+
+function isAutorunLaunchStub(entry, context) {
+  if (!context.hasInstallMediaLayout || !LAUNCH_EXTS.has(entry.ext)) return false;
+  const lower = entry.path.toLowerCase();
+  if (isInstallerLike(lower, entry.ext) || isSetupLike(lower)) return false;
+  return /^(start|startup|launcher|launch|menu|play|run)[\w .-]*\.(exe|com|bat|cmd|lnk|html)$/i.test(entry.name);
+}
+
 function matchesEngineRule(rule, entry) {
   const match = rule?.match || {};
   const lowerName = entry.name.toLowerCase();
@@ -512,6 +564,10 @@ function addEngineHint(engineHints, id, name, sample) {
 
 function pushLimited(items, value) {
   if (items.length < MAX_SIGNAL_SAMPLES && !items.includes(value)) items.push(value);
+}
+
+function pushUniqueWarning(warnings, value) {
+  if (!warnings.includes(value)) warnings.push(value);
 }
 
 function isSetupLike(lowerPath) {

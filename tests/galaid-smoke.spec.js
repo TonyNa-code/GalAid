@@ -352,6 +352,99 @@ test("disc image directory preflight exposes internal launch clues", async ({ pa
   expect(result.preparePath).toBe("InstallDisc.iso");
 });
 
+test("autorun disc image preflight treats start stubs as install media", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async () => ({ ok: false, errorCode: "canceled" }),
+      launchEntry: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    await setFiles([
+      {
+        name: "InstallDisc.iso",
+        path: "InstallDisc.iso",
+        lowerPath: "installdisc.iso",
+        ext: "iso",
+        size: 950000000,
+        depth: 0,
+        fullPath: "C:\\Downloads\\InstallDisc.iso",
+        archivePreview: {
+          schema: "galaid.archivePreview.v1",
+          format: "ISO disc image",
+          packageKind: "disc-image",
+          status: "ok",
+          totalEntries: 3,
+          scannedEntries: 3,
+          fileCount: 3,
+          directoryCount: 0,
+          encryptedEntries: 0,
+          truncated: false,
+          warnings: [
+            "Disc image directory listed with a local 7z-compatible command; no files were extracted.",
+            "Autorun/install-media layout detected; likely autorun stubs are treated as installer entries.",
+          ],
+          sampleFiles: [
+            { path: "autorun.inf", name: "autorun.inf", ext: "inf", size: 120, compressedSize: 120, depth: 0 },
+            { path: "Start.exe", name: "Start.exe", ext: "exe", size: 2412000, compressedSize: 2412000, depth: 0 },
+            { path: "data1.cab", name: "data1.cab", ext: "cab", size: 760000000, compressedSize: 760000000, depth: 0 },
+          ],
+          signals: {
+            launchCandidateCount: 0,
+            launchSamples: [],
+            installerCount: 3,
+            installerSamples: ["Start.exe", "autorun.inf", "data1.cab"],
+            runtimeRepairCount: 0,
+            runtimeRepairSamples: [],
+            engineHints: [],
+            assetCounts: {
+              images: 0,
+              audio: 0,
+              video: 0,
+              scripts: 0,
+              resourceArchives: 0,
+              commercialArchives: 0,
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  await page.locator('[data-tab="packages"]').click();
+  await expect(page.locator("#packagesPanel")).toContainText("ISO disc image 包/镜像预检");
+  await expect(page.locator("#packagesPanel")).toContainText("Start.exe");
+  await expect(page.locator("#packagesPanel")).toContainText("3 安装线索");
+  await expect(page.locator(".package-roadmap")).toContainText("看到古早安装盘线索");
+  await expect(page.locator(".package-roadmap")).not.toContainText("包里看到启动线索");
+
+  await page.locator('[data-tab="launch"]').click();
+  await expect(page.locator(".one-stop-wizard")).toContainText("一键准备并启动");
+
+  const result = await page.evaluate(() => ({
+    launchCandidates: currentAnalysis.launchCandidates.map((candidate) => candidate.file.path),
+    launchCount: currentAnalysis.packages.discSets[0]?.archivePreview?.signals?.launchCandidateCount,
+    installerSamples: currentAnalysis.packages.discSets[0]?.archivePreview?.signals?.installerSamples,
+    nextStep: currentAnalysis.packages.discSets[0]?.nextStep,
+    preparePath: getOneClickPrepareTarget(currentAnalysis)?.file?.path,
+  }));
+  expect(result.launchCandidates).toEqual([]);
+  expect(result.launchCount).toBe(0);
+  expect(result.installerSamples).toEqual(["Start.exe", "autorun.inf", "data1.cab"]);
+  expect(result.nextStep).toContain("Start.exe");
+  expect(result.preparePath).toBe("InstallDisc.iso");
+});
+
 test("desktop one-click flow prepares a package automatically before launch", async ({ page }) => {
   await page.addInitScript(() => {
     window.__preparePayloads = [];

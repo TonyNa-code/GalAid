@@ -46,7 +46,7 @@ The web file-list mode does not read file contents. The desktop beta may read ti
 
 Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. The support tab previews the included file list before download.
 
-Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z, detected self-extracting EXE packages, and supported disc-image directories can be listed through the bundled or local 7z-compatible command when available. Small CUE sheets are read only for referenced media filenames, and unsupported disc images still fall back to media/descriptor metadata.
+Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z, detected self-extracting EXE packages, and supported disc-image directories can be listed through the bundled or local 7z-compatible command when available. Small CUE sheets are read only for referenced media filenames, autorun/install-media layouts are inferred from directory names such as `autorun.inf`, `Start.exe`, and `data1.cab`, and unsupported disc images still fall back to media/descriptor metadata.
 
 Desktop package preparation is separate from preflight. It only starts after a user launch/prepare click, uses an automatic sibling `*-prepared` folder for the one-stop flow or a user-selected output folder for the manual prepare flow, accepts a password the user already knows, and immediately rescans the prepared folder or mounted image. GalAid does not save package passwords, crack passwords, upload package contents, silently mount disc images, or run executables outside the allowlisted launch flow.
 

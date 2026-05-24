@@ -144,6 +144,38 @@ async function main() {
   assert.deepEqual(listedIsoPreview.signals.installerSamples, ["Install/SetupJP.exe"]);
   assert.match(listedIsoPreview.warnings[0], /Disc image directory listed/);
 
+  const autorunDiscPreview = parseSevenZipListOutput(
+    [
+      "Path = InstallDisc.iso",
+      "Type = Iso",
+      "",
+      "Path = autorun.inf",
+      "Size = 120",
+      "Packed Size = 120",
+      "",
+      "Path = Start.exe",
+      "Size = 2412000",
+      "Packed Size = 2412000",
+      "",
+      "Path = data1.cab",
+      "Size = 760000000",
+      "Packed Size = 760000000",
+      "",
+    ].join("\n"),
+    "ISO disc image",
+    {
+      packageKind: "disc-image",
+      warnings: ["Disc image directory listed with a local 7z-compatible command; no files were extracted."],
+    },
+  );
+  assert.equal(autorunDiscPreview.status, "ok");
+  assert.equal(autorunDiscPreview.packageKind, "disc-image");
+  assert.equal(autorunDiscPreview.signals.launchCandidateCount, 0);
+  assert.deepEqual(autorunDiscPreview.signals.launchSamples, []);
+  assert.equal(autorunDiscPreview.signals.installerCount, 3);
+  assert.deepEqual(autorunDiscPreview.signals.installerSamples, ["Start.exe", "autorun.inf", "data1.cab"]);
+  assert.match(autorunDiscPreview.warnings.join(" "), /Autorun\/install-media layout detected/);
+
   const blindWritePath = path.join(tempDir, "AsterOld.b6t");
   await fs.writeFile(blindWritePath, Buffer.alloc(32));
   const blindWritePreview = await previewDiscImageFile(blindWritePath, "b6t", { runExternalListImpl: async () => ({ missing: true }) });

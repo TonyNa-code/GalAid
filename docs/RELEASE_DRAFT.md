@@ -67,7 +67,7 @@ npm start
 ## Known Limits
 
 - Web mode does not inspect inside large archives or disc images yet.
-- Disc-image extraction depends on what the bundled 7z-compatible helper can read; some older or damaged images may still need manual mounting outside GalAid.
+- Disc-image extraction depends on what the bundled 7z-compatible helper can read; some older or damaged images may still need manual mounting outside GalAid, though readable `autorun.inf + Start.exe + data1.cab` style layouts are now classified before extraction.
 - DOS and Win16 programs are detected and routed, but actually running them still needs a suitable old-runtime environment such as DOSBox or a 32-bit/virtualized Windows setup.
 - Old Win32 compatibility hints are metadata-based. They tell the user what to try after a failed launch, but they do not prove the game requires compatibility mode.
 - Legacy PE import hints are advisory. They help prioritize old DirectX, runtime, and video compatibility steps, but do not prove the dependency is missing on the user's PC.
