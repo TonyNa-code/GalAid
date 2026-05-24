@@ -1740,6 +1740,20 @@ textarea {
   font-size: 13px;
 }
 
+.archive-signal-list {
+  gap: 8px;
+}
+
+.archive-signal-group {
+  display: grid;
+  gap: 5px;
+}
+
+.archive-signal-group code {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
 .asset-bars {
   display: grid;
   gap: 10px;

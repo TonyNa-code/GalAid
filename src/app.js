@@ -739,6 +739,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchClues: "启动线索",
       installerClues: "安装线索",
       runtimeRepairClues: "运行库修复项",
+      previewSampleFiles: "预检样例文件",
       truncated: "已截断",
       assetsTitle: "素材地图",
       samplePathsTitle: "样例路径",
@@ -1101,6 +1102,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchClues: "launch clues",
       installerClues: "installer clues",
       runtimeRepairClues: "runtime repair clues",
+      previewSampleFiles: "preflight sample files",
       truncated: "truncated",
       assetsTitle: "Asset map",
       samplePathsTitle: "Sample paths",
@@ -1462,6 +1464,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       launchClues: "起動手がかり",
       installerClues: "インストーラー手がかり",
       runtimeRepairClues: "ランタイム修復候補",
+      previewSampleFiles: "事前チェックのサンプルファイル",
       truncated: "切り詰め",
       assetsTitle: "アセットマップ",
       samplePathsTitle: "サンプルパス",
@@ -6405,6 +6408,7 @@ function renderArchivePreview(preview) {
     .slice(0, 5)
     .map((file) => `<code>${escapeHtml(file.path)} <span>${formatBytes(file.size || 0)}</span></code>`)
     .join("");
+  const signalSamples = renderArchiveSignalSamples(preview);
   const warnings = (preview.warnings || []).slice(0, 2).map((warning) => `<span class="chip warn">${escapeHtml(warning)}</span>`).join("");
 
   return `
@@ -6422,7 +6426,49 @@ function renderArchivePreview(preview) {
         ${preview.truncated ? `<span class="chip warn">${escapeHtml(getUiText("truncated"))}</span>` : ""}
         ${warnings}
       </div>
-      ${sampleFiles ? `<div class="sample-list package-files">${sampleFiles}</div>` : ""}
+      ${signalSamples}
+      ${sampleFiles ? `<div class="sample-list package-files"><strong>${escapeHtml(getUiText("previewSampleFiles"))}</strong>${sampleFiles}</div>` : ""}
+    </div>
+  `;
+}
+
+function renderArchiveSignalSamples(preview) {
+  const signals = preview?.signals || {};
+  const sections = [
+    {
+      label: getUiText("launchClues"),
+      samples: signals.launchSamples || [],
+      className: "good",
+    },
+    {
+      label: getUiText("installerClues"),
+      samples: signals.installerSamples || [],
+      className: "warn",
+    },
+    {
+      label: getUiText("runtimeRepairClues"),
+      samples: getPreviewRuntimeRepairSamples(preview),
+      className: "warn",
+    },
+  ].filter((section) => section.samples.length);
+
+  if (!sections.length) return "";
+
+  return `
+    <div class="sample-list archive-signal-list">
+      ${sections
+        .map(
+          (section) => `
+            <div class="archive-signal-group">
+              <strong><span class="chip ${section.className}">${escapeHtml(section.label)}</span></strong>
+              ${section.samples
+                .slice(0, 4)
+                .map((sample) => `<code>${escapeHtml(sample)}</code>`)
+                .join("")}
+            </div>
+          `,
+        )
+        .join("")}
     </div>
   `;
 }
@@ -7133,34 +7179,50 @@ function buildFileManifest(analysis) {
       sizeLabel: formatBytes(category.size),
       samples: category.samples,
     })),
+    packagePreviews: buildPackagePreviewManifestEntries(analysis),
     archivePreviews: analysis.packages.archiveSets
       .filter((set) => set.archivePreview)
-      .map((set) => ({
-        archivePath: set.firstFile?.path || "",
-        format: set.archivePreview.format,
-        status: set.archivePreview.status,
-        fileCount: set.archivePreview.fileCount || 0,
-        directoryCount: set.archivePreview.directoryCount || 0,
-        launchCandidateCount: set.archivePreview.signals?.launchCandidateCount || 0,
-        launchSamples: set.archivePreview.signals?.launchSamples || [],
-        runtimeRepairCount: getPreviewRuntimeRepairSamples(set.archivePreview).length,
-        runtimeRepairSamples: getPreviewRuntimeRepairSamples(set.archivePreview),
-        engineHints: (set.archivePreview.signals?.engineHints || []).map((hint) => ({
-          id: hint.id,
-          name: hint.name,
-          count: hint.count,
-          samples: hint.samples,
-        })),
-        truncated: Boolean(set.archivePreview.truncated),
-        warnings: set.archivePreview.warnings || [],
-        sampleFiles: (set.archivePreview.sampleFiles || []).slice(0, 20).map((file) => ({
-          path: file.path,
-          ext: file.ext,
-          size: file.size,
-          sizeLabel: formatBytes(file.size || 0),
-        })),
-      })),
+      .map((set) => buildPackagePreviewManifestEntry(set)),
     files,
+  };
+}
+
+function buildPackagePreviewManifestEntries(analysis) {
+  return [...analysis.packages.archiveSets, ...analysis.packages.discSets]
+    .filter((set) => set.archivePreview)
+    .map((set) => buildPackagePreviewManifestEntry(set));
+}
+
+function buildPackagePreviewManifestEntry(set) {
+  const preview = set.archivePreview;
+  return {
+    packageType: set.type || "archive",
+    packagePath: set.firstFile?.path || "",
+    archivePath: set.firstFile?.path || "",
+    format: preview.format,
+    status: preview.status,
+    fileCount: preview.fileCount || 0,
+    directoryCount: preview.directoryCount || 0,
+    launchCandidateCount: preview.signals?.launchCandidateCount || 0,
+    launchSamples: preview.signals?.launchSamples || [],
+    installerCount: preview.signals?.installerCount || 0,
+    installerSamples: preview.signals?.installerSamples || [],
+    runtimeRepairCount: getPreviewRuntimeRepairSamples(preview).length,
+    runtimeRepairSamples: getPreviewRuntimeRepairSamples(preview),
+    engineHints: (preview.signals?.engineHints || []).map((hint) => ({
+      id: hint.id,
+      name: hint.name,
+      count: hint.count,
+      samples: hint.samples,
+    })),
+    truncated: Boolean(preview.truncated),
+    warnings: preview.warnings || [],
+    sampleFiles: (preview.sampleFiles || []).slice(0, 20).map((file) => ({
+      path: file.path,
+      ext: file.ext,
+      size: file.size,
+      sizeLabel: formatBytes(file.size || 0),
+    })),
   };
 }
 

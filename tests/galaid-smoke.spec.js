@@ -425,6 +425,8 @@ test("autorun disc image preflight treats start stubs as install media", async (
   await expect(page.locator("#packagesPanel")).toContainText("ISO disc image 包/镜像预检");
   await expect(page.locator("#packagesPanel")).toContainText("Start.exe");
   await expect(page.locator("#packagesPanel")).toContainText("3 安装线索");
+  await expect(page.locator(".archive-signal-list")).toContainText("安装线索");
+  await expect(page.locator(".archive-signal-list")).toContainText("Start.exe");
   await expect(page.locator(".package-roadmap")).toContainText("看到古早安装盘线索");
   await expect(page.locator(".package-roadmap")).not.toContainText("包里看到启动线索");
 
@@ -437,12 +439,15 @@ test("autorun disc image preflight treats start stubs as install media", async (
     installerSamples: currentAnalysis.packages.discSets[0]?.archivePreview?.signals?.installerSamples,
     nextStep: currentAnalysis.packages.discSets[0]?.nextStep,
     preparePath: getOneClickPrepareTarget(currentAnalysis)?.file?.path,
+    manifestPackagePreviews: JSON.parse(buildSupportBundle(currentAnalysis, "", "zh-CN").entries.find((entry) => entry.path === "file-manifest.json").content).packagePreviews,
   }));
   expect(result.launchCandidates).toEqual([]);
   expect(result.launchCount).toBe(0);
   expect(result.installerSamples).toEqual(["Start.exe", "autorun.inf", "data1.cab"]);
   expect(result.nextStep).toContain("Start.exe");
   expect(result.preparePath).toBe("InstallDisc.iso");
+  expect(result.manifestPackagePreviews[0].packageType).toBe("disc");
+  expect(result.manifestPackagePreviews[0].installerSamples).toEqual(["Start.exe", "autorun.inf", "data1.cab"]);
 });
 
 test("desktop one-click flow prepares a package automatically before launch", async ({ page }) => {
