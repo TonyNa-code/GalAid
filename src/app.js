@@ -6822,6 +6822,83 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
   return lines.join("\n");
 }
 
+function countShareableRedactions(content) {
+  const text = String(content || "");
+  if (!text) return 0;
+  return text.split(SHAREABLE_REDACTION_MARKER).length - 1;
+}
+
+function buildSupportPrivacySummary(entries) {
+  const redactedEntries = entries
+    .map((entry) => ({
+      path: entry.path,
+      redactions: countShareableRedactions(entry.content),
+    }))
+    .filter((entry) => entry.redactions > 0);
+  return {
+    schema: "galaid.privacySummary.v1",
+    marker: SHAREABLE_REDACTION_MARKER,
+    totalRedactions: redactedEntries.reduce((total, entry) => total + entry.redactions, 0),
+    filesWithRedactions: redactedEntries.length,
+    entries: redactedEntries,
+  };
+}
+
+function buildSupportPrivacySummaryMarkdown(summary, language = getAssistantLanguage()) {
+  const copyByLanguage = {
+    "zh-CN": {
+      title: "求助包隐私摘要",
+      overview: "总览",
+      marker: "脱敏标记",
+      total: "脱敏次数",
+      files: "涉及文件",
+      redactedFiles: "脱敏文件",
+      none: "当前没有检测到本机绝对路径脱敏。",
+      note: "这里只统计脱敏标记，不保存原始本机路径。",
+    },
+    en: {
+      title: "Support Bundle Privacy Summary",
+      overview: "Overview",
+      marker: "Redaction marker",
+      total: "Redactions",
+      files: "Files touched",
+      redactedFiles: "Redacted files",
+      none: "No local absolute-path redactions were detected.",
+      note: "This summary counts redaction markers only and does not store original local paths.",
+    },
+    ja: {
+      title: "サポートバンドル プライバシー概要",
+      overview: "概要",
+      marker: "置換マーカー",
+      total: "置換回数",
+      files: "対象ファイル",
+      redactedFiles: "置換されたファイル",
+      none: "ローカル絶対パスの置換は検出されませんでした。",
+      note: "この概要は置換マーカーの数だけを記録し、元のローカルパスは保存しません。",
+    },
+  };
+  const copy = copyByLanguage[language] || copyByLanguage.en;
+  const lines = [
+    `# ${copy.title}`,
+    "",
+    `## ${copy.overview}`,
+    "",
+    `- ${copy.marker}: \`${summary.marker}\``,
+    `- ${copy.total}: ${formatNumber(summary.totalRedactions)}`,
+    `- ${copy.files}: ${formatNumber(summary.filesWithRedactions)}`,
+    `- ${copy.note}`,
+  ];
+  if (summary.entries.length) {
+    lines.push("", `## ${copy.redactedFiles}`, "");
+    for (const entry of summary.entries) {
+      lines.push(`- ${entry.path}: ${formatNumber(entry.redactions)}`);
+    }
+  } else {
+    lines.push("", copy.none);
+  }
+  return lines.join("\n");
+}
+
 function buildSupportBundle(analysis, errorText, language = getAssistantLanguage()) {
   analysis = getShareableAnalysis(analysis);
   errorText = redactShareableText(errorText);
@@ -6880,6 +6957,11 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     privacy: "Manual user-provided symptom notes only; GalAid does not monitor game processes.",
   };
   const profiles = analysis.profiles.map((profile) => getPublicProfile(profile, language));
+  const manifestEntry = {
+    path: "manifest.json",
+    content: JSON.stringify(manifest, null, 2),
+    type: "application/json;charset=utf-8",
+  };
   const entries = [
     {
       path: "README.txt",
@@ -6891,11 +6973,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
       content: diagnosisReport,
       type: "text/markdown;charset=utf-8",
     },
-    {
-      path: "manifest.json",
-      content: JSON.stringify(manifest, null, 2),
-      type: "application/json;charset=utf-8",
-    },
+    manifestEntry,
     {
       path: "file-manifest.json",
       content: JSON.stringify(fileManifest, null, 2),
@@ -6997,6 +7075,25 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     });
   }
 
+  const privacySummary = buildSupportPrivacySummary(entries);
+  manifest.summary.redactedAbsolutePathMentions = privacySummary.totalRedactions;
+  manifest.summary.redactedSupportFiles = privacySummary.filesWithRedactions;
+  manifestEntry.content = JSON.stringify(manifest, null, 2);
+  entries.splice(
+    3,
+    0,
+    {
+      path: "privacy-summary.md",
+      content: buildSupportPrivacySummaryMarkdown(privacySummary, language),
+      type: "text/markdown;charset=utf-8",
+    },
+    {
+      path: "privacy-summary.json",
+      content: JSON.stringify(privacySummary, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+  );
+
   return {
     filename: `${safeTitle}-galaid-support.zip`,
     entries,
@@ -7073,6 +7170,8 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "Included files:",
     "- galaid-report.md: human-readable diagnosis",
     "- manifest.json: bundle summary",
+    "- privacy-summary.md: human-readable local-path redaction counts",
+    "- privacy-summary.json: machine-readable local-path redaction counts",
     "- file-manifest.json: sanitized file list metadata",
     "- package-previews.md: human-readable archive/disc-image preflight clues",
     "- package-previews.json: archive/disc-image preflight launch, installer, and repair clues",

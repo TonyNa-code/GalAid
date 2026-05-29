@@ -56,6 +56,8 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("launch-decision.md");
   await expect(page.locator(".support-file-list")).toContainText("launch-decision.json");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("privacy-summary.md");
+  await expect(page.locator(".support-file-list")).toContainText("privacy-summary.json");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.md");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
   await expect(page.locator("#supportPanel")).toContainText("诊断摘要");
@@ -74,6 +76,8 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   expect(supportEntries).toContain("runtime-repairs.json");
   expect(supportEntries).toContain("launch-decision.md");
   expect(supportEntries).toContain("launch-decision.json");
+  expect(supportEntries).toContain("privacy-summary.md");
+  expect(supportEntries).toContain("privacy-summary.json");
   expect(supportEntries).toContain("package-previews.md");
   expect(supportEntries).toContain("package-previews.json");
 
@@ -91,6 +95,23 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   expect(launchDecisionSupport.markdown).toContain("# 启动决策摘要");
   expect(launchDecisionSupport.markdown).toContain("SakuraTrial/game.exe");
   expect(launchDecisionSupport.markdown).toContain("SakuraTrial/vcredist_x86.exe");
+
+  const privacySupport = await page.evaluate(() => {
+    const bundle = buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN");
+    return {
+      json: JSON.parse(bundle.entries.find((item) => item.path === "privacy-summary.json").content),
+      markdown: bundle.entries.find((item) => item.path === "privacy-summary.md").content,
+      manifest: JSON.parse(bundle.entries.find((item) => item.path === "manifest.json").content),
+    };
+  });
+  expect(privacySupport.json.schema).toBe("galaid.privacySummary.v1");
+  expect(privacySupport.json.totalRedactions).toBeGreaterThanOrEqual(2);
+  expect(privacySupport.json.entries.some((entry) => entry.path === "galaid-report.md")).toBe(true);
+  expect(privacySupport.json.entries.some((entry) => entry.path === "error-text.txt")).toBe(true);
+  expect(privacySupport.markdown).toContain("# 求助包隐私摘要");
+  expect(privacySupport.markdown).toContain("[absolute-path]");
+  expect(privacySupport.manifest.summary.redactedAbsolutePathMentions).toBe(privacySupport.json.totalRedactions);
+  expect(privacySupport.manifest.summary.redactedSupportFiles).toBe(privacySupport.json.filesWithRedactions);
 
   const shareableSupportText = await page.evaluate(() => {
     const bundle = buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN");
@@ -150,6 +171,8 @@ test("package sample shows archive and image preflight without treating it as ru
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("privacy-summary.md");
+  await expect(page.locator(".support-file-list")).toContainText("privacy-summary.json");
   await expect(page.locator(".support-file-list")).toContainText("launch-decision.md");
   await expect(page.locator(".support-file-list")).toContainText("launch-decision.json");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.md");

@@ -44,7 +44,7 @@ The app currently reads:
 
 The web file-list mode does not read file contents. The desktop beta may read tiny metadata files such as `autorun.inf` or `.cue` sheets, and small executable headers, only to identify launch/install routes.
 
-Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. If pasted error text or launch-failure notes include local absolute paths, shareable reports, chat help text, and support bundles replace those paths with `[absolute-path]` before export. The support tab previews the included file list before download.
+Support bundles follow the same privacy model. They contain reports, matched rules, launch hints, and relative-path metadata, but not game files or file contents. If pasted error text or launch-failure notes include local absolute paths, shareable reports, chat help text, and support bundles replace those paths with `[absolute-path]` before export. Each support bundle includes `privacy-summary.md` and `privacy-summary.json` with per-file redaction counts only; they do not store the original local paths. The support tab previews the included file list before download.
 
 Desktop package preflight reads metadata only. ZIP is parsed from the archive directory table, RAR/7z, detected self-extracting EXE packages, and supported disc-image directories can be listed through the bundled or local 7z-compatible command when available. Small CUE sheets are read only for referenced media filenames, autorun/install-media layouts are inferred from directory names such as `autorun.inf`, `Start.exe`, and `data1.cab`, and unsupported disc images still fall back to media/descriptor metadata.
 

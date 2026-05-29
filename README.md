@@ -205,6 +205,8 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 
 - `galaid-report.md`
 - `manifest.json`
+- `privacy-summary.md`, human-readable local absolute-path redaction counts
+- `privacy-summary.json`, machine-readable local absolute-path redaction counts
 - `file-manifest.json`, including package/image preflight signal samples when available
 - `package-previews.md`, a human-readable package/image preflight summary
 - `package-previews.json`, a compact view of archive/disc-image launch, install-media, and repair clues
@@ -218,7 +220,7 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `launch-profiles.json`
 - individual `profiles/*.galaid-profile.json` files
 
-The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary. Shareable reports, chat help text, and support bundles redact pasted local absolute paths such as Windows user folders or macOS home folders to `[absolute-path]` while keeping the diagnostic wording around them.
+The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary. Shareable reports, chat help text, and support bundles redact pasted local absolute paths such as Windows user folders or macOS home folders to `[absolute-path]` while keeping the diagnostic wording around them. Support bundles also include `privacy-summary.md` and `privacy-summary.json`, which count redaction markers per exported file without storing the original local paths.
 
 ## Diagnosis Output Language
 
