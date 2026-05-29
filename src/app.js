@@ -6787,6 +6787,8 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
   const fileManifest = buildFileManifest(analysis);
   const packagePreviewReport = buildPackagePreviewsReport(analysis);
   const packagePreviewMarkdown = buildPackagePreviewsMarkdown(analysis, language);
+  const launchDecisionReport = buildLaunchDecisionReport(analysis, language);
+  const launchDecisionMarkdown = buildLaunchDecisionMarkdown(launchDecisionReport, language);
   const errorRecipeReport = {
     schema: "galaid.errorRecipes.v1",
     hasErrorText: analysis.errorDiagnostics.hasText,
@@ -6870,6 +6872,16 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     {
       path: "runtime-repairs.json",
       content: JSON.stringify(runtimeRepairReport, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "launch-decision.md",
+      content: launchDecisionMarkdown,
+      type: "text/markdown;charset=utf-8",
+    },
+    {
+      path: "launch-decision.json",
+      content: JSON.stringify(launchDecisionReport, null, 2),
       type: "application/json;charset=utf-8",
     },
     {
@@ -7019,6 +7031,8 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- package-previews.json: archive/disc-image preflight launch, installer, and repair clues",
     "- environment-checks.json: environment checklist",
     "- runtime-repairs.json: bundled runtime repair tool hints",
+    "- launch-decision.md: human-readable primary launch/install/repair decision",
+    "- launch-decision.json: ranked launch decision metadata",
     "- install-media.json: setup/autorun/MSI/autorun-script installer entry hints",
     "- desktop-environment.json: optional local runtime check result",
     "- roadmap.json and roadmap-checklist.md: ordered next-step plan",
@@ -7163,6 +7177,268 @@ function buildChatHelpText(analysis, language = getAssistantLanguage()) {
   lines.push(copy.ask);
 
   return lines.join("\n");
+}
+
+function buildLaunchDecisionReport(analysis, language = getAssistantLanguage()) {
+  const topLaunch = analysis.launchCandidates[0] || null;
+  const topInstaller = analysis.installerCandidates?.[0] || null;
+  const primaryRepair = getPrimaryRuntimeRepair(analysis);
+  const packageBlocker = analysis.environment.checks.some((check) => check.id === "extraction" && check.status === "blocker");
+  const needsPreparation = analysis.packages.hasPackages && ((!topLaunch && !topInstaller) || packageBlocker);
+  const prepareTarget = needsPreparation ? getOneClickPrepareTarget(analysis) : null;
+  const firstActionStep = analysis.roadmap.steps.find((step) => step.state !== "info") || analysis.roadmap.steps[0] || null;
+  const primaryAction = getLaunchDecisionPrimaryAction({
+    analysis,
+    language,
+    needsPreparation,
+    prepareTarget,
+    primaryRepair,
+    topLaunch,
+    topInstaller,
+    firstActionStep,
+  });
+
+  return {
+    schema: "galaid.launchDecision.v1",
+    assistantLanguage: language,
+    summary: {
+      title: getDisplayTitle(analysis),
+      status: analysis.status.label,
+      mode: analysis.mode.label,
+      files: analysis.files.length,
+      totalSize: analysis.totalSize,
+      totalSizeLabel: formatBytes(analysis.totalSize),
+      primaryActionType: primaryAction.type,
+      primaryActionLabel: primaryAction.label,
+    },
+    primaryAction,
+    packagePreparation: {
+      needed: Boolean(needsPreparation),
+      targetPackage: prepareTarget?.file?.path || "",
+      packageType: prepareTarget?.set?.type || "",
+      format: prepareTarget?.set?.format || "",
+      reason: needsPreparation
+        ? getUiText("wizardPrepareCurrentBody", {}, language)
+        : getUiText("wizardPrepareDoneBody", {}, language),
+    },
+    launchCandidates: analysis.launchCandidates.slice(0, 8).map(publicLaunchCandidate),
+    installMediaEntries: (analysis.installerCandidates || []).slice(0, 8).map(publicInstallerCandidate),
+    runtimeRepairTools: (analysis.runtimeRepairs || []).slice(0, 8).map(publicRuntimeRepair),
+    engineHints: analysis.engines.slice(0, 5).map((engine) => ({
+      id: engine.id,
+      name: engine.name,
+      confidence: engine.confidence,
+      score: engine.score,
+      explanation: buildEngineExplanation(engine, language),
+      nextStep: getEngineNextStep(engine, language),
+      evidence: (engine.evidenceDetails || []).slice(0, 8).map((detail) => ({
+        path: detail.path,
+        reasons: detail.reasons || [],
+        weight: detail.weight || 0,
+      })),
+    })),
+    roadmap: {
+      summary: analysis.roadmap.summary,
+      firstActionStep,
+      steps: analysis.roadmap.steps.slice(0, 8),
+    },
+    launchFailure: analysis.launchFailure?.hasEvidence
+      ? {
+          evidence: getLaunchFailureEvidence(analysis.launchFailure, language),
+          symptoms: (analysis.launchFailure.symptoms || []).map((id) => ({
+            id,
+            label: getLaunchFailureSymptomText(id, "label", language),
+          })),
+        }
+      : null,
+  };
+}
+
+function getLaunchDecisionPrimaryAction({ analysis, language, needsPreparation, prepareTarget, primaryRepair, topLaunch, topInstaller, firstActionStep }) {
+  if (needsPreparation) {
+    return {
+      type: "prepare-package",
+      label: getUiText("wizardOneClickLaunchPackage", {}, language),
+      path: prepareTarget?.file?.path || "",
+      score: null,
+      reason: getUiText("wizardPrepareCurrentBody", {}, language),
+      action: getUiText("wizardPrepareTitle", {}, language),
+    };
+  }
+  if (primaryRepair) {
+    return {
+      type: "runtime-repair",
+      label: getUiText("wizardOpenRepairTool", {}, language),
+      path: primaryRepair.file.path,
+      score: null,
+      reason: primaryRepair.reason,
+      action: primaryRepair.action,
+      entry: publicRuntimeRepair(primaryRepair),
+    };
+  }
+  if (topLaunch) {
+    return {
+      type: "launch",
+      label: getUiText("wizardOneClickLaunch", {}, language),
+      path: topLaunch.file.path,
+      score: topLaunch.score,
+      reason: topLaunch.reasons.join(", ") || "launch candidate",
+      action: firstActionStep?.action || analysis.roadmap.summary.detail,
+      entry: publicLaunchCandidate(topLaunch),
+    };
+  }
+  if (topInstaller) {
+    return {
+      type: "install-media",
+      label: getUiText("wizardOpenInstaller", {}, language),
+      path: topInstaller.file.path,
+      score: topInstaller.score,
+      reason: topInstaller.reasons.join(", ") || "installer/media entry",
+      action: getUiText("installMediaCardBody", {}, language),
+      entry: publicInstallerCandidate(topInstaller),
+    };
+  }
+  return {
+    type: "roadmap",
+    label: getUiText("wizardGoRoadmap", {}, language),
+    path: "",
+    score: null,
+    reason: analysis.roadmap.summary.detail,
+    action: firstActionStep?.action || analysis.roadmap.summary.label,
+  };
+}
+
+function buildLaunchDecisionMarkdown(report, language = getAssistantLanguage()) {
+  const copies = {
+    "zh-CN": {
+      title: "启动决策摘要",
+      overview: "总览",
+      primary: "首选动作",
+      packagePreparation: "包/镜像准备",
+      launch: "启动候选",
+      installer: "安装盘入口",
+      repair: "运行库修复项",
+      engine: "结构线索",
+      roadmap: "下一步路线",
+      none: "无",
+      status: "状态",
+      mode: "模式",
+      files: "文件规模",
+      type: "类型",
+      path: "路径",
+      score: "分数",
+      reason: "原因",
+      action: "动作",
+      needed: "是否需要准备",
+      yes: "需要",
+      no: "不需要",
+    },
+    en: {
+      title: "Launch Decision Summary",
+      overview: "Overview",
+      primary: "Primary action",
+      packagePreparation: "Package/image preparation",
+      launch: "Launch candidates",
+      installer: "Install media entries",
+      repair: "Runtime repair tools",
+      engine: "Structure clues",
+      roadmap: "Next-step route",
+      none: "None",
+      status: "Status",
+      mode: "Mode",
+      files: "File scale",
+      type: "Type",
+      path: "Path",
+      score: "Score",
+      reason: "Reason",
+      action: "Action",
+      needed: "Preparation needed",
+      yes: "Yes",
+      no: "No",
+    },
+    ja: {
+      title: "起動判断概要",
+      overview: "概要",
+      primary: "優先アクション",
+      packagePreparation: "パッケージ/イメージ準備",
+      launch: "起動候補",
+      installer: "インストールメディア入口",
+      repair: "ランタイム修復候補",
+      engine: "構造の手がかり",
+      roadmap: "次の手順",
+      none: "なし",
+      status: "状態",
+      mode: "モード",
+      files: "ファイル規模",
+      type: "種類",
+      path: "パス",
+      score: "スコア",
+      reason: "理由",
+      action: "アクション",
+      needed: "準備が必要",
+      yes: "必要",
+      no: "不要",
+    },
+  };
+  const copy = copies[language] || copies["zh-CN"];
+  const lines = [`# ${copy.title}`, ""];
+
+  lines.push(`## ${copy.overview}`);
+  lines.push(`- ${copy.status}: ${report.summary.status}`);
+  lines.push(`- ${copy.mode}: ${report.summary.mode}`);
+  lines.push(`- ${copy.files}: ${formatNumber(report.summary.files)} / ${report.summary.totalSizeLabel}`);
+  lines.push(`- ${copy.primary}: ${report.primaryAction.label}`);
+  lines.push("");
+  lines.push(`## ${copy.primary}`);
+  lines.push(`- ${copy.type}: ${report.primaryAction.type}`);
+  lines.push(`- ${copy.path}: ${report.primaryAction.path || copy.none}`);
+  if (report.primaryAction.score !== null && report.primaryAction.score !== undefined) lines.push(`- ${copy.score}: ${report.primaryAction.score}/100`);
+  lines.push(`- ${copy.reason}: ${report.primaryAction.reason || copy.none}`);
+  lines.push(`- ${copy.action}: ${report.primaryAction.action || copy.none}`);
+  lines.push("");
+  lines.push(`## ${copy.packagePreparation}`);
+  lines.push(`- ${copy.needed}: ${report.packagePreparation.needed ? copy.yes : copy.no}`);
+  if (report.packagePreparation.targetPackage) lines.push(`- ${copy.path}: ${report.packagePreparation.targetPackage}`);
+  if (report.packagePreparation.format) lines.push(`- ${copy.type}: ${report.packagePreparation.format}`);
+  lines.push(`- ${copy.reason}: ${report.packagePreparation.reason}`);
+
+  appendLaunchDecisionMarkdownEntries(lines, copy.launch, report.launchCandidates, copy);
+  appendLaunchDecisionMarkdownEntries(lines, copy.installer, report.installMediaEntries, copy);
+  appendLaunchDecisionMarkdownEntries(lines, copy.repair, report.runtimeRepairTools, copy);
+  appendLaunchDecisionMarkdownEntries(lines, copy.engine, report.engineHints, copy, (engine) => ({
+    title: engine.name,
+    path: engine.evidence?.[0]?.path || "",
+    score: engine.score,
+    reason: engine.explanation,
+    action: engine.nextStep,
+  }));
+
+  lines.push("");
+  lines.push(`## ${copy.roadmap}`);
+  for (const [index, step] of (report.roadmap.steps || []).slice(0, 6).entries()) {
+    lines.push(`- ${index + 1}. ${step.title}: ${step.action}`);
+  }
+
+  return lines.join("\n");
+}
+
+function appendLaunchDecisionMarkdownEntries(lines, title, entries, copy, mapEntry = null) {
+  lines.push("");
+  lines.push(`## ${title}`);
+  if (!entries?.length) {
+    lines.push(`- ${copy.none}`);
+    return;
+  }
+  for (const [index, rawEntry] of entries.slice(0, 6).entries()) {
+    const entry = mapEntry ? mapEntry(rawEntry) : rawEntry;
+    const heading = entry.title || entry.name || entry.path || `${title} ${index + 1}`;
+    lines.push(`- ${index + 1}. ${heading}`);
+    if (entry.path) lines.push(`  - ${copy.path}: ${entry.path}`);
+    if (entry.score !== null && entry.score !== undefined) lines.push(`  - ${copy.score}: ${entry.score}/100`);
+    if (entry.reason) lines.push(`  - ${copy.reason}: ${entry.reason}`);
+    if (entry.reasons?.length) lines.push(`  - ${copy.reason}: ${entry.reasons.join(", ")}`);
+    if (entry.action) lines.push(`  - ${copy.action}: ${entry.action}`);
+  }
 }
 
 function buildFileManifest(analysis) {
@@ -7379,6 +7655,20 @@ function publicRuntimeRepair(repair) {
     recommended: Boolean(repair.recommended),
     reason: repair.reason,
     action: repair.action,
+  };
+}
+
+function publicLaunchCandidate(candidate) {
+  return {
+    path: candidate.file.path,
+    name: candidate.file.name,
+    ext: candidate.file.ext,
+    size: candidate.file.size,
+    sizeLabel: formatBytes(candidate.file.size),
+    score: candidate.score,
+    reasons: candidate.reasons,
+    workingDirectory: getDirectoryName(candidate.file.path),
+    executableInfo: candidate.file.executableInfo || null,
   };
 }
 

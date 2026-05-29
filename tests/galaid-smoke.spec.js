@@ -40,6 +40,8 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap.json");
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-file-list")).toContainText("runtime-repairs.json");
+  await expect(page.locator(".support-file-list")).toContainText("launch-decision.md");
+  await expect(page.locator(".support-file-list")).toContainText("launch-decision.json");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.md");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
@@ -57,8 +59,25 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
 
   const supportEntries = await page.evaluate(() => buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN").entries.map((entry) => entry.path));
   expect(supportEntries).toContain("runtime-repairs.json");
+  expect(supportEntries).toContain("launch-decision.md");
+  expect(supportEntries).toContain("launch-decision.json");
   expect(supportEntries).toContain("package-previews.md");
   expect(supportEntries).toContain("package-previews.json");
+
+  const launchDecisionSupport = await page.evaluate(() => {
+    const bundle = buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN");
+    return {
+      json: JSON.parse(bundle.entries.find((item) => item.path === "launch-decision.json").content),
+      markdown: bundle.entries.find((item) => item.path === "launch-decision.md").content,
+    };
+  });
+  expect(launchDecisionSupport.json.schema).toBe("galaid.launchDecision.v1");
+  expect(launchDecisionSupport.json.primaryAction.type).toBe("runtime-repair");
+  expect(launchDecisionSupport.json.primaryAction.path).toBe("SakuraTrial/vcredist_x86.exe");
+  expect(launchDecisionSupport.json.launchCandidates[0].path).toBe("SakuraTrial/game.exe");
+  expect(launchDecisionSupport.markdown).toContain("# 启动决策摘要");
+  expect(launchDecisionSupport.markdown).toContain("SakuraTrial/game.exe");
+  expect(launchDecisionSupport.markdown).toContain("SakuraTrial/vcredist_x86.exe");
 });
 
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
@@ -110,6 +129,8 @@ test("package sample shows archive and image preflight without treating it as ru
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("launch-decision.md");
+  await expect(page.locator(".support-file-list")).toContainText("launch-decision.json");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.md");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
 

@@ -208,6 +208,8 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `file-manifest.json`, including package/image preflight signal samples when available
 - `package-previews.md`, a human-readable package/image preflight summary
 - `package-previews.json`, a compact view of archive/disc-image launch, install-media, and repair clues
+- `launch-decision.md`, a human-readable primary action and fallback route summary
+- `launch-decision.json`, ranked launch/install/repair decision metadata
 - `environment-checks.json`
 - `roadmap.json`
 - `roadmap-checklist.md`
