@@ -37,6 +37,7 @@ const REQUIRED_FILES = [
   "docs/DESKTOP.md",
   "docs/ENGINE_RULES.md",
   "docs/GOOD_FIRST_ISSUES.md",
+  "docs/INSTALL.zh-CN.md",
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
   "desktop/archive-preview.js",
@@ -210,11 +211,11 @@ function checkReadmes(errors) {
   const readmes = [
     {
       file: "README.md",
-      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "GalAid is a launch doctor", "Screenshot OCR"],
+      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR"],
     },
     {
       file: "README.zh-CN.md",
-      phrases: ["GalAid 是一个本地优先", "诊断语言", "商业/自研", "报错截图 OCR"],
+      phrases: ["GalAid 是一个本地优先", "docs/INSTALL.zh-CN.md", "诊断语言", "商业/自研", "报错截图 OCR"],
     },
     {
       file: "README.ja.md",
@@ -228,6 +229,26 @@ function checkReadmes(errors) {
     for (const phrase of readme.phrases) {
       assert(text.includes(phrase), `${readme.file} is missing phrase: ${phrase}`, errors);
     }
+  }
+}
+
+function checkInstallGuide(errors) {
+  const file = "docs/INSTALL.zh-CN.md";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "GalAid 中文快速安装与群分享稿",
+    "Windows 便携版",
+    "群分享短文案",
+    "第一次使用",
+    "它会自动处理什么",
+    "需要解压密码",
+    "求助包",
+    "GalAid-0.1.9-win-x64.exe",
+    "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -538,6 +559,7 @@ function main() {
   checkPrTemplate(errors);
   checkContributing(errors);
   checkReadmes(errors);
+  checkInstallGuide(errors);
   checkGoodFirstIssues(errors);
   checkBrowserSmoke(errors);
   checkArchivePreview(errors);

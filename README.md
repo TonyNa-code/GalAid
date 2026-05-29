@@ -8,6 +8,7 @@
   <p>
     <a href="https://TonyNa-code.github.io/GalAid/"><img alt="Open the live demo" src="https://img.shields.io/badge/Open-Live_Demo-2f855a?style=for-the-badge"></a>
     <a href="https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta"><img alt="Download Windows beta" src="https://img.shields.io/badge/Download-Windows_Beta-2563eb?style=for-the-badge"></a>
+    <a href="docs/INSTALL.zh-CN.md"><img alt="Chinese install guide" src="https://img.shields.io/badge/中文-安装%2F群分享稿-c2410c?style=for-the-badge"></a>
     <a href="docs/CONTRIBUTING.md"><img alt="Contribute" src="https://img.shields.io/badge/Improve-Rules_%26_Recipes-d97706?style=for-the-badge"></a>
   </p>
 
@@ -105,6 +106,7 @@ GalAid turns that mess into a guided launch route.
 | --- | --- | --- |
 | Live demo | [TonyNa-code.github.io/GalAid](https://TonyNa-code.github.io/GalAid/) | Trying GalAid instantly in a browser. |
 | Windows beta | [v0.1.9-beta release](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta) | Drag a folder/archive/image, enter a password if needed, press one launch button, OCR error screenshots, and export support context. |
+| Chinese install guide | [docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md) | Direct exe link, first-run steps, and QQ/group-share copy for non-technical players. |
 | Local web app | Open `index.html` or run `python3 -m http.server 4173` | Offline use, development, and quick source inspection. |
 
 ## Launch Profiles
