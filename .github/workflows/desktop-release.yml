@@ -39,11 +39,24 @@ jobs:
       - name: Build Windows portable app
         run: npm run dist:win
 
+      - name: Write Windows checksum
+        shell: pwsh
+        run: |
+          $asset = Get-ChildItem -Path dist/desktop -Filter '*.exe' | Select-Object -First 1
+          if (-not $asset) {
+            throw "No Windows portable exe was built."
+          }
+
+          $hash = (Get-FileHash -Path $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($asset.Name)" | Set-Content -Path "$($asset.FullName).sha256" -Encoding ascii
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v7
         with:
           name: GalAid-windows-portable
-          path: dist/desktop/*.exe
+          path: |
+            dist/desktop/*.exe
+            dist/desktop/*.exe.sha256
           if-no-files-found: error
 
       - name: Publish Windows release asset
@@ -57,6 +70,11 @@ jobs:
           if (-not $asset) {
             throw "No Windows portable exe was built."
           }
+          $checksumPath = "$($asset.FullName).sha256"
+          if (-not (Test-Path $checksumPath)) {
+            throw "No Windows checksum file was built."
+          }
+          $checksum = Get-Item $checksumPath
 
           if (-not $env:RELEASE_TAG) {
             Write-Host "No release tag was provided; skipping release upload."
@@ -87,10 +105,11 @@ jobs:
           }
 
           $release = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json assets | ConvertFrom-Json
+          $assetNamesToKeep = @($asset.Name, $checksum.Name)
           foreach ($item in $release.assets) {
-            if ($item.name -like 'GalAid-*-win-x64.exe' -and $item.name -ne $asset.Name) {
+            if (($item.name -like 'GalAid-*-win-x64.exe' -or $item.name -like 'GalAid-*-win-x64.exe.sha256') -and ($assetNamesToKeep -notcontains $item.name)) {
               gh release delete-asset $env:RELEASE_TAG $item.name -y --repo $env:GITHUB_REPOSITORY
             }
           }
 
-          gh release upload $env:RELEASE_TAG $asset.FullName --clobber --repo $env:GITHUB_REPOSITORY
+          gh release upload $env:RELEASE_TAG $asset.FullName $checksum.FullName --clobber --repo $env:GITHUB_REPOSITORY

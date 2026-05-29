@@ -246,7 +246,10 @@ function checkInstallGuide(errors) {
     "需要解压密码",
     "求助包",
     "GalAid-0.1.9-win-x64.exe",
+    "GalAid-0.1.9-win-x64.exe.sha256",
+    "Get-FileHash",
     "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe",
+    "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -436,8 +439,11 @@ function checkDesktopRelease(errors) {
     "npm ci --ignore-scripts",
     "npm run check",
     "npm run dist:win",
+    "Get-FileHash",
+    "Set-Content",
     "actions/upload-artifact@v7",
     "dist/desktop/*.exe",
+    "dist/desktop/*.exe.sha256",
     "github.ref_name",
     "releaseCreateArgs",
     "--generate-notes",
