@@ -6786,6 +6786,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
   const manifest = buildSupportManifest(analysis, title, generatedAt, language);
   const fileManifest = buildFileManifest(analysis);
   const packagePreviewReport = buildPackagePreviewsReport(analysis);
+  const packagePreviewMarkdown = buildPackagePreviewsMarkdown(analysis, language);
   const errorRecipeReport = {
     schema: "galaid.errorRecipes.v1",
     hasErrorText: analysis.errorDiagnostics.hasText,
@@ -6850,6 +6851,11 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
       path: "file-manifest.json",
       content: JSON.stringify(fileManifest, null, 2),
       type: "application/json;charset=utf-8",
+    },
+    {
+      path: "package-previews.md",
+      content: packagePreviewMarkdown,
+      type: "text/markdown;charset=utf-8",
     },
     {
       path: "package-previews.json",
@@ -7009,6 +7015,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- galaid-report.md: human-readable diagnosis",
     "- manifest.json: bundle summary",
     "- file-manifest.json: sanitized file list metadata",
+    "- package-previews.md: human-readable archive/disc-image preflight clues",
     "- package-previews.json: archive/disc-image preflight launch, installer, and repair clues",
     "- environment-checks.json: environment checklist",
     "- runtime-repairs.json: bundled runtime repair tool hints",
@@ -7210,6 +7217,102 @@ function buildPackagePreviewsReport(analysis) {
     runtimeRepairClueCount: entries.reduce((sum, entry) => sum + (entry.runtimeRepairCount || 0), 0),
     entries,
   };
+}
+
+function buildPackagePreviewsMarkdown(analysis, language = getAssistantLanguage()) {
+  const copies = {
+    "zh-CN": {
+      title: "包/镜像预检摘要",
+      none: "当前没有包/镜像预检数据。",
+      overview: "总览",
+      count: "预检条目",
+      packagePath: "包/镜像",
+      format: "格式",
+      status: "状态",
+      summary: "判断",
+      nextStep: "下一步",
+      launch: "启动线索",
+      installer: "安装/介质线索",
+      repair: "运行库修复项",
+      engine: "引擎/结构线索",
+      warnings: "提醒",
+      samples: "样例文件",
+    },
+    en: {
+      title: "Package/Image Preflight Summary",
+      none: "No package or image preflight data is available.",
+      overview: "Overview",
+      count: "Previews",
+      packagePath: "Package/image",
+      format: "Format",
+      status: "Status",
+      summary: "Summary",
+      nextStep: "Next step",
+      launch: "Launch clues",
+      installer: "Install/media clues",
+      repair: "Runtime repair clues",
+      engine: "Engine/structure clues",
+      warnings: "Warnings",
+      samples: "Sample files",
+    },
+    ja: {
+      title: "パッケージ/イメージ事前チェック概要",
+      none: "パッケージ/イメージの事前チェックデータはありません。",
+      overview: "概要",
+      count: "事前チェック件数",
+      packagePath: "パッケージ/イメージ",
+      format: "形式",
+      status: "状態",
+      summary: "判定",
+      nextStep: "次の手順",
+      launch: "起動手がかり",
+      installer: "インストール/メディア手がかり",
+      repair: "ランタイム修復候補",
+      engine: "エンジン/構造の手がかり",
+      warnings: "注意",
+      samples: "サンプルファイル",
+    },
+  };
+  const copy = copies[language] || copies["zh-CN"];
+  const report = buildPackagePreviewsReport(analysis);
+  const lines = [`# ${copy.title}`, ""];
+
+  lines.push(`## ${copy.overview}`);
+  lines.push(`- ${copy.count}: ${formatNumber(report.count)}`);
+  lines.push(`- ${copy.launch}: ${formatNumber(report.launchClueCount)}`);
+  lines.push(`- ${copy.installer}: ${formatNumber(report.installerClueCount)}`);
+  lines.push(`- ${copy.repair}: ${formatNumber(report.runtimeRepairClueCount)}`);
+
+  if (!report.entries.length) {
+    lines.push("");
+    lines.push(copy.none);
+    return lines.join("\n");
+  }
+
+  for (const [index, entry] of report.entries.entries()) {
+    lines.push("");
+    lines.push(`## ${index + 1}. ${entry.packagePath || entry.format}`);
+    lines.push(`- ${copy.packagePath}: ${entry.packagePath || "-"}`);
+    lines.push(`- ${copy.format}: ${entry.groupFormat || entry.format || "-"} (${entry.packageType})`);
+    lines.push(`- ${copy.status}: ${entry.status || "-"}`);
+    if (entry.summary) lines.push(`- ${copy.summary}: ${entry.summary}`);
+    if (entry.nextStep) lines.push(`- ${copy.nextStep}: ${entry.nextStep}`);
+    appendPackagePreviewMarkdownList(lines, copy.launch, entry.launchSamples);
+    appendPackagePreviewMarkdownList(lines, copy.installer, entry.installerSamples);
+    appendPackagePreviewMarkdownList(lines, copy.repair, entry.runtimeRepairSamples);
+    appendPackagePreviewMarkdownList(lines, copy.engine, (entry.engineHints || []).map((hint) => `${hint.name} (${hint.count})`));
+    appendPackagePreviewMarkdownList(lines, copy.warnings, entry.warnings);
+    appendPackagePreviewMarkdownList(lines, copy.samples, (entry.sampleFiles || []).map((file) => `${file.path} (${file.sizeLabel})`), 6);
+  }
+
+  return lines.join("\n");
+}
+
+function appendPackagePreviewMarkdownList(lines, label, values, limit = 4) {
+  const items = (values || []).filter(Boolean).slice(0, limit);
+  if (!items.length) return;
+  lines.push(`- ${label}:`);
+  for (const item of items) lines.push(`  - ${item}`);
 }
 
 function buildPackagePreviewManifestEntry(set) {

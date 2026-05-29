@@ -41,6 +41,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-file-list")).toContainText("runtime-repairs.json");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("package-previews.md");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
   await expect(page.locator("#supportPanel")).toContainText("诊断摘要");
 
@@ -56,6 +57,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
 
   const supportEntries = await page.evaluate(() => buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN").entries.map((entry) => entry.path));
   expect(supportEntries).toContain("runtime-repairs.json");
+  expect(supportEntries).toContain("package-previews.md");
   expect(supportEntries).toContain("package-previews.json");
 });
 
@@ -108,18 +110,25 @@ test("package sample shows archive and image preflight without treating it as ru
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("package-previews.md");
   await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
 
-  const packagePreviewReport = await page.evaluate(() => {
-    const entry = buildSupportBundle(currentAnalysis, "", "zh-CN").entries.find((item) => item.path === "package-previews.json");
-    return JSON.parse(entry.content);
+  const packagePreviewSupport = await page.evaluate(() => {
+    const bundle = buildSupportBundle(currentAnalysis, "", "zh-CN");
+    return {
+      json: JSON.parse(bundle.entries.find((item) => item.path === "package-previews.json").content),
+      markdown: bundle.entries.find((item) => item.path === "package-previews.md").content,
+    };
   });
-  expect(packagePreviewReport.schema).toBe("galaid.packagePreviews.v1");
-  expect(packagePreviewReport.count).toBeGreaterThanOrEqual(3);
-  expect(packagePreviewReport.launchClueCount).toBeGreaterThanOrEqual(1);
-  expect(packagePreviewReport.installerClueCount).toBeGreaterThanOrEqual(1);
-  expect(packagePreviewReport.runtimeRepairClueCount).toBeGreaterThanOrEqual(1);
-  expect(packagePreviewReport.entries.some((entry) => entry.launchSamples.includes("SnowTrial/Game.exe"))).toBe(true);
+  expect(packagePreviewSupport.json.schema).toBe("galaid.packagePreviews.v1");
+  expect(packagePreviewSupport.json.count).toBeGreaterThanOrEqual(3);
+  expect(packagePreviewSupport.json.launchClueCount).toBeGreaterThanOrEqual(1);
+  expect(packagePreviewSupport.json.installerClueCount).toBeGreaterThanOrEqual(1);
+  expect(packagePreviewSupport.json.runtimeRepairClueCount).toBeGreaterThanOrEqual(1);
+  expect(packagePreviewSupport.json.entries.some((entry) => entry.launchSamples.includes("SnowTrial/Game.exe"))).toBe(true);
+  expect(packagePreviewSupport.markdown).toContain("# 包/镜像预检摘要");
+  expect(packagePreviewSupport.markdown).toContain("SnowTrial/Game.exe");
+  expect(packagePreviewSupport.markdown).toContain("DXSETUP.exe");
 
   await page.locator("#assistantLanguageSelect").selectOption("en");
   await page.locator('[data-tab="report"]').click();
