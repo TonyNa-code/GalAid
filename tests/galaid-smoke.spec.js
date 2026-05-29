@@ -1,13 +1,26 @@
 const { test, expect } = require("@playwright/test");
 
+function makeWindowsUserPath(...parts) {
+  return ["C:", "Users", "Alice", ...parts].join("\\");
+}
+
+function makeMacUserPath(...parts) {
+  return ["", "Users", "alice", ...parts].join("/");
+}
+
 test("sample diagnosis renders roadmap and support bundle metadata", async ({ page }) => {
+  const privateWinPath = makeWindowsUserPath("Downloads", "SakuraTrial", "game.exe");
+  const privateMacPath = makeMacUserPath("Games", "SakuraTrial", "game.exe");
+
   await page.goto("/");
 
   await expect(page).toHaveTitle(/GalAid/);
   await expect(page.locator("#launchPanel .empty-flow")).toContainText("拖进来");
   await expect(page.locator("#launchPanel .empty-flow")).toContainText("一键启动");
   await page.getByRole("button", { name: "游戏样例" }).click();
-  await page.locator("#errorInput").fill("The program cannot start because d3dx9_43.dll is missing. VCRUNTIME140.dll was not found.");
+  await page
+    .locator("#errorInput")
+    .fill(`The program cannot start because d3dx9_43.dll is missing. VCRUNTIME140.dll was not found. Tried ${privateWinPath} and ${privateMacPath}.`);
   await page.locator('[data-tab="roadmap"]').click();
 
   await expect(page.locator("#projectTitle")).toHaveText("SakuraTrial");
@@ -78,6 +91,14 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   expect(launchDecisionSupport.markdown).toContain("# 启动决策摘要");
   expect(launchDecisionSupport.markdown).toContain("SakuraTrial/game.exe");
   expect(launchDecisionSupport.markdown).toContain("SakuraTrial/vcredist_x86.exe");
+
+  const shareableSupportText = await page.evaluate(() => {
+    const bundle = buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN");
+    return bundle.entries.map((entry) => `${entry.path}\n${entry.content}`).join("\n---\n");
+  });
+  expect(shareableSupportText).toContain("[absolute-path]");
+  expect(shareableSupportText).not.toContain(privateWinPath);
+  expect(shareableSupportText).not.toContain(privateMacPath);
 });
 
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
@@ -1545,6 +1566,9 @@ test("launch attempt follow-up can mark a failure symptom", async ({ page }) => 
 });
 
 test("launch failure follow-up updates roadmap and support bundle", async ({ page }) => {
+  const privateWinPath = makeWindowsUserPath("Downloads", "SakuraTrial", "game.exe");
+  const privateMacPath = makeMacUserPath("Games", "SakuraTrial", "game.exe");
+
   await page.goto("/");
 
   await page.getByRole("button", { name: "游戏样例" }).click();
@@ -1555,7 +1579,7 @@ test("launch failure follow-up updates roadmap and support bundle", async ({ pag
   await page.locator('[data-failure-triage-question="source-state"][data-failure-triage-option="from-package"]').check();
   await page.locator('[data-failure-triage-question="error-capture"][data-failure-triage-option="can-copy"]').check();
   await page.locator('[data-failure-symptom="missing-dll"]').check();
-  await page.locator("[data-failure-note]").fill("VCRUNTIME140.dll was not found");
+  await page.locator("[data-failure-note]").fill(`${privateWinPath} and ${privateMacPath}: VCRUNTIME140.dll was not found`);
   await page.getByRole("button", { name: "更新路线" }).click();
 
   await expect(page.locator("#launchPanel")).toContainText("已记录 5 条现象");
@@ -1570,11 +1594,22 @@ test("launch failure follow-up updates roadmap and support bundle", async ({ pag
   await expect(page.locator(".support-preview")).toContainText("启动失败跟进");
   await expect(page.locator(".support-preview")).toContainText("有弹窗文字");
   await expect(page.locator(".support-preview")).toContainText("VCRUNTIME140.dll was not found");
+  await expect(page.locator(".support-preview")).toContainText("[absolute-path]");
+  await expect(page.locator(".support-preview")).not.toContainText(privateWinPath);
+  await expect(page.locator(".support-preview")).not.toContainText(privateMacPath);
+
+  const chatHelp = await page.evaluate(() => buildChatHelpText(currentAnalysis, "zh-CN"));
+  expect(chatHelp).toContain("[absolute-path]");
+  expect(chatHelp).not.toContain(privateWinPath);
+  expect(chatHelp).not.toContain(privateMacPath);
 
   await page.locator('[data-tab="report"]').click();
   await expect(page.locator("#reportPanel")).toContainText("## 启动失败跟进");
   await expect(page.locator("#reportPanel")).toContainText("问诊答案");
   await expect(page.locator("#reportPanel")).toContainText("缺 DLL/运行库");
+  await expect(page.locator("#reportPanel")).toContainText("[absolute-path]");
+  await expect(page.locator("#reportPanel")).not.toContainText(privateWinPath);
+  await expect(page.locator("#reportPanel")).not.toContainText(privateMacPath);
 });
 
 test("commercial sample promotes proprietary engine startup route", async ({ page }) => {

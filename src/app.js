@@ -57,6 +57,16 @@ const SUPPORT_BUNDLE_FILE_LIMIT = 5000;
 const ERROR_RECIPES = Array.isArray(window.GALAID_ERROR_RECIPES) ? window.GALAID_ERROR_RECIPES : [];
 const ASSISTANT_LANGUAGE_STORAGE_KEY = "GalAid.assistantLanguage.v1";
 const BROWSER_TESSERACT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
+const SHAREABLE_REDACTION_MARKER = "[absolute-path]";
+const SHAREABLE_PATH_PATTERNS = [
+  /file:\/\/\/[A-Za-z]:\/[^\s`"'<>]+/gi,
+  /\b[A-Za-z]:\\Users\\(?:[^\\/:*?"<>|\r\n]+\\)+[^\\/:*?"<>|\r\n\s,;)]*/gi,
+  /\b[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)+[^\\/:*?"<>|\r\n\s,;)]*/g,
+  /\\\\[A-Za-z0-9._-]+\\[^\s`"'<>|]+/g,
+  /\/Users\/[^\s`"'<>]+/g,
+  /\/home\/[^\s`"'<>]+/g,
+  /\/var\/folders\/[^\s`"'<>]+/g,
+];
 let browserTesseractPromise = null;
 const LAUNCH_FAILURE_SYMPTOMS = [
   {
@@ -1984,6 +1994,37 @@ function refreshCurrentReport() {
 
 function normalizePath(path) {
   return String(path || "").replaceAll("\\", "/").replace(/^\/+/, "");
+}
+
+function redactShareableText(value) {
+  let text = String(value || "");
+  for (const pattern of SHAREABLE_PATH_PATTERNS) {
+    pattern.lastIndex = 0;
+    text = text.replace(pattern, SHAREABLE_REDACTION_MARKER);
+  }
+  return text;
+}
+
+function getShareableAnalysis(analysis) {
+  return sanitizeShareableValue(analysis);
+}
+
+function sanitizeShareableValue(value, seen = new WeakMap()) {
+  if (typeof value === "string") return redactShareableText(value);
+  if (!value || typeof value !== "object") return value;
+  if (seen.has(value)) return seen.get(value);
+  if (Array.isArray(value)) {
+    const clone = [];
+    seen.set(value, clone);
+    for (const item of value) clone.push(sanitizeShareableValue(item, seen));
+    return clone;
+  }
+  const clone = {};
+  seen.set(value, clone);
+  for (const [key, item] of Object.entries(value)) {
+    clone[key] = sanitizeShareableValue(item, seen);
+  }
+  return clone;
 }
 
 function getExt(name) {
@@ -6580,7 +6621,8 @@ function renderSupport(analysis) {
   `;
 }
 
-function buildRoadmapChecklistText(analysis, language = getAssistantLanguage()) {
+function buildRoadmapChecklistText(analysis, language = getAssistantLanguage(), options = {}) {
+  analysis = options.alreadyShareable ? analysis : getShareableAnalysis(analysis);
   const pack = getAssistantPack(language);
   const labels = pack.labels;
   const lines = [];
@@ -6599,7 +6641,9 @@ function buildRoadmapChecklistText(analysis, language = getAssistantLanguage()) 
   return lines.join("\n");
 }
 
-function buildMarkdownReport(analysis, errorText, language = getAssistantLanguage()) {
+function buildMarkdownReport(analysis, errorText, language = getAssistantLanguage(), options = {}) {
+  analysis = options.alreadyShareable ? analysis : getShareableAnalysis(analysis);
+  errorText = redactShareableText(errorText);
   const pack = getAssistantPack(language);
   const labels = pack.labels;
   const lines = [];
@@ -6779,15 +6823,18 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
 }
 
 function buildSupportBundle(analysis, errorText, language = getAssistantLanguage()) {
+  analysis = getShareableAnalysis(analysis);
+  errorText = redactShareableText(errorText);
+  const shareableOptions = { alreadyShareable: true };
   const title = getDisplayTitle(analysis);
   const generatedAt = new Date().toISOString();
   const safeTitle = slugifyFilename(title, "galaid-diagnosis");
-  const diagnosisReport = buildMarkdownReport(analysis, errorText, language);
+  const diagnosisReport = buildMarkdownReport(analysis, errorText, language, shareableOptions);
   const manifest = buildSupportManifest(analysis, title, generatedAt, language);
   const fileManifest = buildFileManifest(analysis);
   const packagePreviewReport = buildPackagePreviewsReport(analysis);
   const packagePreviewMarkdown = buildPackagePreviewsMarkdown(analysis, language);
-  const launchDecisionReport = buildLaunchDecisionReport(analysis, language);
+  const launchDecisionReport = buildLaunchDecisionReport(analysis, language, shareableOptions);
   const launchDecisionMarkdown = buildLaunchDecisionMarkdown(launchDecisionReport, language);
   const errorRecipeReport = {
     schema: "galaid.errorRecipes.v1",
@@ -6812,7 +6859,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     schema: "galaid.roadmap.v1",
     summary: analysis.roadmap.summary,
     steps: analysis.roadmap.steps,
-    checklist: buildRoadmapChecklistText(analysis, language),
+    checklist: buildRoadmapChecklistText(analysis, language, shareableOptions),
   };
   const launchFailureReport = {
     schema: "galaid.launchFailure.v1",
@@ -7043,6 +7090,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
 }
 
 function buildSupportSummaryText(analysis, manifest, filename, language = getAssistantLanguage()) {
+  analysis = getShareableAnalysis(analysis);
   const pack = getAssistantPack(language);
   const labels = pack.labels;
   const lines = [];
@@ -7095,6 +7143,7 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
 }
 
 function buildChatHelpText(analysis, language = getAssistantLanguage()) {
+  analysis = getShareableAnalysis(analysis);
   const copies = {
     "zh-CN": {
       title: "我在 GalAid 里扫了一下这个 galgame，求助信息如下：",
@@ -7179,7 +7228,8 @@ function buildChatHelpText(analysis, language = getAssistantLanguage()) {
   return lines.join("\n");
 }
 
-function buildLaunchDecisionReport(analysis, language = getAssistantLanguage()) {
+function buildLaunchDecisionReport(analysis, language = getAssistantLanguage(), options = {}) {
+  analysis = options.alreadyShareable ? analysis : getShareableAnalysis(analysis);
   const topLaunch = analysis.launchCandidates[0] || null;
   const topInstaller = analysis.installerCandidates?.[0] || null;
   const primaryRepair = getPrimaryRuntimeRepair(analysis);

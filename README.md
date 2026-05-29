@@ -218,7 +218,7 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `launch-profiles.json`
 - individual `profiles/*.galaid-profile.json` files
 
-The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary.
+The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary. Shareable reports, chat help text, and support bundles redact pasted local absolute paths such as Windows user folders or macOS home folders to `[absolute-path]` while keeping the diagnostic wording around them.
 
 ## Diagnosis Output Language
 
