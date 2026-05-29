@@ -409,7 +409,7 @@ function checkDesktopRelease(errors) {
   checkNoTrailingWhitespace(packageFile, packageText, errors);
 
   for (const phrase of [
-    "windows-latest",
+    "windows-2025-vs2026",
     "actions/checkout@v6",
     "actions/setup-node@v6",
     "npm ci --ignore-scripts",
