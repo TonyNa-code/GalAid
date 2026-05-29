@@ -41,6 +41,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   await expect(page.locator(".support-file-list")).toContainText("roadmap-checklist.md");
   await expect(page.locator(".support-file-list")).toContainText("runtime-repairs.json");
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
   await expect(page.locator("#supportPanel")).toContainText("诊断摘要");
 
   const supportPreview = page.locator(".support-preview");
@@ -55,6 +56,7 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
 
   const supportEntries = await page.evaluate(() => buildSupportBundle(currentAnalysis, errorInput.value, "zh-CN").entries.map((entry) => entry.path));
   expect(supportEntries).toContain("runtime-repairs.json");
+  expect(supportEntries).toContain("package-previews.json");
 });
 
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
@@ -106,6 +108,18 @@ test("package sample shows archive and image preflight without treating it as ru
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.locator(".support-file-list")).toContainText("file-manifest.json");
+  await expect(page.locator(".support-file-list")).toContainText("package-previews.json");
+
+  const packagePreviewReport = await page.evaluate(() => {
+    const entry = buildSupportBundle(currentAnalysis, "", "zh-CN").entries.find((item) => item.path === "package-previews.json");
+    return JSON.parse(entry.content);
+  });
+  expect(packagePreviewReport.schema).toBe("galaid.packagePreviews.v1");
+  expect(packagePreviewReport.count).toBeGreaterThanOrEqual(3);
+  expect(packagePreviewReport.launchClueCount).toBeGreaterThanOrEqual(1);
+  expect(packagePreviewReport.installerClueCount).toBeGreaterThanOrEqual(1);
+  expect(packagePreviewReport.runtimeRepairClueCount).toBeGreaterThanOrEqual(1);
+  expect(packagePreviewReport.entries.some((entry) => entry.launchSamples.includes("SnowTrial/Game.exe"))).toBe(true);
 
   await page.locator("#assistantLanguageSelect").selectOption("en");
   await page.locator('[data-tab="report"]').click();

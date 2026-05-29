@@ -6785,6 +6785,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
   const diagnosisReport = buildMarkdownReport(analysis, errorText, language);
   const manifest = buildSupportManifest(analysis, title, generatedAt, language);
   const fileManifest = buildFileManifest(analysis);
+  const packagePreviewReport = buildPackagePreviewsReport(analysis);
   const errorRecipeReport = {
     schema: "galaid.errorRecipes.v1",
     hasErrorText: analysis.errorDiagnostics.hasText,
@@ -6848,6 +6849,11 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
     {
       path: "file-manifest.json",
       content: JSON.stringify(fileManifest, null, 2),
+      type: "application/json;charset=utf-8",
+    },
+    {
+      path: "package-previews.json",
+      content: JSON.stringify(packagePreviewReport, null, 2),
       type: "application/json;charset=utf-8",
     },
     {
@@ -7003,6 +7009,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- galaid-report.md: human-readable diagnosis",
     "- manifest.json: bundle summary",
     "- file-manifest.json: sanitized file list metadata",
+    "- package-previews.json: archive/disc-image preflight launch, installer, and repair clues",
     "- environment-checks.json: environment checklist",
     "- runtime-repairs.json: bundled runtime repair tool hints",
     "- install-media.json: setup/autorun/MSI/autorun-script installer entry hints",
@@ -7193,12 +7200,28 @@ function buildPackagePreviewManifestEntries(analysis) {
     .map((set) => buildPackagePreviewManifestEntry(set));
 }
 
+function buildPackagePreviewsReport(analysis) {
+  const entries = buildPackagePreviewManifestEntries(analysis);
+  return {
+    schema: "galaid.packagePreviews.v1",
+    count: entries.length,
+    launchClueCount: entries.reduce((sum, entry) => sum + (entry.launchCandidateCount || 0), 0),
+    installerClueCount: entries.reduce((sum, entry) => sum + (entry.installerCount || 0), 0),
+    runtimeRepairClueCount: entries.reduce((sum, entry) => sum + (entry.runtimeRepairCount || 0), 0),
+    entries,
+  };
+}
+
 function buildPackagePreviewManifestEntry(set) {
   const preview = set.archivePreview;
   return {
     packageType: set.type || "archive",
     packagePath: set.firstFile?.path || "",
     archivePath: set.firstFile?.path || "",
+    groupFormat: set.format || "",
+    level: set.level || "",
+    summary: set.summary || "",
+    nextStep: set.nextStep || "",
     format: preview.format,
     status: preview.status,
     fileCount: preview.fileCount || 0,

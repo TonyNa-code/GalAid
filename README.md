@@ -206,6 +206,7 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `galaid-report.md`
 - `manifest.json`
 - `file-manifest.json`, including package/image preflight signal samples when available
+- `package-previews.json`, a compact view of archive/disc-image launch, install-media, and repair clues
 - `environment-checks.json`
 - `roadmap.json`
 - `roadmap-checklist.md`
