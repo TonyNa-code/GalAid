@@ -72,3 +72,9 @@ Get-Content .\GalAid-0.1.9-win-x64.exe.sha256
 ```
 
 两边的十六进制 hash 一致，就说明文件和发布页上的校验文件对应。
+
+项目维护者也可以在仓库里运行下面的命令，只下载很小的 `.sha256` 和 `.release.json` 旁路文件，自动确认发布清单、commit、文件大小和 GitHub 资产 hash 是否一致：
+
+```bash
+npm run verify:release -- v0.1.9-beta
+```

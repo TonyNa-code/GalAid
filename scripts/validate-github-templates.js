@@ -49,6 +49,7 @@ const REQUIRED_FILES = [
   "scripts/test-archive-preview.js",
   "scripts/test-package-prep.js",
   "scripts/release-audit.js",
+  "scripts/verify-release-assets.js",
   "src/engine-rules.js",
   "tests/galaid-smoke.spec.js",
 ];
@@ -187,8 +188,10 @@ function checkReleaseDocs(errors) {
     expectedVersionHeading,
     "Highlights",
     "Error screenshot OCR",
+    "Release verifier checks published Windows sidecars",
     "Pre-Release Checklist",
     "npm run audit:release -- --strict",
+    "npm run verify:release -- v0.1.9-beta",
     "GitHub Pages",
     "Known Limits",
   ]) {
@@ -248,6 +251,7 @@ function checkInstallGuide(errors) {
     "GalAid-0.1.9-win-x64.exe",
     "GalAid-0.1.9-win-x64.exe.sha256",
     "GalAid-0.1.9-win-x64.exe.release.json",
+    "npm run verify:release -- v0.1.9-beta",
     "Get-FileHash",
     "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe",
     "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256",
@@ -269,6 +273,22 @@ function checkReleaseAuditScript(errors) {
     "PLACEHOLDER_MARKERS",
     "auditGitMetadata",
     "Release audit passed",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkReleaseVerifierScript(errors) {
+  const file = "scripts/verify-release-assets.js";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "galaid.windowsReleaseAsset.v1",
+    "browser_download_url",
+    "Large .exe download was not required.",
+    "GitHub asset digest",
+    "Release asset verification failed",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -464,12 +484,13 @@ function checkDesktopRelease(errors) {
     "requestedExecutionLevel",
     "asInvoker",
     "dist:win",
+    "verify:release",
     "data/**/*",
   ]) {
     assert(packageText.includes(phrase), `${packageFile} is missing desktop build phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["Windows Portable Build", "workflow_dispatch", "npm run audit:release -- --strict"]) {
+  for (const phrase of ["Windows Portable Build", "workflow_dispatch", "npm run audit:release -- --strict", "npm run verify:release -- v0.1.9-beta"]) {
     assert(desktopText.includes(phrase), `${desktopDoc} is missing phrase: ${phrase}`, errors);
   }
 }
@@ -582,6 +603,7 @@ function main() {
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);
   checkReleaseAuditScript(errors);
+  checkReleaseVerifierScript(errors);
 
   if (errors.length) {
     throw new Error(`Invalid GitHub templates:\n- ${errors.join("\n- ")}`);

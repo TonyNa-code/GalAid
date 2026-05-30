@@ -42,6 +42,14 @@ The release workflow builds a portable Windows `.exe` on GitHub Actions:
 
 The package uses `electron-builder` with a portable x64 Windows target. It does not ask for administrator privileges.
 
+To verify a published Windows beta without downloading the large `.exe`, run:
+
+```bash
+npm run verify:release -- v0.1.9-beta
+```
+
+The verifier reads the GitHub release metadata, downloads only the small `.sha256` and `.release.json` sidecars, then checks the manifest schema, tag, commit shape, asset size, and SHA-256 against the release asset metadata.
+
 ## One-Click Launch Boundary
 
 - Compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries are launchable in V1, and install-media `.msi` entries open through Windows Installer.
