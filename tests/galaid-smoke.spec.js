@@ -122,6 +122,31 @@ test("sample diagnosis renders roadmap and support bundle metadata", async ({ pa
   expect(shareableSupportText).not.toContain(privateMacPath);
 });
 
+test("DirectX legacy recipe keeps exact DLL evidence narrow", async ({ page }) => {
+  await page.goto("/");
+
+  const recipeMatches = await page.evaluate(() => {
+    const examples = [
+      "The program cannot start because XINPUT1_3.dll is missing.",
+      "Cannot load XAudio2_7.dll.",
+      "XAPOFX1_5.dll was not found.",
+      "X3DAudio1_7.dll missing.",
+      "XACTEngine3_7.dll not found.",
+      "D3DCompiler_43.dll is missing.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      broadRendererFailure: buildErrorDiagnostics("Failed to initialize renderer: d3d11.dll").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of recipeMatches.positives) {
+    expect(matches).toContain("directx-legacy");
+  }
+  expect(recipeMatches.broadRendererFailure).not.toContain("directx-legacy");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 

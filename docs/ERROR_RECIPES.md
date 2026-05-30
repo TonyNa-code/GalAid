@@ -51,6 +51,20 @@ A broad pattern can create an overconfident diagnosis when the pasted text is in
 
 When evidence is partial, phrase the diagnosis as a likely cause and suggest one safe verification step first.
 
+## DirectX Legacy Evidence
+
+The `directx-legacy` recipe should stay focused on exact legacy component names. These are good positive examples:
+
+- `d3dx9_43.dll`
+- `xinput1_3.dll`
+- `xaudio2_7.dll`
+- `xapofx1_5.dll`
+- `x3daudio1_7.dll`
+- `xactengine3_7.dll`
+- `d3dcompiler_43.dll`
+
+Keep broad renderer failures such as `d3d11.dll` as supporting context only. By itself, that text should not trigger the DirectX 9-era runtime route.
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.
