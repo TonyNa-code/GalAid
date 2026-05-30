@@ -27,7 +27,7 @@ GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps 
 - Disc-image preparation handoff: mount Windows `.iso` images when available, or best-effort extract supported image files before rescanning
 - English default README with Chinese/Japanese translations and Chinese/English/Japanese diagnosis output language
 - Chinese quick install and QQ/group-share copy in `docs/INSTALL.zh-CN.md`
-- Windows release uploads include a generated `.sha256` sidecar for the portable `.exe`
+- Windows release uploads include generated `.sha256` and `.release.json` sidecars for the portable `.exe`
 - Community-editable startup error recipes in `data/error-recipes.json`
 - Support bundle with reports, launch profiles, launch-failure notes, roadmap, recipe matches, and file manifest
 - GitHub issue templates, PR template, CI checks, and GitHub Pages deployment workflow

@@ -6,6 +6,7 @@
 
 - Windows 便携版：<https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe>
 - SHA-256 校验文件：<https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256>
+- 发布清单 JSON：<https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.release.json>
 - 发布页：<https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta>
 - 网页预览：<https://TonyNa-code.github.io/GalAid/>
 
@@ -61,7 +62,7 @@ GalAid 会先判断入口是不是 DOS、Win16、旧 Win32 或安装盘路线。
 
 ## 校验下载文件
 
-当前 Windows 便携版文件名应为 `GalAid-0.1.9-win-x64.exe`。发布页会同时提供 `GalAid-0.1.9-win-x64.exe.sha256`，里面是这次构建自动生成的 SHA-256。
+当前 Windows 便携版文件名应为 `GalAid-0.1.9-win-x64.exe`。发布页会同时提供 `GalAid-0.1.9-win-x64.exe.sha256`，里面是这次构建自动生成的 SHA-256。`GalAid-0.1.9-win-x64.exe.release.json` 则给脚本或下载页使用，记录版本标签、commit、文件名、大小和 SHA-256。
 
 Windows PowerShell 可以这样比对：
 

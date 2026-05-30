@@ -36,9 +36,9 @@ The release workflow builds a portable Windows `.exe` on GitHub Actions:
 - workflow: `.github/workflows/desktop-release.yml`
 - trigger: manual `workflow_dispatch` or a `v*` tag
 - command: `npm run dist:win`
-- output: `dist/desktop/*.exe` and `dist/desktop/*.exe.sha256`
-- tag pushes create or update a GitHub pre-release when the tag looks like `alpha`, `beta`, or `rc`, then upload the Windows portable `.exe` and its SHA-256 sidecar
-- manual runs can still pass `release_tag` to upload a rebuilt `.exe` and matching checksum to an existing release
+- output: `dist/desktop/*.exe`, `dist/desktop/*.exe.sha256`, and `dist/desktop/*.exe.release.json`
+- tag pushes create or update a GitHub pre-release when the tag looks like `alpha`, `beta`, or `rc`, then upload the Windows portable `.exe`, its SHA-256 sidecar, and a machine-readable release manifest
+- manual runs can still pass `release_tag` to upload a rebuilt `.exe`, matching checksum, and manifest to an existing release
 
 The package uses `electron-builder` with a portable x64 Windows target. It does not ask for administrator privileges.
 
