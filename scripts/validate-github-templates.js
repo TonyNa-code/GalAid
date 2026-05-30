@@ -41,6 +41,7 @@ const REQUIRED_FILES = [
   "docs/INSTALL.zh-CN.md",
   "docs/RELEASE_DRAFT.md",
   "docs/REPO_TOPICS.md",
+  "docs/ROADMAP.md",
   "desktop/archive-preview.js",
   "desktop/package-prep.js",
   "desktop/launcher.js",
@@ -216,6 +217,25 @@ function checkReleaseDocs(errors) {
     "github-pages",
   ]) {
     assert(topicsText.includes(phrase), `${topicsFile} is missing phrase: ${phrase}`, errors);
+  }
+}
+
+function checkRoadmap(errors) {
+  const file = "docs/ROADMAP.md";
+  const text = readRelative(file);
+  checkNoTrailingWhitespace(file, text, errors);
+
+  for (const phrase of [
+    "v0.1.9 Beta Shipped",
+    "GitHub Pages demo",
+    "Windows desktop beta",
+    "published Windows release sidecars",
+    "Next Polishing Passes",
+    "1.0 Hardening",
+    "Signed Windows release builds",
+    "Later Ideas",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -639,6 +659,7 @@ function main() {
   checkSecurityPolicy(errors);
   checkCodeOfConduct(errors);
   checkReleaseDocs(errors);
+  checkRoadmap(errors);
   checkReleaseAuditScript(errors);
   checkReleaseVerifierScript(errors);
 
