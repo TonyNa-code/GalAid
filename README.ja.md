@@ -117,6 +117,12 @@ npm run check
 npm run test:smoke
 ```
 
+## ロードマップ
+
+`v0.1.9-beta` はライブ Web デモと Windows デスクトップ beta として公開済みです。現在の優先事項は、metadata-only なエンジンルールとエラーレシピの追加、アーカイブ/ディスクイメージ/インストールメディアの smoke fixture 強化、インストール手順と初心者向け文言の改善、1.0 に向けた署名付き Windows ビルドや失敗時コピーの強化です。
+
+全体の状態は [docs/ROADMAP.md](docs/ROADMAP.md)、新規コントリビューター向けの優先タスクは [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md) を参照してください。
+
 ## ライセンス
 
 MIT. See [LICENSE](LICENSE).

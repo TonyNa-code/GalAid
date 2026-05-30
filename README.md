@@ -322,9 +322,14 @@ See [docs/DESKTOP.md](docs/DESKTOP.md) for packaging notes.
 
 ## Roadmap
 
-- Better engine fingerprints
-- Open-format asset preview
-- Community-maintained diagnosis recipes and engine rules
+`v0.1.9-beta` is already shipped as a live web demo and Windows desktop beta. Current priorities are:
+
+- more metadata-only engine rules and startup error recipes from redacted reports
+- more archive, split-volume, disc-image, and install-media smoke fixtures
+- clearer screenshots, install docs, and beginner-facing copy
+- 1.0 hardening such as signed Windows builds and better recovery wording
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the full state, and [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md) for the current priority queue.
 
 ## License
 

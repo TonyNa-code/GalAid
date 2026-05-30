@@ -119,6 +119,12 @@ npm run check
 npm run test:smoke
 ```
 
+## 路线图
+
+`v0.1.9-beta` 已经作为网页演示和 Windows 桌面 beta 发布。当前优先方向是补更多 metadata-only 引擎规则和报错配方、增加压缩包/镜像/安装盘 smoke 用例、完善安装文档和新手文案，以及为 1.0 做签名构建和失败恢复文案等硬化工作。
+
+完整路线图见 [docs/ROADMAP.md](docs/ROADMAP.md)，适合新贡献者领取的任务见 [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md)。
+
 ## 许可证
 
 MIT. See [LICENSE](LICENSE).
