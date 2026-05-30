@@ -7120,6 +7120,9 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
 
 function buildSupportManifest(analysis, title, generatedAt, language = getAssistantLanguage()) {
   const pack = getAssistantPack(language);
+  const packagePreviewSets = [...analysis.packages.archiveSets, ...analysis.packages.discSets].filter((set) => set.archivePreview);
+  const encryptedPackagePreviews = packagePreviewSets.filter((set) => set.archivePreview?.encryptedEntries);
+  const encryptedEntryCount = encryptedPackagePreviews.reduce((sum, set) => sum + (set.archivePreview?.encryptedEntries || 0), 0);
   return {
     schema: "galaid.supportBundle.v1",
     generatedAt,
@@ -7153,7 +7156,10 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
       environmentChecks: analysis.environment.checks.length,
       desktopEnvironmentChecks: analysis.desktopEnvironment?.checks?.length || 0,
       roadmapSteps: analysis.roadmap.steps.length,
-      archivePreviews: [...analysis.packages.archiveSets, ...analysis.packages.discSets].filter((set) => set.archivePreview).length,
+      archivePreviews: packagePreviewSets.length,
+      encryptedPackagePreviews: encryptedPackagePreviews.length,
+      encryptedEntries: encryptedEntryCount,
+      passwordProtectedPackages: encryptedPackagePreviews.length,
     },
     roots: analysis.roots,
     desktopMeta: analysis.desktopMeta
@@ -7618,6 +7624,8 @@ function buildFileManifest(analysis) {
     depth: file.depth,
     executableInfo: file.executableInfo || undefined,
   }));
+  const packagePreviews = buildPackagePreviewManifestEntries(analysis);
+  const encryptedEntryCount = packagePreviews.reduce((sum, entry) => sum + (entry.encryptedEntries || 0), 0);
 
   return {
     schema: "galaid.fileManifest.v1",
@@ -7636,7 +7644,9 @@ function buildFileManifest(analysis) {
       sizeLabel: formatBytes(category.size),
       samples: category.samples,
     })),
-    packagePreviews: buildPackagePreviewManifestEntries(analysis),
+    packagePreviews,
+    encryptedEntryCount,
+    passwordProtectedPackages: packagePreviews.filter((entry) => entry.passwordProtected).length,
     archivePreviews: analysis.packages.archiveSets
       .filter((set) => set.archivePreview)
       .map((set) => buildPackagePreviewManifestEntry(set)),

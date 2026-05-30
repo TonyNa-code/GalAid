@@ -1475,16 +1475,26 @@ test("desktop one-click flow retries password-protected packages", async ({ page
   const preflightSupport = await page.evaluate(() => {
     const bundle = buildSupportBundle(currentAnalysis, "", "zh-CN");
     const report = JSON.parse(bundle.entries.find((entry) => entry.path === "package-previews.json").content);
+    const manifest = JSON.parse(bundle.entries.find((entry) => entry.path === "manifest.json").content);
+    const fileManifest = JSON.parse(bundle.entries.find((entry) => entry.path === "file-manifest.json").content);
     return {
       encryptedEntryCount: report.encryptedEntryCount,
       encryptedEntries: report.entries[0]?.encryptedEntries,
       passwordProtected: report.entries[0]?.passwordProtected,
+      manifestEncryptedEntries: manifest.summary.encryptedEntries,
+      manifestPasswordProtectedPackages: manifest.summary.passwordProtectedPackages,
+      fileManifestEncryptedEntryCount: fileManifest.encryptedEntryCount,
+      fileManifestPasswordProtectedPackages: fileManifest.passwordProtectedPackages,
       markdown: bundle.entries.find((entry) => entry.path === "package-previews.md").content,
     };
   });
   expect(preflightSupport.encryptedEntryCount).toBe(12);
   expect(preflightSupport.encryptedEntries).toBe(12);
   expect(preflightSupport.passwordProtected).toBe(true);
+  expect(preflightSupport.manifestEncryptedEntries).toBe(12);
+  expect(preflightSupport.manifestPasswordProtectedPackages).toBe(1);
+  expect(preflightSupport.fileManifestEncryptedEntryCount).toBe(12);
+  expect(preflightSupport.fileManifestPasswordProtectedPackages).toBe(1);
   expect(preflightSupport.markdown).toContain("加密条目: 12");
 
   await page.locator('[data-tab="report"]').click();
