@@ -751,6 +751,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       runtimeRepairClues: "运行库修复项",
       previewSampleFiles: "预检样例文件",
       truncated: "已截断",
+      encryptedEntries: "加密条目",
       assetsTitle: "素材地图",
       samplePathsTitle: "样例路径",
       localManifest: "本地清单",
@@ -1114,6 +1115,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       runtimeRepairClues: "runtime repair clues",
       previewSampleFiles: "preflight sample files",
       truncated: "truncated",
+      encryptedEntries: "encrypted entries",
       assetsTitle: "Asset map",
       samplePathsTitle: "Sample paths",
       localManifest: "local manifest",
@@ -1476,6 +1478,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       runtimeRepairClues: "ランタイム修復候補",
       previewSampleFiles: "事前チェックのサンプルファイル",
       truncated: "切り詰め",
+      encryptedEntries: "暗号化項目",
       assetsTitle: "アセットマップ",
       samplePathsTitle: "サンプルパス",
       localManifest: "ローカル一覧",
@@ -6464,6 +6467,7 @@ function renderArchivePreview(preview) {
         ${installerCount ? `<span class="chip">${formatNumber(installerCount)} ${escapeHtml(getUiText("installerClues"))}</span>` : ""}
         ${runtimeRepairCount ? `<span class="chip warn">${formatNumber(runtimeRepairCount)} ${escapeHtml(getUiText("runtimeRepairClues"))}</span>` : ""}
         ${engineNames.map((name) => `<span class="chip good">${escapeHtml(name)}</span>`).join("")}
+        ${preview.encryptedEntries ? `<span class="chip warn">${formatNumber(preview.encryptedEntries)} ${escapeHtml(getUiText("encryptedEntries"))}</span>` : ""}
         ${preview.truncated ? `<span class="chip warn">${escapeHtml(getUiText("truncated"))}</span>` : ""}
         ${warnings}
       </div>
@@ -7640,6 +7644,7 @@ function buildPackagePreviewsReport(analysis) {
     launchClueCount: entries.reduce((sum, entry) => sum + (entry.launchCandidateCount || 0), 0),
     installerClueCount: entries.reduce((sum, entry) => sum + (entry.installerCount || 0), 0),
     runtimeRepairClueCount: entries.reduce((sum, entry) => sum + (entry.runtimeRepairCount || 0), 0),
+    encryptedEntryCount: entries.reduce((sum, entry) => sum + (entry.encryptedEntries || 0), 0),
     entries,
   };
 }
@@ -7659,6 +7664,7 @@ function buildPackagePreviewsMarkdown(analysis, language = getAssistantLanguage(
       launch: "启动线索",
       installer: "安装/介质线索",
       repair: "运行库修复项",
+      encrypted: "加密条目",
       engine: "引擎/结构线索",
       warnings: "提醒",
       samples: "样例文件",
@@ -7676,6 +7682,7 @@ function buildPackagePreviewsMarkdown(analysis, language = getAssistantLanguage(
       launch: "Launch clues",
       installer: "Install/media clues",
       repair: "Runtime repair clues",
+      encrypted: "Encrypted entries",
       engine: "Engine/structure clues",
       warnings: "Warnings",
       samples: "Sample files",
@@ -7693,6 +7700,7 @@ function buildPackagePreviewsMarkdown(analysis, language = getAssistantLanguage(
       launch: "起動手がかり",
       installer: "インストール/メディア手がかり",
       repair: "ランタイム修復候補",
+      encrypted: "暗号化項目",
       engine: "エンジン/構造の手がかり",
       warnings: "注意",
       samples: "サンプルファイル",
@@ -7707,6 +7715,7 @@ function buildPackagePreviewsMarkdown(analysis, language = getAssistantLanguage(
   lines.push(`- ${copy.launch}: ${formatNumber(report.launchClueCount)}`);
   lines.push(`- ${copy.installer}: ${formatNumber(report.installerClueCount)}`);
   lines.push(`- ${copy.repair}: ${formatNumber(report.runtimeRepairClueCount)}`);
+  lines.push(`- ${copy.encrypted}: ${formatNumber(report.encryptedEntryCount)}`);
 
   if (!report.entries.length) {
     lines.push("");
@@ -7722,6 +7731,7 @@ function buildPackagePreviewsMarkdown(analysis, language = getAssistantLanguage(
     lines.push(`- ${copy.status}: ${entry.status || "-"}`);
     if (entry.summary) lines.push(`- ${copy.summary}: ${entry.summary}`);
     if (entry.nextStep) lines.push(`- ${copy.nextStep}: ${entry.nextStep}`);
+    if (entry.encryptedEntries) lines.push(`- ${copy.encrypted}: ${formatNumber(entry.encryptedEntries)}`);
     appendPackagePreviewMarkdownList(lines, copy.launch, entry.launchSamples);
     appendPackagePreviewMarkdownList(lines, copy.installer, entry.installerSamples);
     appendPackagePreviewMarkdownList(lines, copy.repair, entry.runtimeRepairSamples);
@@ -7754,6 +7764,8 @@ function buildPackagePreviewManifestEntry(set) {
     status: preview.status,
     fileCount: preview.fileCount || 0,
     directoryCount: preview.directoryCount || 0,
+    encryptedEntries: preview.encryptedEntries || 0,
+    passwordProtected: Boolean(preview.encryptedEntries),
     launchCandidateCount: preview.signals?.launchCandidateCount || 0,
     launchSamples: preview.signals?.launchSamples || [],
     installerCount: preview.signals?.installerCount || 0,

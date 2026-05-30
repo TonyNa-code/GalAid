@@ -1468,6 +1468,25 @@ test("desktop one-click flow retries password-protected packages", async ({ page
     await setFiles(files);
   });
 
+  await page.locator('[data-tab="packages"]').click();
+  await expect(page.locator("#packagesPanel")).toContainText("12 加密条目");
+
+  const preflightSupport = await page.evaluate(() => {
+    const bundle = buildSupportBundle(currentAnalysis, "", "zh-CN");
+    const report = JSON.parse(bundle.entries.find((entry) => entry.path === "package-previews.json").content);
+    return {
+      encryptedEntryCount: report.encryptedEntryCount,
+      encryptedEntries: report.entries[0]?.encryptedEntries,
+      passwordProtected: report.entries[0]?.passwordProtected,
+      markdown: bundle.entries.find((entry) => entry.path === "package-previews.md").content,
+    };
+  });
+  expect(preflightSupport.encryptedEntryCount).toBe(12);
+  expect(preflightSupport.encryptedEntries).toBe(12);
+  expect(preflightSupport.passwordProtected).toBe(true);
+  expect(preflightSupport.markdown).toContain("加密条目: 12");
+
+  await page.locator('[data-tab="launch"]').click();
   await page.getByRole("button", { name: "一键准备并启动" }).click();
   await page.waitForFunction(() => window.__launchPayloads?.length === 1);
 
