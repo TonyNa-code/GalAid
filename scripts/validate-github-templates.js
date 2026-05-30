@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
+const PUBLISHED_WINDOWS_BETA_COMMIT = "60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98";
 
 const ISSUE_FORMS = [
   {
@@ -193,6 +194,8 @@ function checkReleaseDocs(errors) {
     "Pre-Release Checklist",
     "npm run audit:release -- --strict",
     "npm run verify:release -- v0.1.9-beta",
+    PUBLISHED_WINDOWS_BETA_COMMIT,
+    "--json",
     "GitHub Pages",
     "Known Limits",
   ]) {
@@ -215,15 +218,15 @@ function checkReadmes(errors) {
   const readmes = [
     {
       file: "README.md",
-      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR", "Download And Verify", "GalAid-0.1.9-win-x64.exe.release.json", "--json"],
+      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR", "Download And Verify", "GalAid-0.1.9-win-x64.exe.release.json", PUBLISHED_WINDOWS_BETA_COMMIT, "--json"],
     },
     {
       file: "README.zh-CN.md",
-      phrases: ["GalAid 是一个本地优先", "docs/INSTALL.zh-CN.md", "诊断语言", "商业/自研", "报错截图 OCR", "Windows 便携版下载", "GalAid-0.1.9-win-x64.exe.sha256"],
+      phrases: ["GalAid 是一个本地优先", "docs/INSTALL.zh-CN.md", "诊断语言", "商业/自研", "报错截图 OCR", "Windows 便携版下载", "GalAid-0.1.9-win-x64.exe.sha256", PUBLISHED_WINDOWS_BETA_COMMIT],
     },
     {
       file: "README.ja.md",
-      phrases: ["GalAid は", "診断言語", "商用/自社", "エラー画像 OCR", "Windows Portable Beta", "GalAid-0.1.9-win-x64.exe.sha256"],
+      phrases: ["GalAid は", "診断言語", "商用/自社", "エラー画像 OCR", "Windows Portable Beta", "GalAid-0.1.9-win-x64.exe.sha256", PUBLISHED_WINDOWS_BETA_COMMIT],
     },
   ];
 
@@ -253,6 +256,8 @@ function checkInstallGuide(errors) {
     "GalAid-0.1.9-win-x64.exe.sha256",
     "GalAid-0.1.9-win-x64.exe.release.json",
     "npm run verify:release -- v0.1.9-beta",
+    PUBLISHED_WINDOWS_BETA_COMMIT,
+    "--json",
     "Get-FileHash",
     "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe",
     "https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256",
@@ -299,6 +304,7 @@ function checkReleaseVerifierScript(errors) {
     "retryDelayMs",
     "galaid.releaseVerification.v1",
     "--json",
+    PUBLISHED_WINDOWS_BETA_COMMIT,
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -516,7 +522,7 @@ function checkDesktopRelease(errors) {
     assert(packageText.includes(phrase), `${packageFile} is missing desktop build phrase: ${phrase}`, errors);
   }
 
-  for (const phrase of ["Windows Portable Build", "workflow_dispatch", "npm run audit:release -- --strict", "npm run verify:release -- v0.1.9-beta"]) {
+  for (const phrase of ["Windows Portable Build", "workflow_dispatch", "npm run audit:release -- --strict", "npm run verify:release -- v0.1.9-beta", PUBLISHED_WINDOWS_BETA_COMMIT, "--json"]) {
     assert(desktopText.includes(phrase), `${desktopDoc} is missing phrase: ${phrase}`, errors);
   }
 }

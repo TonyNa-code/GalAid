@@ -76,5 +76,5 @@ Get-Content .\GalAid-0.1.9-win-x64.exe.sha256
 项目维护者也可以在仓库里运行下面的命令，只下载很小的 `.sha256` 和 `.release.json` 旁路文件，自动确认发布清单、commit、文件大小和 GitHub 资产 hash 是否一致：
 
 ```bash
-npm run verify:release -- v0.1.9-beta
+npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98 --json
 ```

@@ -61,7 +61,7 @@ npm start
 - [x] Confirm `npm run check` passes locally.
 - [x] Confirm `npm run test:smoke` passes locally.
 - [x] Confirm `npm run audit:release -- --strict` has no warnings.
-- [x] Confirm `npm run verify:release -- v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042` passes against the published Windows beta.
+- [x] Confirm `npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98 --json` passes against the published Windows beta.
 - [x] Add a player-facing Windows install/share guide.
 - [ ] Confirm the `Deploy Pages` workflow publishes the static demo.
 - [ ] Open the Pages demo and run the built-in game sample.

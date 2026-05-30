@@ -75,7 +75,7 @@ Examples:
   node scripts/verify-release-assets.js
   node scripts/verify-release-assets.js v0.1.9-beta
   node scripts/verify-release-assets.js --repo TonyNa-code/GalAid --tag v0.1.9-beta
-  node scripts/verify-release-assets.js v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042
+  node scripts/verify-release-assets.js v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98
   node scripts/verify-release-assets.js v0.1.9-beta --retries 5 --retry-delay-ms 2000
   node scripts/verify-release-assets.js v0.1.9-beta --json`);
 }

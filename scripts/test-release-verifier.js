@@ -12,8 +12,8 @@ const {
   withRetries,
 } = require("./verify-release-assets");
 
-const HASH = "3226da8562047cfe5c19b0f56e46196d94c64bfe61b88e8c690c70066aa460e2";
-const COMMIT = "e3c84de0a6ec2e36f8f78b3ca65b61e576c47042";
+const HASH = "c0fa509aca96dd6ef7beeba2de7d1293e146de57bf1203fcca381184910e5a7b";
+const COMMIT = "60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98";
 const EXE_NAME = `GalAid-${packageJson.version}-win-x64.exe`;
 const CHECKSUM_NAME = `${EXE_NAME}.sha256`;
 const MANIFEST_NAME = `${EXE_NAME}.release.json`;
@@ -52,7 +52,7 @@ async function main() {
   const release = {
     tag_name: "v0.1.9-beta",
     assets: [
-      makeAsset(EXE_NAME, 102185022, `sha256:${HASH}`),
+      makeAsset(EXE_NAME, 102185013, `sha256:${HASH}`),
       makeAsset(CHECKSUM_NAME, 92, "sha256:5dc6bed48e98037f6894bd13cccfe7fce83ede16ad949aecdb15303bae0bd78f"),
       makeAsset(MANIFEST_NAME, 557, "sha256:4dfc95d7223865f8762c868ddb528229e0fe78c35776db0c3097545dae2d7bee"),
     ],
@@ -69,7 +69,7 @@ async function main() {
     commit: COMMIT,
     asset: {
       name: EXE_NAME,
-      size: 102185022,
+      size: 102185013,
       sha256: HASH,
       checksumName: CHECKSUM_NAME,
     },
@@ -141,7 +141,7 @@ async function main() {
       largeAssetDownloaded: false,
       asset: {
         name: EXE_NAME,
-        size: 102185022,
+        size: 102185013,
         sha256: HASH,
       },
       manifest: {
