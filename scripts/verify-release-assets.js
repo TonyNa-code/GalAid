@@ -3,6 +3,8 @@ const packageJson = require("../package.json");
 
 const DEFAULT_REPO = readRepositorySlug() || "TonyNa-code/GalAid";
 const DEFAULT_TAG = `v${packageJson.version}-beta`;
+const DEFAULT_RETRIES = 5;
+const DEFAULT_RETRY_DELAY_MS = 1500;
 const USER_AGENT = "GalAid release verifier";
 
 function readRepositorySlug() {
@@ -16,6 +18,8 @@ function parseArgs(argv) {
     repo: DEFAULT_REPO,
     tag: DEFAULT_TAG,
     expectedCommit: "",
+    retries: DEFAULT_RETRIES,
+    retryDelayMs: DEFAULT_RETRY_DELAY_MS,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -36,6 +40,14 @@ function parseArgs(argv) {
       options.expectedCommit = arg.slice("--commit=".length);
     } else if (arg.startsWith("--expected-commit=")) {
       options.expectedCommit = arg.slice("--expected-commit=".length);
+    } else if (arg === "--retries") {
+      options.retries = Number(argv[(index += 1)] || "");
+    } else if (arg.startsWith("--retries=")) {
+      options.retries = Number(arg.slice("--retries=".length));
+    } else if (arg === "--retry-delay-ms") {
+      options.retryDelayMs = Number(argv[(index += 1)] || "");
+    } else if (arg.startsWith("--retry-delay-ms=")) {
+      options.retryDelayMs = Number(arg.slice("--retry-delay-ms=".length));
     } else if (!arg.startsWith("-") && options.tag === DEFAULT_TAG) {
       options.tag = arg;
     } else {
@@ -46,6 +58,8 @@ function parseArgs(argv) {
   if (!/^[^/\s]+\/[^/\s]+$/.test(options.repo)) throw new Error("Expected --repo owner/name.");
   if (!options.tag) throw new Error("Expected a release tag.");
   if (options.expectedCommit && !/^[a-f0-9]{40}$/i.test(options.expectedCommit)) throw new Error("Expected --commit to be a 40-character SHA.");
+  if (!Number.isInteger(options.retries) || options.retries < 0 || options.retries > 10) throw new Error("Expected --retries to be an integer from 0 to 10.");
+  if (!Number.isInteger(options.retryDelayMs) || options.retryDelayMs < 0 || options.retryDelayMs > 60000) throw new Error("Expected --retry-delay-ms to be an integer from 0 to 60000.");
   return options;
 }
 
@@ -58,7 +72,12 @@ Examples:
   node scripts/verify-release-assets.js
   node scripts/verify-release-assets.js v0.1.9-beta
   node scripts/verify-release-assets.js --repo TonyNa-code/GalAid --tag v0.1.9-beta
-  node scripts/verify-release-assets.js v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042`);
+  node scripts/verify-release-assets.js v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042
+  node scripts/verify-release-assets.js v0.1.9-beta --retries 5 --retry-delay-ms 2000`);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function requestText(url, { accept = "application/octet-stream" } = {}) {
@@ -104,6 +123,21 @@ async function readRelease(repo, tag) {
   const url = `https://api.github.com/repos/${repo}/releases/tags/${encodedTag}`;
   const body = await requestText(url, { accept: "application/vnd.github+json" });
   return JSON.parse(body);
+}
+
+async function withRetries(task, { retries = DEFAULT_RETRIES, delayMs = DEFAULT_RETRY_DELAY_MS, label = "operation" } = {}) {
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await task(attempt);
+    } catch (error) {
+      lastError = error;
+      if (attempt >= retries) break;
+      console.warn(`${label} failed on attempt ${attempt + 1}/${retries + 1}: ${error.message}`);
+      if (delayMs > 0) await sleep(delayMs);
+    }
+  }
+  throw lastError;
 }
 
 function findAsset(release, name) {
@@ -169,33 +203,43 @@ async function main() {
   const checksumName = `${exeName}.sha256`;
   const manifestName = `${exeName}.release.json`;
 
-  const release = await readRelease(options.repo, options.tag);
-  const exeAsset = findAsset(release, exeName);
-  const checksumAsset = findAsset(release, checksumName);
-  const manifestAsset = findAsset(release, manifestName);
+  const result = await withRetries(
+    async () => {
+      const release = await readRelease(options.repo, options.tag);
+      const exeAsset = findAsset(release, exeName);
+      const checksumAsset = findAsset(release, checksumName);
+      const manifestAsset = findAsset(release, manifestName);
+      const checksumText = await requestText(checksumAsset.browser_download_url);
+      const manifestText = await requestText(manifestAsset.browser_download_url, { accept: "application/json" });
+      const checksum = parseChecksum(checksumText, checksumName);
+      const manifest = JSON.parse(manifestText);
 
-  const checksumText = await requestText(checksumAsset.browser_download_url);
-  const manifestText = await requestText(manifestAsset.browser_download_url, { accept: "application/json" });
-  const checksum = parseChecksum(checksumText, checksumName);
-  const manifest = JSON.parse(manifestText);
+      validateRelease({
+        repo: options.repo,
+        tag: options.tag,
+        expectedCommit: options.expectedCommit,
+        release,
+        exeAsset,
+        checksumAsset,
+        manifestAsset,
+        checksum,
+        manifest,
+      });
 
-  validateRelease({
-    repo: options.repo,
-    tag: options.tag,
-    expectedCommit: options.expectedCommit,
-    release,
-    exeAsset,
-    checksumAsset,
-    manifestAsset,
-    checksum,
-    manifest,
-  });
+      return { exeAsset, checksum, manifest };
+    },
+    {
+      retries: options.retries,
+      delayMs: options.retryDelayMs,
+      label: "Release asset verification",
+    },
+  );
 
   console.log(`Verified ${options.repo} ${options.tag}`);
-  console.log(`- asset: ${exeAsset.name} (${exeAsset.size} bytes)`);
-  console.log(`- sha256: ${checksum.hash}`);
-  console.log(`- commit: ${manifest.commit}`);
-  console.log(`- run: ${manifest.workflow} #${manifest.runId}`);
+  console.log(`- asset: ${result.exeAsset.name} (${result.exeAsset.size} bytes)`);
+  console.log(`- sha256: ${result.checksum.hash}`);
+  console.log(`- commit: ${result.manifest.commit}`);
+  console.log(`- run: ${result.manifest.workflow} #${result.manifest.runId}`);
   console.log("Large .exe download was not required.");
 }
 
@@ -214,4 +258,5 @@ module.exports = {
   parseChecksum,
   readRepositorySlug,
   validateRelease,
+  withRetries,
 };

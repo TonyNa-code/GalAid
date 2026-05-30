@@ -8,6 +8,7 @@ const {
   parseChecksum,
   readRepositorySlug,
   validateRelease,
+  withRetries,
 } = require("./verify-release-assets");
 
 const HASH = "3226da8562047cfe5c19b0f56e46196d94c64bfe61b88e8c690c70066aa460e2";
@@ -16,20 +17,24 @@ const EXE_NAME = `GalAid-${packageJson.version}-win-x64.exe`;
 const CHECKSUM_NAME = `${EXE_NAME}.sha256`;
 const MANIFEST_NAME = `${EXE_NAME}.release.json`;
 
-function main() {
+async function main() {
   assert.equal(readRepositorySlug(), "TonyNa-code/GalAid");
   assert.equal(DEFAULT_REPO, "TonyNa-code/GalAid");
   assert.equal(DEFAULT_TAG, `v${packageJson.version}-beta`);
 
-  assert.deepEqual(parseArgs([]), { repo: DEFAULT_REPO, tag: DEFAULT_TAG, expectedCommit: "" });
-  assert.deepEqual(parseArgs(["v0.1.9-beta"]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta", expectedCommit: "" });
-  assert.deepEqual(parseArgs(["--repo", "Example/GalAid", "--tag", "v1.0.0"]), { repo: "Example/GalAid", tag: "v1.0.0", expectedCommit: "" });
-  assert.deepEqual(parseArgs(["--repo=Example/GalAid", "--tag=v1.0.1"]), { repo: "Example/GalAid", tag: "v1.0.1", expectedCommit: "" });
-  assert.deepEqual(parseArgs(["v0.1.9-beta", "--commit", COMMIT]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta", expectedCommit: COMMIT });
-  assert.deepEqual(parseArgs(["--tag=v0.1.9-beta", "--expected-commit=" + COMMIT]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta", expectedCommit: COMMIT });
+  const defaultArgs = { repo: DEFAULT_REPO, tag: DEFAULT_TAG, expectedCommit: "", retries: 5, retryDelayMs: 1500 };
+  assert.deepEqual(parseArgs([]), defaultArgs);
+  assert.deepEqual(parseArgs(["v0.1.9-beta"]), { ...defaultArgs, tag: "v0.1.9-beta" });
+  assert.deepEqual(parseArgs(["--repo", "Example/GalAid", "--tag", "v1.0.0"]), { ...defaultArgs, repo: "Example/GalAid", tag: "v1.0.0" });
+  assert.deepEqual(parseArgs(["--repo=Example/GalAid", "--tag=v1.0.1"]), { ...defaultArgs, repo: "Example/GalAid", tag: "v1.0.1" });
+  assert.deepEqual(parseArgs(["v0.1.9-beta", "--commit", COMMIT]), { ...defaultArgs, tag: "v0.1.9-beta", expectedCommit: COMMIT });
+  assert.deepEqual(parseArgs(["--tag=v0.1.9-beta", "--expected-commit=" + COMMIT]), { ...defaultArgs, tag: "v0.1.9-beta", expectedCommit: COMMIT });
+  assert.deepEqual(parseArgs(["--retries", "5", "--retry-delay-ms=0"]), { ...defaultArgs, retries: 5, retryDelayMs: 0 });
   assert.equal(parseArgs(["--help"]).help, true);
   assert.throws(() => parseArgs(["--repo", "missing-slash"]), /Expected --repo/);
   assert.throws(() => parseArgs(["--commit", "short"]), /Expected --commit/);
+  assert.throws(() => parseArgs(["--retries", "11"]), /Expected --retries/);
+  assert.throws(() => parseArgs(["--retry-delay-ms", "60001"]), /Expected --retry-delay-ms/);
   assert.throws(() => parseArgs(["--unknown"]), /Unknown argument/);
 
   assert.deepEqual(parseChecksum(`${HASH}  ${EXE_NAME}\r\n`, CHECKSUM_NAME), {
@@ -113,7 +118,44 @@ function main() {
   );
   assert.throws(() => findAsset(release, "missing.exe"), /is missing missing\.exe/);
 
+  await testRetries();
   console.log("Release verifier smoke passed.");
+}
+
+async function testRetries() {
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (message) => warnings.push(String(message));
+  let attempts = 0;
+  try {
+    const result = await withRetries(
+      async () => {
+        attempts += 1;
+        if (attempts < 3) throw new Error("transient release metadata");
+        return "ok";
+      },
+      { retries: 3, delayMs: 0, label: "test retry" },
+    );
+    assert.equal(result, "ok");
+    assert.equal(attempts, 3);
+
+    await assert.rejects(
+      () =>
+        withRetries(
+          async () => {
+            throw new Error("still broken");
+          },
+          { retries: 1, delayMs: 0, label: "test retry" },
+        ),
+      /still broken/,
+    );
+  } finally {
+    console.warn = originalWarn;
+  }
+
+  assert.equal(warnings.length, 3);
+  assert.match(warnings[0], /transient release metadata/);
+  assert.match(warnings[2], /still broken/);
 }
 
 function makeAsset(name, size, digest) {
@@ -125,4 +167,7 @@ function makeAsset(name, size, digest) {
   };
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

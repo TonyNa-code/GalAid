@@ -295,6 +295,8 @@ function checkReleaseVerifierScript(errors) {
     "Release asset verification failed",
     "module.exports",
     "expectedCommit",
+    "withRetries",
+    "retryDelayMs",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -306,6 +308,7 @@ function checkReleaseVerifierScript(errors) {
     "validateRelease",
     "Manifest commit mismatch",
     "Manifest SHA-256 does not match checksum sidecar",
+    "transient release metadata",
   ]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }

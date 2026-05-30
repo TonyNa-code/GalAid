@@ -49,7 +49,7 @@ To verify a published Windows beta without downloading the large `.exe`, run:
 npm run verify:release -- v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042
 ```
 
-The verifier reads the GitHub release metadata, downloads only the small `.sha256` and `.release.json` sidecars, then checks the manifest schema, tag, expected commit, asset size, and SHA-256 against the release asset metadata.
+The verifier reads the GitHub release metadata, downloads only the small `.sha256` and `.release.json` sidecars, then checks the manifest schema, tag, expected commit, asset size, and SHA-256 against the release asset metadata. It retries briefly by default so a just-uploaded release is not failed by short GitHub metadata propagation delay.
 
 ## One-Click Launch Boundary
 
