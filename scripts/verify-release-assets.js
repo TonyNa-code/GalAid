@@ -18,6 +18,7 @@ function parseArgs(argv) {
     repo: DEFAULT_REPO,
     tag: DEFAULT_TAG,
     expectedCommit: "",
+    json: false,
     retries: DEFAULT_RETRIES,
     retryDelayMs: DEFAULT_RETRY_DELAY_MS,
   };
@@ -40,6 +41,8 @@ function parseArgs(argv) {
       options.expectedCommit = arg.slice("--commit=".length);
     } else if (arg.startsWith("--expected-commit=")) {
       options.expectedCommit = arg.slice("--expected-commit=".length);
+    } else if (arg === "--json") {
+      options.json = true;
     } else if (arg === "--retries") {
       options.retries = Number(argv[(index += 1)] || "");
     } else if (arg.startsWith("--retries=")) {
@@ -73,7 +76,8 @@ Examples:
   node scripts/verify-release-assets.js v0.1.9-beta
   node scripts/verify-release-assets.js --repo TonyNa-code/GalAid --tag v0.1.9-beta
   node scripts/verify-release-assets.js v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042
-  node scripts/verify-release-assets.js v0.1.9-beta --retries 5 --retry-delay-ms 2000`);
+  node scripts/verify-release-assets.js v0.1.9-beta --retries 5 --retry-delay-ms 2000
+  node scripts/verify-release-assets.js v0.1.9-beta --json`);
 }
 
 function sleep(ms) {
@@ -192,6 +196,28 @@ function validateRelease({ repo, tag, expectedCommit = "", release, exeAsset, ch
   if (errors.length) throw new Error(`Release asset verification failed:\n- ${errors.join("\n- ")}`);
 }
 
+function buildVerificationSummary({ repo, tag, exeAsset, checksum, manifest }) {
+  return {
+    schema: "galaid.releaseVerification.v1",
+    repository: repo,
+    releaseTag: tag,
+    largeAssetDownloaded: false,
+    asset: {
+      name: exeAsset.name,
+      size: Number(exeAsset.size),
+      sha256: checksum.hash,
+    },
+    manifest: {
+      schema: manifest.schema,
+      generatedAt: manifest.generatedAt || "",
+      commit: manifest.commit,
+      workflow: manifest.workflow || "",
+      runId: manifest.runId || "",
+      runAttempt: manifest.runAttempt || "",
+    },
+  };
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
@@ -235,6 +261,19 @@ async function main() {
     },
   );
 
+  const summary = buildVerificationSummary({
+    repo: options.repo,
+    tag: options.tag,
+    exeAsset: result.exeAsset,
+    checksum: result.checksum,
+    manifest: result.manifest,
+  });
+
+  if (options.json) {
+    console.log(JSON.stringify(summary, null, 2));
+    return;
+  }
+
   console.log(`Verified ${options.repo} ${options.tag}`);
   console.log(`- asset: ${result.exeAsset.name} (${result.exeAsset.size} bytes)`);
   console.log(`- sha256: ${result.checksum.hash}`);
@@ -253,6 +292,7 @@ if (require.main === module) {
 module.exports = {
   DEFAULT_REPO,
   DEFAULT_TAG,
+  buildVerificationSummary,
   findAsset,
   parseArgs,
   parseChecksum,

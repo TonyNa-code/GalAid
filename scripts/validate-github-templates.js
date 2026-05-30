@@ -297,6 +297,8 @@ function checkReleaseVerifierScript(errors) {
     "expectedCommit",
     "withRetries",
     "retryDelayMs",
+    "galaid.releaseVerification.v1",
+    "--json",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -306,6 +308,7 @@ function checkReleaseVerifierScript(errors) {
     "parseArgs",
     "parseChecksum",
     "validateRelease",
+    "buildVerificationSummary",
     "Manifest commit mismatch",
     "Manifest SHA-256 does not match checksum sidecar",
     "transient release metadata",

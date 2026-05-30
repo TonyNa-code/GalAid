@@ -3,6 +3,7 @@ const packageJson = require("../package.json");
 const {
   DEFAULT_REPO,
   DEFAULT_TAG,
+  buildVerificationSummary,
   findAsset,
   parseArgs,
   parseChecksum,
@@ -22,13 +23,14 @@ async function main() {
   assert.equal(DEFAULT_REPO, "TonyNa-code/GalAid");
   assert.equal(DEFAULT_TAG, `v${packageJson.version}-beta`);
 
-  const defaultArgs = { repo: DEFAULT_REPO, tag: DEFAULT_TAG, expectedCommit: "", retries: 5, retryDelayMs: 1500 };
+  const defaultArgs = { repo: DEFAULT_REPO, tag: DEFAULT_TAG, expectedCommit: "", json: false, retries: 5, retryDelayMs: 1500 };
   assert.deepEqual(parseArgs([]), defaultArgs);
   assert.deepEqual(parseArgs(["v0.1.9-beta"]), { ...defaultArgs, tag: "v0.1.9-beta" });
   assert.deepEqual(parseArgs(["--repo", "Example/GalAid", "--tag", "v1.0.0"]), { ...defaultArgs, repo: "Example/GalAid", tag: "v1.0.0" });
   assert.deepEqual(parseArgs(["--repo=Example/GalAid", "--tag=v1.0.1"]), { ...defaultArgs, repo: "Example/GalAid", tag: "v1.0.1" });
   assert.deepEqual(parseArgs(["v0.1.9-beta", "--commit", COMMIT]), { ...defaultArgs, tag: "v0.1.9-beta", expectedCommit: COMMIT });
   assert.deepEqual(parseArgs(["--tag=v0.1.9-beta", "--expected-commit=" + COMMIT]), { ...defaultArgs, tag: "v0.1.9-beta", expectedCommit: COMMIT });
+  assert.deepEqual(parseArgs(["v0.1.9-beta", "--json"]), { ...defaultArgs, tag: "v0.1.9-beta", json: true });
   assert.deepEqual(parseArgs(["--retries", "5", "--retry-delay-ms=0"]), { ...defaultArgs, retries: 5, retryDelayMs: 0 });
   assert.equal(parseArgs(["--help"]).help, true);
   assert.throws(() => parseArgs(["--repo", "missing-slash"]), /Expected --repo/);
@@ -117,6 +119,41 @@ async function main() {
     /Manifest SHA-256 does not match checksum sidecar/,
   );
   assert.throws(() => findAsset(release, "missing.exe"), /is missing missing\.exe/);
+
+  assert.deepEqual(
+    buildVerificationSummary({
+      repo: "TonyNa-code/GalAid",
+      tag: "v0.1.9-beta",
+      exeAsset,
+      checksum,
+      manifest: {
+        ...manifest,
+        generatedAt: "2026-05-30T12:42:02.0000000Z",
+        workflow: "Desktop Release",
+        runId: "26684024904",
+        runAttempt: "1",
+      },
+    }),
+    {
+      schema: "galaid.releaseVerification.v1",
+      repository: "TonyNa-code/GalAid",
+      releaseTag: "v0.1.9-beta",
+      largeAssetDownloaded: false,
+      asset: {
+        name: EXE_NAME,
+        size: 102185022,
+        sha256: HASH,
+      },
+      manifest: {
+        schema: "galaid.windowsReleaseAsset.v1",
+        generatedAt: "2026-05-30T12:42:02.0000000Z",
+        commit: COMMIT,
+        workflow: "Desktop Release",
+        runId: "26684024904",
+        runAttempt: "1",
+      },
+    },
+  );
 
   await testRetries();
   console.log("Release verifier smoke passed.");

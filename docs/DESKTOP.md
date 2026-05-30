@@ -51,6 +51,8 @@ npm run verify:release -- v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e57
 
 The verifier reads the GitHub release metadata, downloads only the small `.sha256` and `.release.json` sidecars, then checks the manifest schema, tag, expected commit, asset size, and SHA-256 against the release asset metadata. It retries briefly by default so a just-uploaded release is not failed by short GitHub metadata propagation delay.
 
+For scripts or download-page tooling, add `--json` to emit a machine-readable `galaid.releaseVerification.v1` summary instead of the human-readable lines.
+
 ## One-Click Launch Boundary
 
 - Compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries are launchable in V1, and install-media `.msi` entries open through Windows Installer.
