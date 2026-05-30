@@ -2,6 +2,27 @@
 
 Use this list to create beginner-friendly GitHub issues after each release. Keep every issue metadata-only and inside GalAid's safety boundary.
 
+## How to Use This List
+
+Each item below can become a GitHub issue with the listed labels, entry files, and checks. Keep the issue body short, link back to `docs/ROADMAP.md`, and ask contributors to attach only redacted GalAid reports or metadata-only examples.
+
+Done means:
+
+- the change is small enough for a first-time contributor
+- the acceptance checklist is fully testable
+- examples use fake or relative paths only
+- `npm run check` passes before review
+
+## Current Priority Queue
+
+| Priority | Issue | Why now | Entry files | Required checks |
+| --- | --- | --- | --- | --- |
+| P1 | More DirectX error recipe evidence | Missing DirectX 9 DLLs are still one of the most common launch blockers. | `data/error-recipes.json`, `docs/ERROR_RECIPES.md` | `npm run build:recipes`, `npm run check` |
+| P1 | More commercial engine structure examples | The self-developed engine route is GalAid's main differentiator for Japanese VN folders. | `data/engine-rules.json`, `docs/ENGINE_RULES.md` | `npm run build:engines`, `npm run check` |
+| P2 | Archive and disc-image wording polish | New users often arrive with only a package, split volume, or image file. | `README.md`, `docs/DESKTOP.md`, `docs/INSTALL.zh-CN.md` | `npm run check` |
+| P2 | More smoke coverage for package/install-media flows | One-click launch confidence depends on small deterministic regression cases. | `tests/galaid-smoke.spec.js`, `scripts/test-package-prep.js` | `npm run test:smoke`, `npm run check` |
+| P3 | Redacted false-positive examples | Better reports make recipes and engine rules safer to improve. | `docs/ERROR_RECIPES.md`, `docs/ENGINE_RULES.md` | `npm run check` |
+
 ## 1. Add more DirectX error recipe evidence
 
 Labels: `good first issue`, `recipe`

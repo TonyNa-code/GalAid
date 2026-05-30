@@ -408,6 +408,12 @@ function checkGoodFirstIssues(errors) {
 
   for (const phrase of [
     "Good First Issues",
+    "How to Use This List",
+    "Current Priority Queue",
+    "docs/ROADMAP.md",
+    "Entry files",
+    "Required checks",
+    "P1",
     "good first issue",
     "Acceptance checklist",
     "data/error-recipes.json",
