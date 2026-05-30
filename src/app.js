@@ -6983,7 +6983,7 @@ function buildSupportBundle(analysis, errorText, language = getAssistantLanguage
   const entries = [
     {
       path: "README.txt",
-      content: buildSupportReadme(analysis, title, generatedAt, language),
+      content: buildSupportReadme(analysis, title, generatedAt, language, manifest),
       type: "text/plain;charset=utf-8",
     },
     {
@@ -7178,9 +7178,10 @@ function buildSupportManifest(analysis, title, generatedAt, language = getAssist
   };
 }
 
-function buildSupportReadme(analysis, title, generatedAt, language = getAssistantLanguage()) {
+function buildSupportReadme(analysis, title, generatedAt, language = getAssistantLanguage(), manifest = null) {
   const pack = getAssistantPack(language);
   const labels = pack.labels;
+  const encryptedSummary = getEncryptedPackageSummaryText(manifest?.summary, language);
   return [
     pack.supportBundleTitle,
     "",
@@ -7190,6 +7191,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     `${labels.files}: ${formatNumber(analysis.files.length)}`,
     `${labels.size}: ${formatBytes(analysis.totalSize)}`,
     `${labels.assistantLanguage}: ${pack.name}`,
+    ...(encryptedSummary ? [encryptedSummary] : []),
     "",
     "Included files:",
     "- galaid-report.md: human-readable diagnosis",
@@ -7223,6 +7225,7 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   const warnings = analysis.findings
     .filter((finding) => finding.level === "blocker" || finding.level === "warning")
     .slice(0, 5);
+  const encryptedSummary = getEncryptedPackageSummaryText(manifest.summary, language);
 
   lines.push(`## ${pack.supportTitle}`);
   lines.push("");
@@ -7231,6 +7234,7 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
   lines.push(`- ${labels.status}: ${analysis.status.label}`);
   lines.push(`- ${labels.files}: ${formatNumber(analysis.files.length)} files / ${formatBytes(analysis.totalSize)}`);
   lines.push(`- ${labels.mode}: ${analysis.mode.label}`);
+  if (encryptedSummary) lines.push(`- ${encryptedSummary}`);
   lines.push(`- ${labels.recommendedEntry}: ${topLaunch ? `${topLaunch.file.path} (${topLaunch.score}/100)` : labels.noLaunch}`);
   if (!topLaunch && topInstaller) {
     lines.push(`- ${labels.installerCandidates}: ${topInstaller.file.path} (${topInstaller.score}/100)`);
@@ -7263,6 +7267,20 @@ function buildSupportSummaryText(analysis, manifest, filename, language = getAss
     lines.push(`- ${index + 1}. ${step.title}: ${step.action}`);
   }
   return lines.join("\n");
+}
+
+function getEncryptedPackageSummaryText(summary, language = getAssistantLanguage()) {
+  const encryptedEntries = summary?.encryptedEntries || 0;
+  if (!encryptedEntries) return "";
+  const passwordProtectedPackages = summary?.passwordProtectedPackages || summary?.encryptedPackagePreviews || 0;
+  const copies = {
+    "zh-CN": { entries: "加密条目", packages: "疑似密码包" },
+    en: { entries: "Encrypted entries", packages: "password-protected packages" },
+    ja: { entries: "暗号化項目", packages: "パスワード付き候補" },
+  };
+  const copy = copies[language] || copies["zh-CN"];
+  const packagePart = passwordProtectedPackages ? ` / ${copy.packages}: ${formatNumber(passwordProtectedPackages)}` : "";
+  return `${copy.entries}: ${formatNumber(encryptedEntries)}${packagePart}`;
 }
 
 function buildChatHelpText(analysis, language = getAssistantLanguage()) {

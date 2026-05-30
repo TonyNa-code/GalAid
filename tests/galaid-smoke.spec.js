@@ -1486,6 +1486,8 @@ test("desktop one-click flow retries password-protected packages", async ({ page
       fileManifestEncryptedEntryCount: fileManifest.encryptedEntryCount,
       fileManifestPasswordProtectedPackages: fileManifest.passwordProtectedPackages,
       markdown: bundle.entries.find((entry) => entry.path === "package-previews.md").content,
+      readme: bundle.entries.find((entry) => entry.path === "README.txt").content,
+      summary: buildSupportSummaryText(currentAnalysis, manifest, bundle.filename, "zh-CN"),
     };
   });
   expect(preflightSupport.encryptedEntryCount).toBe(12);
@@ -1496,6 +1498,8 @@ test("desktop one-click flow retries password-protected packages", async ({ page
   expect(preflightSupport.fileManifestEncryptedEntryCount).toBe(12);
   expect(preflightSupport.fileManifestPasswordProtectedPackages).toBe(1);
   expect(preflightSupport.markdown).toContain("加密条目: 12");
+  expect(preflightSupport.readme).toContain("加密条目: 12 / 疑似密码包: 1");
+  expect(preflightSupport.summary).toContain("加密条目: 12 / 疑似密码包: 1");
 
   await page.locator('[data-tab="report"]').click();
   await expect(page.locator("#reportPanel")).toContainText("压缩包可能需要解压密码");
