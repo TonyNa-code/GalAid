@@ -21,12 +21,15 @@ function main() {
   assert.equal(DEFAULT_REPO, "TonyNa-code/GalAid");
   assert.equal(DEFAULT_TAG, `v${packageJson.version}-beta`);
 
-  assert.deepEqual(parseArgs([]), { repo: DEFAULT_REPO, tag: DEFAULT_TAG });
-  assert.deepEqual(parseArgs(["v0.1.9-beta"]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta" });
-  assert.deepEqual(parseArgs(["--repo", "Example/GalAid", "--tag", "v1.0.0"]), { repo: "Example/GalAid", tag: "v1.0.0" });
-  assert.deepEqual(parseArgs(["--repo=Example/GalAid", "--tag=v1.0.1"]), { repo: "Example/GalAid", tag: "v1.0.1" });
+  assert.deepEqual(parseArgs([]), { repo: DEFAULT_REPO, tag: DEFAULT_TAG, expectedCommit: "" });
+  assert.deepEqual(parseArgs(["v0.1.9-beta"]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta", expectedCommit: "" });
+  assert.deepEqual(parseArgs(["--repo", "Example/GalAid", "--tag", "v1.0.0"]), { repo: "Example/GalAid", tag: "v1.0.0", expectedCommit: "" });
+  assert.deepEqual(parseArgs(["--repo=Example/GalAid", "--tag=v1.0.1"]), { repo: "Example/GalAid", tag: "v1.0.1", expectedCommit: "" });
+  assert.deepEqual(parseArgs(["v0.1.9-beta", "--commit", COMMIT]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta", expectedCommit: COMMIT });
+  assert.deepEqual(parseArgs(["--tag=v0.1.9-beta", "--expected-commit=" + COMMIT]), { repo: DEFAULT_REPO, tag: "v0.1.9-beta", expectedCommit: COMMIT });
   assert.equal(parseArgs(["--help"]).help, true);
   assert.throws(() => parseArgs(["--repo", "missing-slash"]), /Expected --repo/);
+  assert.throws(() => parseArgs(["--commit", "short"]), /Expected --commit/);
   assert.throws(() => parseArgs(["--unknown"]), /Unknown argument/);
 
   assert.deepEqual(parseChecksum(`${HASH}  ${EXE_NAME}\r\n`, CHECKSUM_NAME), {
@@ -69,6 +72,7 @@ function main() {
     validateRelease({
       repo: "TonyNa-code/GalAid",
       tag: "v0.1.9-beta",
+      expectedCommit: COMMIT,
       release,
       exeAsset,
       checksumAsset,
@@ -78,6 +82,21 @@ function main() {
     }),
   );
 
+  assert.throws(
+    () =>
+      validateRelease({
+        repo: "TonyNa-code/GalAid",
+        tag: "v0.1.9-beta",
+        expectedCommit: "0".repeat(40),
+        release,
+        exeAsset,
+        checksumAsset,
+        manifestAsset,
+        checksum,
+        manifest,
+      }),
+    /Manifest commit mismatch/,
+  );
   assert.throws(
     () =>
       validateRelease({

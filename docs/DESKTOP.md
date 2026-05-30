@@ -39,16 +39,17 @@ The release workflow builds a portable Windows `.exe` on GitHub Actions:
 - output: `dist/desktop/*.exe`, `dist/desktop/*.exe.sha256`, and `dist/desktop/*.exe.release.json`
 - tag pushes create or update a GitHub pre-release when the tag looks like `alpha`, `beta`, or `rc`, then upload the Windows portable `.exe`, its SHA-256 sidecar, and a machine-readable release manifest
 - manual runs can still pass `release_tag` to upload a rebuilt `.exe`, matching checksum, and manifest to an existing release
+- after upload, the workflow runs the release verifier against the published sidecars and current commit
 
 The package uses `electron-builder` with a portable x64 Windows target. It does not ask for administrator privileges.
 
 To verify a published Windows beta without downloading the large `.exe`, run:
 
 ```bash
-npm run verify:release -- v0.1.9-beta
+npm run verify:release -- v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042
 ```
 
-The verifier reads the GitHub release metadata, downloads only the small `.sha256` and `.release.json` sidecars, then checks the manifest schema, tag, commit shape, asset size, and SHA-256 against the release asset metadata.
+The verifier reads the GitHub release metadata, downloads only the small `.sha256` and `.release.json` sidecars, then checks the manifest schema, tag, expected commit, asset size, and SHA-256 against the release asset metadata.
 
 ## One-Click Launch Boundary
 

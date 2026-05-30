@@ -15,6 +15,7 @@ function parseArgs(argv) {
   const options = {
     repo: DEFAULT_REPO,
     tag: DEFAULT_TAG,
+    expectedCommit: "",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -29,6 +30,12 @@ function parseArgs(argv) {
       options.tag = argv[(index += 1)] || "";
     } else if (arg.startsWith("--tag=")) {
       options.tag = arg.slice("--tag=".length);
+    } else if (arg === "--commit" || arg === "--expected-commit") {
+      options.expectedCommit = argv[(index += 1)] || "";
+    } else if (arg.startsWith("--commit=")) {
+      options.expectedCommit = arg.slice("--commit=".length);
+    } else if (arg.startsWith("--expected-commit=")) {
+      options.expectedCommit = arg.slice("--expected-commit=".length);
     } else if (!arg.startsWith("-") && options.tag === DEFAULT_TAG) {
       options.tag = arg;
     } else {
@@ -38,6 +45,7 @@ function parseArgs(argv) {
 
   if (!/^[^/\s]+\/[^/\s]+$/.test(options.repo)) throw new Error("Expected --repo owner/name.");
   if (!options.tag) throw new Error("Expected a release tag.");
+  if (options.expectedCommit && !/^[a-f0-9]{40}$/i.test(options.expectedCommit)) throw new Error("Expected --commit to be a 40-character SHA.");
   return options;
 }
 
@@ -49,19 +57,23 @@ Checks the Windows release sidecars without downloading the large .exe.
 Examples:
   node scripts/verify-release-assets.js
   node scripts/verify-release-assets.js v0.1.9-beta
-  node scripts/verify-release-assets.js --repo TonyNa-code/GalAid --tag v0.1.9-beta`);
+  node scripts/verify-release-assets.js --repo TonyNa-code/GalAid --tag v0.1.9-beta
+  node scripts/verify-release-assets.js v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042`);
 }
 
 function requestText(url, { accept = "application/octet-stream" } = {}) {
+  const headers = {
+    Accept: accept,
+    "User-Agent": USER_AGENT,
+  };
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
+  const hostname = new URL(url).hostname;
+  if (token && /(^|\.)github\.com$/i.test(hostname)) headers.Authorization = `Bearer ${token}`;
+
   return new Promise((resolve, reject) => {
     const request = https.get(
       url,
-      {
-        headers: {
-          Accept: accept,
-          "User-Agent": USER_AGENT,
-        },
-      },
+      { headers },
       (response) => {
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
           response.resume();
@@ -114,7 +126,7 @@ function pushAssert(errors, condition, message) {
   if (!condition) errors.push(message);
 }
 
-function validateRelease({ repo, tag, release, exeAsset, checksumAsset, manifestAsset, checksum, manifest }) {
+function validateRelease({ repo, tag, expectedCommit = "", release, exeAsset, checksumAsset, manifestAsset, checksum, manifest }) {
   const errors = [];
 
   pushAssert(errors, release.tag_name === tag, `Release tag mismatch: expected ${tag}, got ${release.tag_name}.`);
@@ -122,6 +134,9 @@ function validateRelease({ repo, tag, release, exeAsset, checksumAsset, manifest
   pushAssert(errors, manifest.repository === repo, `Manifest repository mismatch: expected ${repo}, got ${manifest.repository}.`);
   pushAssert(errors, manifest.releaseTag === tag, `Manifest releaseTag mismatch: expected ${tag}, got ${manifest.releaseTag}.`);
   pushAssert(errors, /^[a-f0-9]{40}$/i.test(manifest.commit || ""), "Manifest commit is not a 40-character SHA.");
+  if (expectedCommit) {
+    pushAssert(errors, String(manifest.commit).toLowerCase() === expectedCommit.toLowerCase(), `Manifest commit mismatch: expected ${expectedCommit}, got ${manifest.commit}.`);
+  }
   pushAssert(errors, manifest.asset?.name === exeAsset.name, `Manifest asset name mismatch: expected ${exeAsset.name}, got ${manifest.asset?.name}.`);
   pushAssert(errors, manifest.asset?.checksumName === checksumAsset.name, `Manifest checksum name mismatch: expected ${checksumAsset.name}, got ${manifest.asset?.checksumName}.`);
   pushAssert(errors, Number(manifest.asset?.size) === Number(exeAsset.size), `Manifest asset size mismatch: expected ${exeAsset.size}, got ${manifest.asset?.size}.`);
@@ -167,6 +182,7 @@ async function main() {
   validateRelease({
     repo: options.repo,
     tag: options.tag,
+    expectedCommit: options.expectedCommit,
     release,
     exeAsset,
     checksumAsset,

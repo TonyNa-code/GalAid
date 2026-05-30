@@ -28,7 +28,7 @@ GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps 
 - English default README with Chinese/Japanese translations and Chinese/English/Japanese diagnosis output language
 - Chinese quick install and QQ/group-share copy in `docs/INSTALL.zh-CN.md`
 - Windows release uploads include generated `.sha256` and `.release.json` sidecars for the portable `.exe`
-- Release verifier checks published Windows sidecars and GitHub asset metadata without downloading the large `.exe`
+- Release verifier checks published Windows sidecars, expected commit, and GitHub asset metadata without downloading the large `.exe`
 - Community-editable startup error recipes in `data/error-recipes.json`
 - Support bundle with reports, launch profiles, launch-failure notes, roadmap, recipe matches, and file manifest
 - GitHub issue templates, PR template, CI checks, and GitHub Pages deployment workflow
@@ -61,7 +61,7 @@ npm start
 - [x] Confirm `npm run check` passes locally.
 - [x] Confirm `npm run test:smoke` passes locally.
 - [x] Confirm `npm run audit:release -- --strict` has no warnings.
-- [x] Confirm `npm run verify:release -- v0.1.9-beta` passes against the published Windows beta.
+- [x] Confirm `npm run verify:release -- v0.1.9-beta --commit e3c84de0a6ec2e36f8f78b3ca65b61e576c47042` passes against the published Windows beta.
 - [x] Add a player-facing Windows install/share guide.
 - [ ] Confirm the `Deploy Pages` workflow publishes the static demo.
 - [ ] Open the Pages demo and run the built-in game sample.

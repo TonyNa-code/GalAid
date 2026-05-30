@@ -141,3 +141,12 @@ jobs:
           }
 
           gh release upload $env:RELEASE_TAG $asset.FullName $checksum.FullName $manifest.FullName --clobber --repo $env:GITHUB_REPOSITORY
+
+      - name: Verify published Windows release assets
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
+        shell: pwsh
+        run: |
+          npm run verify:release -- $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --commit $env:GITHUB_SHA

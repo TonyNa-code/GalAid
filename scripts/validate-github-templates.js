@@ -294,6 +294,7 @@ function checkReleaseVerifierScript(errors) {
     "GitHub asset digest",
     "Release asset verification failed",
     "module.exports",
+    "expectedCommit",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
   }
@@ -303,6 +304,7 @@ function checkReleaseVerifierScript(errors) {
     "parseArgs",
     "parseChecksum",
     "validateRelease",
+    "Manifest commit mismatch",
     "Manifest SHA-256 does not match checksum sidecar",
   ]) {
     assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
@@ -489,6 +491,8 @@ function checkDesktopRelease(errors) {
     "--generate-notes",
     "--prerelease",
     "gh release upload",
+    "Verify published Windows release assets",
+    "npm run verify:release -- $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --commit $env:GITHUB_SHA",
   ]) {
     assert(workflowText.includes(phrase), `${workflowFile} is missing phrase: ${phrase}`, errors);
   }
