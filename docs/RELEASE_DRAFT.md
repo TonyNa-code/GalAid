@@ -54,6 +54,15 @@ npm install
 npm start
 ```
 
+## Published Status
+
+Verified on 2026-05-31 Asia/Shanghai:
+
+- GitHub Pages: <https://TonyNa-code.github.io/GalAid/> returns HTTP 200, and the built-in `游戏样例` flow renders the `SakuraTrial` diagnosis.
+- Deploy Pages: the latest `main` workflow run completed successfully.
+- GitHub release: <https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta> is published as a pre-release with the Windows `.exe`, `.sha256`, and `.release.json` assets.
+- Repository topics: the suggested topics from `docs/REPO_TOPICS.md` are set on GitHub.
+
 ## Pre-Release Checklist
 
 - [x] Replace README demo placeholder with the real GitHub Pages URL.
@@ -63,11 +72,11 @@ npm start
 - [x] Confirm `npm run audit:release -- --strict` has no warnings.
 - [x] Confirm `npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98 --json` passes against the published Windows beta.
 - [x] Add a player-facing Windows install/share guide.
-- [ ] Confirm the `Deploy Pages` workflow publishes the static demo.
-- [ ] Open the Pages demo and run the built-in game sample.
-- [ ] Review `SECURITY.md`, `CODE_OF_CONDUCT.md`, and `docs/CONTRIBUTING.md`.
-- [ ] Add repository topics from `docs/REPO_TOPICS.md`.
-- [ ] Create a GitHub release using this draft.
+- [x] Confirm the `Deploy Pages` workflow publishes the static demo.
+- [x] Open the Pages demo and run the built-in game sample.
+- [x] Review `SECURITY.md`, `CODE_OF_CONDUCT.md`, and `docs/CONTRIBUTING.md`.
+- [x] Add repository topics from `docs/REPO_TOPICS.md`.
+- [x] Create a GitHub release using this draft.
 
 ## Known Limits
 
