@@ -2959,9 +2959,10 @@ function buildPackageRecommendations(archiveSets, discSets, archives, discs, fil
   }
 
   if (packageSets.some((set) => set.archivePreview?.encryptedEntries)) {
+    const encryptedEntryCount = packageSets.reduce((sum, set) => sum + (set.archivePreview?.encryptedEntries || 0), 0);
     steps.push({
       title: "压缩包可能包含加密条目",
-      body: "这个包可能需要密码。你可以在准备时输入已知解压密码，GalAid 会继续解压并重扫。",
+      body: `预检里看到 ${formatNumber(encryptedEntryCount)} 个加密条目。这个包可能需要密码；准备时输入已知解压密码后，GalAid 会继续解压并重扫。`,
     });
   }
 
@@ -4300,6 +4301,17 @@ function buildFindings(files, roots, engines, launchCandidates, installerCandida
       title: "压缩包分卷可能不完整",
       body: "检测到分卷编号缺口。请确认 part1/part2 或 .001/.002 等所有分卷都在同一目录后再解压。",
       evidence: compactEvidence(missingSets, 4),
+    });
+  }
+
+  const encryptedPackageSets = [...packages.archiveSets, ...packages.discSets].filter((set) => set.archivePreview?.encryptedEntries);
+  if (encryptedPackageSets.length) {
+    const encryptedEntryCount = encryptedPackageSets.reduce((sum, set) => sum + (set.archivePreview?.encryptedEntries || 0), 0);
+    findings.push({
+      level: "warning",
+      title: "压缩包可能需要解压密码",
+      body: `包/镜像预检发现 ${formatNumber(encryptedEntryCount)} 个加密条目。准备时输入已知解压密码即可继续，不需要把密码写进求助包。`,
+      evidence: compactEvidence(encryptedPackageSets.map((set) => set.firstFile?.path || set.files?.[0]?.file?.path).filter(Boolean), 4),
     });
   }
 
@@ -6799,7 +6811,9 @@ function buildMarkdownReport(analysis, errorText, language = getAssistantLanguag
       lines.push(`  - ${labels.nextStep}: ${set.nextStep}`);
       if (set.archivePreview) {
         const runtimeRepairSamples = getPreviewRuntimeRepairSamples(set.archivePreview);
-        lines.push(`  - ${set.archivePreview.format || "Package"} preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} metadata entries, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues, ${set.archivePreview.signals?.installerCount || 0} installer clues, ${runtimeRepairSamples.length} runtime repair clues`);
+        const encryptedEntries = set.archivePreview.encryptedEntries || 0;
+        const encryptedSummary = encryptedEntries ? `, ${formatNumber(encryptedEntries)} ${getUiText("encryptedEntries", {}, language)}` : "";
+        lines.push(`  - ${set.archivePreview.format || "Package"} preview: ${set.archivePreview.status}, ${set.archivePreview.fileCount || 0} metadata entries, ${set.archivePreview.signals?.launchCandidateCount || 0} launch clues, ${set.archivePreview.signals?.installerCount || 0} installer clues, ${runtimeRepairSamples.length} runtime repair clues${encryptedSummary}`);
         for (const sample of set.archivePreview.signals?.launchSamples || []) lines.push(`  - Preview launch clue: ${sample}`);
         for (const sample of set.archivePreview.signals?.installerSamples || []) lines.push(`  - Preview installer clue: ${sample}`);
         for (const sample of runtimeRepairSamples) lines.push(`  - Preview runtime repair clue: ${sample}`);
@@ -7178,7 +7192,7 @@ function buildSupportReadme(analysis, title, generatedAt, language = getAssistan
     "- privacy-summary.json: machine-readable local-path redaction counts",
     "- file-manifest.json: sanitized file list metadata",
     "- package-previews.md: human-readable archive/disc-image preflight clues",
-    "- package-previews.json: archive/disc-image preflight launch, installer, and repair clues",
+    "- package-previews.json: archive/disc-image preflight launch, installer, repair, and encrypted-entry clues",
     "- environment-checks.json: environment checklist",
     "- runtime-repairs.json: bundled runtime repair tool hints",
     "- launch-decision.md: human-readable primary launch/install/repair decision",

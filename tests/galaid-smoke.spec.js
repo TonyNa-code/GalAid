@@ -1470,6 +1470,7 @@ test("desktop one-click flow retries password-protected packages", async ({ page
 
   await page.locator('[data-tab="packages"]').click();
   await expect(page.locator("#packagesPanel")).toContainText("12 加密条目");
+  await expect(page.locator(".package-roadmap")).toContainText("12 个加密条目");
 
   const preflightSupport = await page.evaluate(() => {
     const bundle = buildSupportBundle(currentAnalysis, "", "zh-CN");
@@ -1485,6 +1486,10 @@ test("desktop one-click flow retries password-protected packages", async ({ page
   expect(preflightSupport.encryptedEntries).toBe(12);
   expect(preflightSupport.passwordProtected).toBe(true);
   expect(preflightSupport.markdown).toContain("加密条目: 12");
+
+  await page.locator('[data-tab="report"]').click();
+  await expect(page.locator("#reportPanel")).toContainText("压缩包可能需要解压密码");
+  await expect(page.locator("#reportPanel")).toContainText("12 加密条目");
 
   await page.locator('[data-tab="launch"]').click();
   await page.getByRole("button", { name: "一键准备并启动" }).click();
