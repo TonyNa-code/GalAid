@@ -224,9 +224,9 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `manifest.json`
 - `privacy-summary.md`, human-readable local absolute-path redaction counts
 - `privacy-summary.json`, machine-readable local absolute-path redaction counts
-- `file-manifest.json`, including package/image preflight signal samples when available
+- `file-manifest.json`, including package/image preflight signal samples and encrypted-entry counts when available
 - `package-previews.md`, a human-readable package/image preflight summary
-- `package-previews.json`, a compact view of archive/disc-image launch, install-media, and repair clues
+- `package-previews.json`, a compact view of archive/disc-image launch, install-media, repair, and password-protected package clues
 - `launch-decision.md`, a human-readable primary action and fallback route summary
 - `launch-decision.json`, ranked launch/install/repair decision metadata
 - `environment-checks.json`
@@ -237,7 +237,7 @@ The support bundle is a local `.zip` for asking for help in an issue, forum, or 
 - `launch-profiles.json`
 - individual `profiles/*.galaid-profile.json` files
 
-The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary. Shareable reports, chat help text, and support bundles redact pasted local absolute paths such as Windows user folders or macOS home folders to `[absolute-path]` while keeping the diagnostic wording around them. Support bundles also include `privacy-summary.md` and `privacy-summary.json`, which count redaction markers per exported file without storing the original local paths.
+The `求助` tab also shows exactly what will be included and can copy a short issue-ready summary. If package preflight sees encrypted entries, the support bundle `README.txt`, `manifest.json`, `file-manifest.json`, and copyable summary all surface the encrypted-entry and likely password-protected package counts without storing the password. Shareable reports, chat help text, and support bundles redact pasted local absolute paths such as Windows user folders or macOS home folders to `[absolute-path]` while keeping the diagnostic wording around them. Support bundles also include `privacy-summary.md` and `privacy-summary.json`, which count redaction markers per exported file without storing the original local paths.
 
 ## Diagnosis Output Language
 

@@ -56,9 +56,9 @@ GalAid 会把这些情况整理成一份小白也能看懂的诊断路线。
 - 桌面端可检测本机 DirectX 旧组件、VC++、.NET、VB6、QuickTime/旧视频组件、RPG Maker RTP 和系统区域，帮助判断是不是电脑环境缺口
 - 对大目录使用 20,000+ 文件模式，只展示关键样例但保留完整元数据诊断
 - 桌面 beta 支持原生文件夹选择和递归扫描
-- 桌面包/镜像预检可读取 ZIP 目录、通过内置或本机 7z 工具列出 RAR/7z/LZH/LHA/ARJ/CAB/TAR 类元数据，并把启动、安装盘和运行库修复样例单独高亮；同时识别镜像介质线索、`autorun.inf + Start.exe + data1.cab` 这类老安装盘结构和包内运行库修复项；用户点击一键启动后可本地解压、挂载/解包镜像、自动重扫并启动推荐入口；如果没有游戏主程序但有 `setup.exe/autorun.exe/.msi` 或 `autorun.inf` 指向的安装入口，则单独走安装盘入口
+- 桌面包/镜像预检可读取 ZIP 目录、通过内置或本机 7z 工具列出 RAR/7z/LZH/LHA/ARJ/CAB/TAR 类元数据，并把启动、安装盘、运行库修复样例和加密条目单独高亮；同时识别镜像介质线索、`autorun.inf + Start.exe + data1.cab` 这类老安装盘结构和包内运行库修复项；用户点击一键启动后可本地解压、挂载/解包镜像、自动重扫并启动推荐入口；如果没有游戏主程序但有 `setup.exe/autorun.exe/.msi` 或 `autorun.inf` 指向的安装入口，则单独走安装盘入口
 - 复制或下载 Markdown 报告
-- 导出包含路线、启动决策、环境检查、配方命中、文件清单、`package-previews.md`/`package-previews.json`、`launch-decision.md`/`launch-decision.json` 和 `privacy-summary.md`/`privacy-summary.json` 的求助包；复制文案和求助包会把用户粘贴的本机绝对路径脱敏成 `[absolute-path]`，隐私摘要只统计脱敏次数，不保存原始路径
+- 导出包含路线、启动决策、环境检查、配方命中、文件清单、`package-previews.md`/`package-previews.json`、`launch-decision.md`/`launch-decision.json` 和 `privacy-summary.md`/`privacy-summary.json` 的求助包；如果预检发现加密条目，`README.txt`、`manifest.json`、`file-manifest.json` 和可复制摘要都会显示加密条目/疑似密码包数量，但不会保存密码；复制文案和求助包会把用户粘贴的本机绝对路径脱敏成 `[absolute-path]`，隐私摘要只统计脱敏次数，不保存原始路径
 
 ## 诊断语言
 

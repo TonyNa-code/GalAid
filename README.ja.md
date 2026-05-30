@@ -54,9 +54,9 @@ GalAid はこれらを小さな診断レポートと手順に整理します。
 - デスクトップ版では、古い DirectX、VC++、.NET、VB6、QuickTime/動画コンポーネント、RPG Maker RTP、システム locale を確認し、PC 側の不足を切り分けられる
 - 20,000+ ファイルの大規模フォルダ向けモード
 - デスクトップ beta でネイティブフォルダ選択と再帰スキャン
-- デスクトップのパッケージ/イメージ事前チェックは ZIP ディレクトリ、同梱またはローカル 7z ツールによる RAR/7z/LZH/LHA/ARJ/CAB/TAR 系メタデータを読み、起動、インストールメディア、ランタイム修復サンプルを個別に強調する。ディスクイメージ種別、`autorun.inf + Start.exe + data1.cab` のような古いインストールディスク構造、同梱ランタイム修復項目も扱い、起動ボタンからローカル展開、ISO マウント/イメージ展開、再スキャン、推奨入口の起動まで進められる。ゲーム本体がなく `setup.exe/autorun.exe/.msi` または `autorun.inf` が指すインストール入口だけの場合は、インストールメディア入口として分けて扱う
+- デスクトップのパッケージ/イメージ事前チェックは ZIP ディレクトリ、同梱またはローカル 7z ツールによる RAR/7z/LZH/LHA/ARJ/CAB/TAR 系メタデータを読み、起動、インストールメディア、ランタイム修復サンプル、暗号化項目を個別に強調する。ディスクイメージ種別、`autorun.inf + Start.exe + data1.cab` のような古いインストールディスク構造、同梱ランタイム修復項目も扱い、起動ボタンからローカル展開、ISO マウント/イメージ展開、再スキャン、推奨入口の起動まで進められる。ゲーム本体がなく `setup.exe/autorun.exe/.msi` または `autorun.inf` が指すインストール入口だけの場合は、インストールメディア入口として分けて扱う
 - Markdown 診断レポートのコピー/ダウンロード
-- 手順、起動判断、環境チェック、レシピ一致、ファイル一覧、`package-previews.md`/`package-previews.json`、`launch-decision.md`/`launch-decision.json`、`privacy-summary.md`/`privacy-summary.json` をまとめたサポートバンドルの出力。コピー文面とサポートバンドルでは、貼り付けられたローカル絶対パスを `[absolute-path]` に置き換え、プライバシー概要には置換回数だけを記録し、元のパスは保存しない
+- 手順、起動判断、環境チェック、レシピ一致、ファイル一覧、`package-previews.md`/`package-previews.json`、`launch-decision.md`/`launch-decision.json`、`privacy-summary.md`/`privacy-summary.json` をまとめたサポートバンドルの出力。事前チェックで暗号化項目が見つかった場合、`README.txt`、`manifest.json`、`file-manifest.json`、コピー用概要に暗号化項目/パスワード付き候補数を表示するが、パスワードは保存しない。コピー文面とサポートバンドルでは、貼り付けられたローカル絶対パスを `[absolute-path]` に置き換え、プライバシー概要には置換回数だけを記録し、元のパスは保存しない
 
 ## 診断言語
 
