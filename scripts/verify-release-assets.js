@@ -183,7 +183,19 @@ async function main() {
   console.log("Large .exe download was not required.");
 }
 
-main().catch((error) => {
-  console.error(error.message);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  DEFAULT_REPO,
+  DEFAULT_TAG,
+  findAsset,
+  parseArgs,
+  parseChecksum,
+  readRepositorySlug,
+  validateRelease,
+};

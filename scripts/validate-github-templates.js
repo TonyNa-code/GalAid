@@ -48,6 +48,7 @@ const REQUIRED_FILES = [
   "scripts/test-desktop-launcher.js",
   "scripts/test-archive-preview.js",
   "scripts/test-package-prep.js",
+  "scripts/test-release-verifier.js",
   "scripts/release-audit.js",
   "scripts/verify-release-assets.js",
   "src/engine-rules.js",
@@ -280,8 +281,11 @@ function checkReleaseAuditScript(errors) {
 
 function checkReleaseVerifierScript(errors) {
   const file = "scripts/verify-release-assets.js";
+  const testFile = "scripts/test-release-verifier.js";
   const text = readRelative(file);
+  const testText = readRelative(testFile);
   checkNoTrailingWhitespace(file, text, errors);
+  checkNoTrailingWhitespace(testFile, testText, errors);
 
   for (const phrase of [
     "galaid.windowsReleaseAsset.v1",
@@ -289,8 +293,19 @@ function checkReleaseVerifierScript(errors) {
     "Large .exe download was not required.",
     "GitHub asset digest",
     "Release asset verification failed",
+    "module.exports",
   ]) {
     assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
+
+  for (const phrase of [
+    "Release verifier smoke passed",
+    "parseArgs",
+    "parseChecksum",
+    "validateRelease",
+    "Manifest SHA-256 does not match checksum sidecar",
+  ]) {
+    assert(testText.includes(phrase), `${testFile} is missing phrase: ${phrase}`, errors);
   }
 }
 
@@ -485,6 +500,7 @@ function checkDesktopRelease(errors) {
     "asInvoker",
     "dist:win",
     "verify:release",
+    "test:release",
     "data/**/*",
   ]) {
     assert(packageText.includes(phrase), `${packageFile} is missing desktop build phrase: ${phrase}`, errors);
