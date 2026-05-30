@@ -29,6 +29,26 @@ window.GALAID_ERROR_RECIPES = [
     ]
   },
   {
+    "id": "directplay-legacy",
+    "title": "DirectPlay 旧版组件",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "directplay",
+      "dplayx?\\.dll",
+      "dpnet\\.dll",
+      "dpwsockx\\.dll",
+      "dplaysvr\\.exe"
+    ],
+    "cause": "部分 Win95/Win98/WinXP 时代游戏依赖 Windows 旧版组件 DirectPlay。它和常见 D3DX/XInput 缺失不是同一条路线。",
+    "action": "在 Windows 功能里启用 Legacy Components / DirectPlay，再从 GalAid 推荐入口重试。",
+    "checklist": [
+      "打开 Windows 功能",
+      "启用 Legacy Components / DirectPlay",
+      "重启或重新登录后从推荐入口重试"
+    ]
+  },
+  {
     "id": "visual-cpp-redist",
     "title": "VC++ 运行库",
     "category": "runtime",

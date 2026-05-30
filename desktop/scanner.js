@@ -11,6 +11,7 @@ const RUNTIME_IMPORT_HINTS = [
   { id: "legacy-direct3d", pattern: /^(d3d8|d3d9|d3drm|d3dx9_\d+)\.dll$/i },
   { id: "legacy-directsound", pattern: /^(dsound|xaudio2_\d+|xactengine\d+_\d+|x3daudio\d+_\d+)\.dll$/i },
   { id: "legacy-directinput", pattern: /^dinput8?\.dll$/i },
+  { id: "legacy-directplay", pattern: /^(dplayx?|dpnet|dpwsockx)\.dll$|^dplaysvr\.exe$/i },
   { id: "legacy-winmm", pattern: /^(winmm|msacm32|avifil32)\.dll$/i },
   { id: "legacy-vc", pattern: /^(msvcr\d+|msvcp\d+|vcruntime\d+)\.dll$/i },
   { id: "legacy-vb6", pattern: /^msvbvm60\.dll$/i },

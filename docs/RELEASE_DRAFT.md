@@ -12,14 +12,14 @@ GalAid v0.1.9 is a launch doctor for visual novel and galgame folders. It helps 
 - Launch candidate scoring for `.exe`, `.bat`, `.cmd`, `.lnk`, and `index.html`
 - Executable header hints for DOS COM/MZ, Win16 NE, legacy LE/LX, Win32 PE, and Win64 PE entries, with DOS/Win16 routed away from direct launch
 - Old Win32 PE subsystem-version hints for Win95/NT4/Win2000/XP compatibility-mode guidance while keeping the entry launchable
-- PE import hints for legacy DirectDraw, DirectSound, DirectInput, Direct3D 8/9, WinMM, VC++ runtime DLLs, VB6, .NET, QuickTime, DirectShow/MCI, Flash/ActiveX, and Borland/Delphi dependencies
+- PE import hints for legacy DirectDraw, DirectSound, DirectInput, DirectPlay, Direct3D 8/9, WinMM, VC++ runtime DLLs, VB6, .NET, QuickTime, DirectShow/MCI, Flash/ActiveX, and Borland/Delphi dependencies
 - Commercial/self-developed engine route based on root executables, same-folder DLLs, resource archives, config files, and working directory
 - Evidence explanations, confidence details, and next steps for engine matches
 - Optional Locale Emulator, Wine, and Proton launch templates for locale-sensitive profiles
 - Manual launch-failure follow-up for no response, crash, mojibake, black screen, and missing DLL/runtime symptoms
 - Error screenshot OCR for English, Japanese, and Simplified Chinese dialog text
 - Ordered next-step roadmap for beginners
-- Runtime and environment checks for locale, paths, DirectX, VC++ runtime, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, permissions, and web VN local-server needs
+- Runtime and environment checks for locale, paths, DirectX, DirectPlay, VC++ runtime, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, permissions, and web VN local-server needs
 - Archive and disc-image guidance for split archives, `.iso`, CUE sheets with referenced `.bin/.img` tracks, `.mds/.mdf`, and similar package stages
 - Desktop package preflight for ZIP metadata, bundled/local 7z-compatible RAR/7z/self-extracting EXE listings, CUE track declarations, supported disc-image directory listings, and media/descriptor clues
 - Bundled archive extraction handoff: enter a known password if needed, extract locally into a fresh prepared folder, automatically rescan, then launch the top entry from the one-stop flow

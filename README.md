@@ -70,7 +70,7 @@ Many visual novel players get stuck before the game even opens:
 - archives are not fully extracted
 - disc images such as `.iso`, `.cue`, `.bin`, `.mds` are confusing
 - Japanese locale, fonts, and path encoding cause mojibake or crashes
-- old DirectX, VC++, VB6, .NET, QuickTime/video, or RPG Maker RTP dependencies are missing
+- old DirectX, DirectPlay, VC++, VB6, .NET, QuickTime/video, or RPG Maker RTP dependencies are missing
 - folders contain many `.exe` files and it is unclear which one starts the game
 - Win95/Win98/WinXP-era entries may actually be DOS, Win16, old installer media, or normal Win32
 - a startup dialog appears, but the user cannot copy the text
@@ -147,7 +147,7 @@ After a launch attempt fails, the `启动` tab can walk the user through a quick
 
 The environment page turns common "why won't this start?" issues into a checklist before the user starts changing system settings.
 
-It checks whether the folder appears fully extracted, whether a launch entry exists, whether bundled DirectX/VC++/.NET/VB6/QuickTime/RPG Maker RTP repair tools are present, and whether the metadata, PE imports, or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old executable formats, old DirectX components, VC++ redistributables, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, permissions, or web VN browser restrictions.
+It checks whether the folder appears fully extracted, whether a launch entry exists, whether bundled DirectX/VC++/.NET/VB6/QuickTime/RPG Maker RTP repair tools are present, and whether the metadata, PE imports, or pasted error text points to a commercial/private engine startup chain, Japanese locale, path encoding, old executable formats, old DirectX or DirectPlay components, VC++ redistributables, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, permissions, or web VN browser restrictions.
 
 For many commercial Japanese VNs, GalAid does not need to name the exact private engine to be useful. A root `.exe` plus large `.arc/.dat/.pak/.pck/.cpk/.pac/.vol` resource archives, nearby DLL plugins, and config files is enough to trigger the commercial/self-developed engine route. That route focuses on preserving the original folder structure, keeping the working directory correct, and checking locale/runtime problems before assuming the game itself is broken.
 
@@ -161,7 +161,7 @@ Desktop OCR uses Tesseract.js with English, Japanese, and Simplified Chinese rec
 
 ## Error Recipes
 
-Common startup errors live in `data/error-recipes.json` as small data objects. The app can match pasted logs against recipes for DirectX, VC++ redistributables, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, locale issues, missing files, archive damage, web VN local-file restrictions, Unity runtime files, and mounted-disc checks.
+Common startup errors live in `data/error-recipes.json` as small data objects. The app can match pasted logs against recipes for DirectX, DirectPlay, VC++ redistributables, VB6, .NET Framework, QuickTime/video components, RPG Maker RTP, locale issues, missing files, archive damage, web VN local-file restrictions, Unity runtime files, and mounted-disc checks.
 
 After editing recipes, run:
 
@@ -253,7 +253,7 @@ The main limit is file count, not total bytes:
 - 20,000+ files: large folder mode with compact rendering
 - 50,000+ files: large folder mode skips full path sorting to keep the browser responsive
 
-Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.lzh/.lha`, `.arj`, `.cab`, `.tar/.tgz/.tar.gz`, self-extracting `.exe` packages, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app when their metadata is present. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z/LZH/LHA/ARJ/CAB/TAR-style and self-extracting EXE metadata through the bundled or local 7z-compatible command, read small CUE sheets to group referenced `.bin/.img` tracks even when names differ, list supported disc-image directories without extraction, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/.NET/VB6/QuickTime/RPG Maker RTP repair tools, split-volume status, old install-media clues, `autorun.inf + Start.exe + data1.cab` install-disc layouts, bonus discs, patch-like packages, engine clues, DOS/Win16/Win32/Win64 executable headers, old Win32 subsystem-version hints, and legacy DirectDraw/DirectSound/DirectInput/WinMM/VC++/VB6/.NET/QuickTime/Borland import hints before extraction.
+Single large archives or disc images such as `.zip`, `.rar`, `.7z`, `.lzh/.lha`, `.arj`, `.cab`, `.tar/.tgz/.tar.gz`, self-extracting `.exe` packages, `.iso`, `.cue`, `.bin`, `.mds/.mdf`, `.ccd/.img/.sub`, `.nrg`, `.isz`, `.cdi`, BlindWrite images, `.mdx`, `.daa`, `.uif`, and `.pdi` can be identified in the web app when their metadata is present. The desktop beta can additionally preflight ZIP central-directory metadata, list RAR/7z/LZH/LHA/ARJ/CAB/TAR-style and self-extracting EXE metadata through the bundled or local 7z-compatible command, read small CUE sheets to group referenced `.bin/.img` tracks even when names differ, list supported disc-image directories without extraction, and flag disc-image descriptor/media roles. It can spot likely launchers, installers, bundled DirectX/VC++/.NET/VB6/QuickTime/RPG Maker RTP repair tools, split-volume status, old install-media clues, `autorun.inf + Start.exe + data1.cab` install-disc layouts, bonus discs, patch-like packages, engine clues, DOS/Win16/Win32/Win64 executable headers, old Win32 subsystem-version hints, and legacy DirectDraw/DirectSound/DirectInput/DirectPlay/WinMM/VC++/VB6/.NET/QuickTime/Borland import hints before extraction.
 
 When the user clicks the one-stop launch button, the desktop beta can use a bundled 7z-compatible helper first, then local `7zz` / `7z` / `7za` if needed. It extracts supported archive packages and detected self-extracting EXE packages into a new sibling `*-prepared` folder, asks for a known password when needed, expands compressed tar packages such as `.tar.gz/.tgz` in two passes, mounts Windows `.iso` images through the system mount command, or best-effort extracts common disc-image files before automatically rescanning the prepared folder and launching the top entry. If no game launcher exists but an install-media entry does, including `.msi`, the same flow opens that installer and tells the user to rescan the installed game folder afterward. The manual `Extract and rescan` and `Mount/extract and rescan` actions remain available when the user wants to choose the output parent folder first. If launch still fails, the desktop beta asks the user to mark the visible symptom and folds that into the roadmap.
 

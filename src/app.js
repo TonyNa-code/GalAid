@@ -2299,6 +2299,7 @@ const RUNTIME_IMPORT_HINT_META = {
   "legacy-direct3d": { family: "directx", label: "Direct3D" },
   "legacy-directsound": { family: "directx", label: "DirectSound" },
   "legacy-directinput": { family: "directx", label: "DirectInput" },
+  "legacy-directplay": { family: "directplay", label: "DirectPlay" },
   "legacy-winmm": { family: "media", label: "WinMM/MCI" },
   "legacy-vc": { family: "vc", label: "VC++ runtime" },
   "legacy-vb6": { family: "vb6", label: "VB6 runtime" },
@@ -3736,6 +3737,7 @@ function getRuntimeImportRoute(files, launchCandidates) {
   }
   const evidence = compactEvidence(hintFiles.map(formatRuntimeImportEvidence), 4);
   const hasDirectX = families.has("directx");
+  const hasDirectPlay = families.has("directplay");
   const hasVc = families.has("vc");
   const hasDotNet = families.has("dotnet");
   const hasVb6 = families.has("vb6");
@@ -3749,6 +3751,7 @@ function getRuntimeImportRoute(files, launchCandidates) {
   return {
     hasAny: true,
     hasDirectX,
+    hasDirectPlay,
     hasVc,
     hasDotNet,
     hasVb6,
@@ -3818,6 +3821,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
     /文字化け|乱码|mojibake|locale|\?{4,}|\uFFFD|日区|区域设置/i.test(errorValue);
   const directXRecipeOrSymptom = failureSymptoms.has("black-screen") || hasErrorRecipe(errorDiagnostics, "directx-legacy");
   const directXError = directXRecipeOrSymptom || runtimeImportRoute.hasDirectX;
+  const directPlayError = hasErrorRecipe(errorDiagnostics, "directplay-legacy") || runtimeImportRoute.hasDirectPlay;
   const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist") || runtimeImportRoute.hasVc;
   const dotNetError = hasErrorRecipe(errorDiagnostics, "dotnet-runtime") || runtimeImportRoute.hasDotNet;
   const vb6Error = hasErrorRecipe(errorDiagnostics, "vb6-runtime") || runtimeImportRoute.hasVb6;
@@ -4045,6 +4049,23 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
           ? "先直接启动；如果失败，优先补 DirectX End-User Runtime，并尝试窗口化、禁用全屏优化、兼容模式或 dgVoodoo/dxwrapper 这类用户自选兼容层。"
         : "只有在报错提到 d3dx、xinput、dsound、dinput 时再处理这一项。",
       evidence: compactEvidence([...directXInstallers, ...(runtimeImportRoute.hasDirectX ? runtimeImportRoute.evidence || [] : [])], 4),
+    }),
+  );
+
+  checks.push(
+    makeEnvironmentCheck({
+      id: "directplay",
+      title: "DirectPlay 旧版组件",
+      status: directPlayError ? "warning" : "info",
+      detail: hasErrorRecipe(errorDiagnostics, "directplay-legacy")
+        ? "报错里出现 DirectPlay、dplayx、dpnet 或相关旧网络组件线索。"
+        : runtimeImportRoute.hasDirectPlay
+          ? "推荐启动入口导入了 DirectPlay 旧版组件。它不代表本机一定缺失，但 Win95/98/XP 时代游戏启动失败时应优先复查。"
+          : "文件清单和报错里没有发现明确 DirectPlay 线索。",
+      action: directPlayError
+        ? "在 Windows 功能里启用 Legacy Components / DirectPlay，再从推荐入口重试。"
+        : "只有在报错点名 DirectPlay、dplayx.dll 或 dpnet.dll 时再处理这一项。",
+      evidence: compactEvidence(runtimeImportRoute.hasDirectPlay ? runtimeImportRoute.evidence || [] : [], 4),
     }),
   );
 
@@ -4636,7 +4657,7 @@ function buildRoadmap({ packages, launchCandidates, installerCandidates, profile
     }
   }
 
-  for (const checkId of ["legacy-runtime", "legacy-win32", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "vcredist", "legacy-runtime-imports", "rtp", "permission", "web-vn"]) {
+  for (const checkId of ["legacy-runtime", "legacy-win32", "commercial-engine", "path", "locale", "bundled-runtime", "directx", "directplay", "vcredist", "legacy-runtime-imports", "rtp", "permission", "web-vn"]) {
     const check = envChecks.get(checkId);
     if (!check || !["blocker", "warning"].includes(check.status)) continue;
     const recipeId = getEnvironmentRecipeId(check.id);
@@ -4757,6 +4778,7 @@ function getDesktopEnvironmentRoadmapContext(analysis) {
   const symptoms = new Set(analysis.launchFailure?.symptoms || []);
   return {
     directx: route.hasDirectX || hasErrorRecipe(analysis.errorDiagnostics, "directx-legacy") || symptoms.has("black-screen"),
+    directplay: route.hasDirectPlay || hasErrorRecipe(analysis.errorDiagnostics, "directplay-legacy"),
     vc: route.hasVc || hasErrorRecipe(analysis.errorDiagnostics, "visual-cpp-redist") || symptoms.has("missing-dll"),
     dotnet: route.hasDotNet || hasErrorRecipe(analysis.errorDiagnostics, "dotnet-runtime"),
     vb6: route.hasVb6 || hasErrorRecipe(analysis.errorDiagnostics, "vb6-runtime"),
@@ -4776,6 +4798,7 @@ function shouldPromoteDesktopEnvironmentCheck(check, context = {}) {
   if (!check) return false;
   const contextualChecks = {
     "dotnet-native": "dotnet",
+    "directplay-native": "directplay",
     "vb6-native": "vb6",
     "quicktime-native": "quicktime",
     "rtp-native": "rtp",
@@ -4850,6 +4873,7 @@ function getEnvironmentRoadmapPriority(id) {
     locale: 50,
     "bundled-runtime": 58,
     directx: 60,
+    directplay: 64,
     vcredist: 70,
     "legacy-runtime-imports": 75,
     rtp: 80,
@@ -4863,6 +4887,7 @@ function getDesktopEnvironmentRoadmapPriority(id) {
   const priorities = {
     "locale-native": 55,
     "directx-native": 62,
+    "directplay-native": 64,
     "vcredist-native": 72,
     "dotnet-native": 74,
     "vb6-native": 76,
@@ -4876,6 +4901,7 @@ function getEnvironmentRecipeId(id) {
   const recipeIds = {
     locale: "locale-encoding",
     directx: "directx-legacy",
+    directplay: "directplay-legacy",
     vcredist: "visual-cpp-redist",
     rtp: "rpgmaker-rtp",
     permission: "permission-write",

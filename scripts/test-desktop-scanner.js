@@ -20,7 +20,7 @@ async function main() {
         machine: 0x014c,
         magic: 0x10b,
         subsystemVersion: [5, 1],
-        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "WINMM.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "rtl60.bpl"],
+        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "DPLAYX.dll", "DPNET.dll", "WINMM.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "rtl60.bpl"],
       }),
     );
 
@@ -45,6 +45,8 @@ async function main() {
     assert.deepEqual(byName.get("XP32.EXE").executableInfo.runtimeImports, [
       "ddraw.dll",
       "dsound.dll",
+      "dplayx.dll",
+      "dpnet.dll",
       "winmm.dll",
       "msvcr71.dll",
       "msvbvm60.dll",
@@ -56,6 +58,7 @@ async function main() {
     assert.deepEqual(byName.get("XP32.EXE").executableInfo.importHints, [
       "legacy-directdraw",
       "legacy-directsound",
+      "legacy-directplay",
       "legacy-winmm",
       "legacy-vc",
       "legacy-vb6",

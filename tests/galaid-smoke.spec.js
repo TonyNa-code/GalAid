@@ -147,6 +147,44 @@ test("DirectX legacy recipe keeps exact DLL evidence narrow", async ({ page }) =
   expect(recipeMatches.broadRendererFailure).not.toContain("directx-legacy");
 });
 
+test("DirectPlay recipe and import hints route old Windows component guidance", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze(
+      [
+        {
+          name: "OldNetworkVN.exe",
+          path: "OldNetworkVN/OldNetworkVN.exe",
+          lowerPath: "oldnetworkvn/oldnetworkvn.exe",
+          ext: "exe",
+          size: 1024,
+          depth: 1,
+          executableInfo: {
+            runtime: "win32",
+            runtimeImports: ["dplayx.dll", "dpnet.dll"],
+            importHints: ["legacy-directplay"],
+          },
+        },
+      ],
+      "DirectPlay is required. dplayx.dll was not found.",
+    );
+    return {
+      matches: analysis.errorDiagnostics.matches.map((match) => match.id),
+      directPlayCheck: analysis.environment.checks.find((check) => check.id === "directplay"),
+      directXCheck: analysis.environment.checks.find((check) => check.id === "directx"),
+      roadmapIds: analysis.roadmap.steps.map((step) => step.id),
+    };
+  });
+
+  expect(result.matches).toContain("directplay-legacy");
+  expect(result.matches).not.toContain("directx-legacy");
+  expect(result.directPlayCheck.status).toBe("warning");
+  expect(result.directPlayCheck.evidence.join(" ")).toContain("dplayx.dll");
+  expect(result.directXCheck.status).toBe("info");
+  expect(result.roadmapIds).toContain("error-directplay-legacy");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 

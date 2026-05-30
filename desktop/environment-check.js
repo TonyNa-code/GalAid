@@ -19,8 +19,9 @@ async function checkRuntimeEnvironment({ platform = process.platform, spawnImpl 
     return { ok: true, platform, checkedAt, checks, summary: summarizeChecks(checks) };
   }
 
-  const [directx, vcredist, dotnet, vb6, quicktime, rtp, locale] = await Promise.all([
+  const [directx, directplay, vcredist, dotnet, vb6, quicktime, rtp, locale] = await Promise.all([
     inspectDirectX(spawnImpl),
+    inspectDirectPlay(spawnImpl),
     inspectVisualCpp(spawnImpl),
     inspectDotNetFramework(spawnImpl),
     inspectVb6Runtime(spawnImpl),
@@ -28,7 +29,7 @@ async function checkRuntimeEnvironment({ platform = process.platform, spawnImpl 
     inspectRpgMakerRtp(spawnImpl),
     inspectLocale(spawnImpl),
   ]);
-  const checks = [directx, vcredist, dotnet, vb6, quicktime, rtp, locale];
+  const checks = [directx, directplay, vcredist, dotnet, vb6, quicktime, rtp, locale];
   return { ok: true, platform, checkedAt, checks, summary: summarizeChecks(checks) };
 }
 
@@ -57,6 +58,41 @@ async function inspectDirectX(spawnImpl) {
     action: evidence.length
       ? "如果仍黑屏，继续结合报错文字排查显卡切换、窗口模式和游戏完整性。"
       : "遇到 d3dx、xinput、xaudio、xact、dinput 相关报错时，优先补 DirectX End-User Runtime。",
+    evidence,
+  });
+}
+
+async function inspectDirectPlay(spawnImpl) {
+  const result = await runPowerShell(
+    [
+      "try {",
+      "  $feature=Get-WindowsOptionalFeature -Online -FeatureName DirectPlay -ErrorAction Stop;",
+      "  Write-Output ('DirectPlay=' + $feature.State)",
+      "} catch { Write-Output 'DirectPlay=unknown' }",
+      "$roots=@($env:WINDIR + '\\System32',$env:WINDIR + '\\SysWOW64');",
+      "foreach($root in $roots){",
+      "  if(Test-Path (Join-Path $root 'dplayx.dll')){ Write-Output ('dplayx.dll (' + (Split-Path $root -Leaf) + ')') }",
+      "  if(Test-Path (Join-Path $root 'dpnet.dll')){ Write-Output ('dpnet.dll (' + (Split-Path $root -Leaf) + ')') }",
+      "}",
+    ].join(" "),
+    spawnImpl,
+  );
+  if (!result.ok) return commandProbeCheck("directplay-native", "DirectPlay 旧版组件", result);
+  const evidence = uniqueLines(result.stdout).slice(0, 6);
+  const isEnabled = evidence.some((line) => /directplay=enabled/i.test(line));
+  const isDisabled = evidence.some((line) => /directplay=disabled/i.test(line));
+  return makeCheck({
+    id: "directplay-native",
+    title: "DirectPlay 旧版组件",
+    status: isEnabled ? "good" : "info",
+    detail: isEnabled
+      ? "检测到 Windows DirectPlay 旧版组件已启用。"
+      : isDisabled
+        ? "Windows DirectPlay 旧版组件当前未启用；只有报错点名 DirectPlay、dplayx 或 dpnet 时才需要处理。"
+        : "没有确认到 DirectPlay 启用状态；只有报错点名 DirectPlay、dplayx 或 dpnet 时才需要处理。",
+    action: isEnabled
+      ? "如果仍提示 DirectPlay，继续检查游戏目录完整性和启动入口。"
+      : "遇到 DirectPlay、dplayx.dll 或 dpnet.dll 报错时，在 Windows 功能里启用 Legacy Components / DirectPlay 后重试。",
     evidence,
   });
 }
@@ -344,6 +380,7 @@ function compactEvidence(values, limit = 4) {
 module.exports = {
   checkRuntimeEnvironment,
   inspectDirectX,
+  inspectDirectPlay,
   inspectDotNetFramework,
   inspectLocale,
   inspectQuickTime,

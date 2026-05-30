@@ -13,7 +13,7 @@ GalAid is already usable as a static web demo and a Windows desktop beta.
 - Launch candidate scoring for `.exe/.com/.bat/.cmd/.lnk`, installers, and web VN entries
 - Commercial/self-developed engine startup-route diagnostics
 - Engine fingerprints with evidence and confidence details
-- Error recipe matcher for DirectX, VC++, VB6, .NET, QuickTime/video, RPG Maker RTP, locale, missing files, archive damage, and web VN restrictions
+- Error recipe matcher for DirectX, DirectPlay, VC++, VB6, .NET, QuickTime/video, RPG Maker RTP, locale, missing files, archive damage, and web VN restrictions
 - Screenshot OCR for startup dialogs
 - Legacy executable header detection for DOS, Win16, LE/LX, Win32, and Win64 entries
 - Old Win32 compatibility guidance for Win95/NT4/Win2000/XP-era entries

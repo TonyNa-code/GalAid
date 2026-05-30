@@ -65,6 +65,17 @@ The `directx-legacy` recipe should stay focused on exact legacy component names.
 
 Keep broad renderer failures such as `d3d11.dll` as supporting context only. By itself, that text should not trigger the DirectX 9-era runtime route.
 
+## DirectPlay Legacy Evidence
+
+Keep DirectPlay separate from the DirectX 9-era runtime route because the beginner action is different. Good positive examples include:
+
+- `DirectPlay is required`
+- `dplayx.dll was not found`
+- `dpnet.dll is missing`
+- `dpwsockx.dll failed to load`
+
+The recommended action should point to Windows Features: enable `Legacy Components / DirectPlay`, then retry from GalAid's recommended launcher.
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.

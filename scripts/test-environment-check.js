@@ -3,6 +3,7 @@ const { EventEmitter } = require("node:events");
 const {
   checkRuntimeEnvironment,
   inspectDirectX,
+  inspectDirectPlay,
   inspectDotNetFramework,
   inspectLocale,
   inspectQuickTime,
@@ -20,19 +21,23 @@ async function main() {
 
   assert.equal(winResult.ok, true);
   assert.equal(winResult.platform, "win32");
-  assert.equal(winResult.checks.length, 7);
+  assert.equal(winResult.checks.length, 8);
   assert.equal(winResult.checks.find((check) => check.id === "directx-native").status, "good");
+  assert.equal(winResult.checks.find((check) => check.id === "directplay-native").status, "good");
   assert.equal(winResult.checks.find((check) => check.id === "vcredist-native").status, "good");
   assert.equal(winResult.checks.find((check) => check.id === "dotnet-native").status, "good");
   assert.equal(winResult.checks.find((check) => check.id === "vb6-native").status, "good");
   assert.equal(winResult.checks.find((check) => check.id === "quicktime-native").status, "info");
   assert.equal(winResult.checks.find((check) => check.id === "rtp-native").status, "info");
   assert.equal(winResult.checks.find((check) => check.id === "locale-native").status, "info");
-  assert.equal(spawned.length, 7);
+  assert.equal(spawned.length, 8);
   assert.equal(JSON.stringify(winResult).includes("C:\\Users"), false);
 
   const missingDirectX = await inspectDirectX(makeStaticSpawn(""));
   assert.equal(missingDirectX.status, "warning");
+
+  const disabledDirectPlay = await inspectDirectPlay(makeStaticSpawn("DirectPlay=Disabled\n"));
+  assert.equal(disabledDirectPlay.status, "info");
 
   const missingVc = await inspectVisualCpp(makeStaticSpawn(""));
   assert.equal(missingVc.status, "warning");
@@ -64,6 +69,9 @@ function makeEnvironmentSpawn({ spawned = [] } = {}) {
     const script = String(args?.at(-1) || "");
     if (script.includes("d3dx9_43.dll")) {
       return makeChild({ spawned, command, args, options, stdout: "d3dx9_43.dll (System32)\nxinput1_3.dll (SysWOW64)\n" });
+    }
+    if (script.includes("FeatureName DirectPlay")) {
+      return makeChild({ spawned, command, args, options, stdout: "DirectPlay=Enabled\ndplayx.dll (SysWOW64)\n" });
     }
     if (script.includes("Microsoft Visual C")) {
       return makeChild({ spawned, command, args, options, stdout: "Microsoft Visual C++ 2015-2022 Redistributable (x86)\n" });
