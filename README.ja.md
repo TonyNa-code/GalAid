@@ -13,6 +13,14 @@ GalAid は、ビジュアルノベル / galgame フォルダ向けのローカ�
 
 デモ：`https://TonyNa-code.github.io/GalAid/`
 
+## Windows Portable Beta
+
+- App: <https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe>
+- SHA-256 sidecar: <https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256>
+- Release manifest: <https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.release.json>
+
+Maintainers can run `npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98 --json` to verify the sidecars, file size, and SHA-256 without downloading the large `.exe`.
+
 ![GalAid flow demo](docs/assets/galaid-flow-demo.gif)
 
 ## なぜ必要か

@@ -15,6 +15,14 @@ GalAid 是一个本地优先的视觉小说 / galgame 启动诊断工具。
 
 给群友或普通玩家看的快速安装和分享文案在 [docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md)。里面有 Windows 便携版直链、第一次使用步骤和可直接复制的 QQ 群短文案。
 
+## Windows 便携版下载
+
+- 主程序：<https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe>
+- SHA-256 校验：<https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256>
+- 发布清单：<https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.release.json>
+
+维护者可以运行 `npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98 --json`，不用下载大体积 `.exe` 也能核对发布清单、文件大小和 SHA-256。
+
 ![GalAid flow demo](docs/assets/galaid-flow-demo.gif)
 
 ## 为什么做这个

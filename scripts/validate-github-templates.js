@@ -215,15 +215,15 @@ function checkReadmes(errors) {
   const readmes = [
     {
       file: "README.md",
-      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR"],
+      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR", "Download And Verify", "GalAid-0.1.9-win-x64.exe.release.json", "--json"],
     },
     {
       file: "README.zh-CN.md",
-      phrases: ["GalAid 是一个本地优先", "docs/INSTALL.zh-CN.md", "诊断语言", "商业/自研", "报错截图 OCR"],
+      phrases: ["GalAid 是一个本地优先", "docs/INSTALL.zh-CN.md", "诊断语言", "商业/自研", "报错截图 OCR", "Windows 便携版下载", "GalAid-0.1.9-win-x64.exe.sha256"],
     },
     {
       file: "README.ja.md",
-      phrases: ["GalAid は", "診断言語", "商用/自社", "エラー画像 OCR"],
+      phrases: ["GalAid は", "診断言語", "商用/自社", "エラー画像 OCR", "Windows Portable Beta", "GalAid-0.1.9-win-x64.exe.sha256"],
     },
   ];
 

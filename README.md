@@ -85,6 +85,21 @@ GalAid turns that mess into a guided launch route.
 | Web demo | Quick preview | File-list diagnosis, engine clues, package stage hints, error recipe matching, report export. |
 | Rule data | Community contribution | Engine fingerprints, startup error recipes, package patterns, and smoke-tested examples. |
 
+## Download And Verify
+
+| File | Link |
+| --- | --- |
+| Windows portable beta | [GalAid-0.1.9-win-x64.exe](https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe) |
+| SHA-256 sidecar | [GalAid-0.1.9-win-x64.exe.sha256](https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.sha256) |
+| Release manifest | [GalAid-0.1.9-win-x64.exe.release.json](https://github.com/TonyNa-code/GalAid/releases/download/v0.1.9-beta/GalAid-0.1.9-win-x64.exe.release.json) |
+| Release page | [v0.1.9-beta](https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta) |
+
+Maintainers can verify the published sidecars without downloading the large `.exe`:
+
+```bash
+npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4c6ccb98 --json
+```
+
 ## Feature Map
 
 <table>
