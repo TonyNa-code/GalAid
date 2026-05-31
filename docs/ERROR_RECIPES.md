@@ -92,6 +92,26 @@ Keep DirectPlay separate from the DirectX 9-era runtime route because the beginn
 
 The recommended action should point to Windows Features: enable `Legacy Components / DirectPlay`, then retry from GalAid's recommended launcher.
 
+## Flash And Borland Legacy Evidence
+
+Keep Flash/ActiveX and Borland/Delphi rules narrow. They should explain old launcher/config-tool failures without implying every game needs these components.
+
+Good Flash/ActiveX clues:
+
+- `flash.ocx`
+- `flash9.ocx`
+- `swflash.ocx`
+- `Shockwave Flash`
+- `ActiveX component can't create object`
+
+Good Borland/Delphi clues:
+
+- `borlndmm.dll`
+- `cc3260mt.dll`
+- `rtl60.bpl`
+- `vcl60.bpl`
+- `vcljpg70.bpl`
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.

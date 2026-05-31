@@ -209,6 +209,41 @@ test("old video component recipe covers DirectShow, MCI, and codec clues", async
   }
 });
 
+test("Flash ActiveX and Borland runtime recipes stay narrow", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const flashExamples = [
+      "flash.ocx failed to load.",
+      "Flash9.ocx is missing.",
+      "Shockwave Flash object could not be created.",
+      "ActiveX component can't create object.",
+    ];
+    const borlandExamples = [
+      "borlndmm.dll was not found.",
+      "cc3260mt.dll failed to load.",
+      "rtl60.bpl is missing.",
+      "vcljpg70.bpl could not be found.",
+    ];
+
+    return {
+      flash: flashExamples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      borland: borlandExamples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      genericFlash: buildErrorDiagnostics("The intro movie flashes and then closes.").matches.map((match) => match.id),
+      genericDelphi: buildErrorDiagnostics("This post mentions Delphi as trivia.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.flash) {
+    expect(matches).toContain("activex-flash-runtime");
+  }
+  for (const matches of result.borland) {
+    expect(matches).toContain("borland-delphi-runtime");
+  }
+  expect(result.genericFlash).not.toContain("activex-flash-runtime");
+  expect(result.genericDelphi).not.toContain("borland-delphi-runtime");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 

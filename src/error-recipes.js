@@ -330,5 +330,50 @@ window.GALAID_ERROR_RECIPES = [
       "检查游戏包是否自带视频组件安装器",
       "补齐后从推荐入口重试"
     ]
+  },
+  {
+    "id": "activex-flash-runtime",
+    "title": "Flash/ActiveX 旧组件",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "flash\\d*\\.ocx",
+      "swflash\\.ocx",
+      "shockwave flash",
+      "active.?x.*(cannot create object|component|class not registered)",
+      "class not registered.*active.?x",
+      "activex component can't create object"
+    ],
+    "cause": "部分 WinXP 时代启动器、菜单或小游戏组件依赖 Flash ActiveX/OCX。新系统通常不会再默认提供这些旧组件。",
+    "action": "如果主游戏入口可绕过启动器，先直接运行主程序；如果报错来自菜单或配置工具，再按游戏包说明处理对应旧 ActiveX 组件。",
+    "checklist": [
+      "确认报错是否点名 flash.ocx、swflash.ocx 或 Shockwave Flash",
+      "优先尝试绕过菜单直接运行主游戏 exe",
+      "如果必须使用该启动器，再处理游戏包自带或说明要求的旧组件"
+    ]
+  },
+  {
+    "id": "borland-delphi-runtime",
+    "title": "Borland/Delphi 旧运行库",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "borlndmm\\.dll",
+      "cc3260mt\\.dll",
+      "\\brtl\\d+\\.bpl",
+      "\\bvcl\\d+\\.bpl",
+      "\\bvclx\\d+\\.bpl",
+      "\\bvcldb\\d+\\.bpl",
+      "\\bvcljpg\\d+\\.bpl",
+      "borland runtime",
+      "delphi runtime"
+    ],
+    "cause": "部分旧启动器、配置工具或自研引擎用 Borland C++ Builder / Delphi 编写，缺少随包 DLL 或 BPL 时会启动失败。",
+    "action": "先确认这些 DLL/BPL 是否和启动器在同一目录或完整解压；如果报错来自配置工具，可尝试直接运行主游戏入口。",
+    "checklist": [
+      "确认报错是否点名 Borland/Delphi DLL 或 BPL",
+      "重新完整解压并保持原目录结构",
+      "尝试从 GalAid 推荐的主游戏入口启动"
+    ]
   }
 ];
