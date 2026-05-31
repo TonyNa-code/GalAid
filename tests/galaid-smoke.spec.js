@@ -209,7 +209,7 @@ test("old video component recipe covers DirectShow, MCI, and codec clues", async
   }
 });
 
-test("Flash ActiveX and Borland runtime recipes stay narrow", async ({ page }) => {
+test("Flash, VB ActiveX, and Borland runtime recipes stay narrow", async ({ page }) => {
   await page.goto("/");
 
   const result = await page.evaluate(() => {
@@ -217,6 +217,11 @@ test("Flash ActiveX and Borland runtime recipes stay narrow", async ({ page }) =
       "flash.ocx failed to load.",
       "Flash9.ocx is missing.",
       "Shockwave Flash object could not be created.",
+    ];
+    const activexExamples = [
+      "MSCOMCTL.OCX was not correctly registered.",
+      "COMDLG32.OCX is missing or invalid.",
+      "TABCTL32.OCX could not be loaded.",
       "ActiveX component can't create object.",
     ];
     const borlandExamples = [
@@ -228,8 +233,10 @@ test("Flash ActiveX and Borland runtime recipes stay narrow", async ({ page }) =
 
     return {
       flash: flashExamples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      activex: activexExamples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
       borland: borlandExamples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
       genericFlash: buildErrorDiagnostics("The intro movie flashes and then closes.").matches.map((match) => match.id),
+      genericActiveX: buildErrorDiagnostics("The article mentions ActiveX history.").matches.map((match) => match.id),
       genericDelphi: buildErrorDiagnostics("This post mentions Delphi as trivia.").matches.map((match) => match.id),
     };
   });
@@ -237,10 +244,15 @@ test("Flash ActiveX and Borland runtime recipes stay narrow", async ({ page }) =
   for (const matches of result.flash) {
     expect(matches).toContain("activex-flash-runtime");
   }
+  for (const matches of result.activex) {
+    expect(matches).toContain("vb-activex-controls");
+    expect(matches).not.toContain("activex-flash-runtime");
+  }
   for (const matches of result.borland) {
     expect(matches).toContain("borland-delphi-runtime");
   }
   expect(result.genericFlash).not.toContain("activex-flash-runtime");
+  expect(result.genericActiveX).not.toContain("vb-activex-controls");
   expect(result.genericDelphi).not.toContain("borland-delphi-runtime");
 });
 

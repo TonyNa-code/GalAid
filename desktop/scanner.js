@@ -19,6 +19,7 @@ const RUNTIME_IMPORT_HINTS = [
   { id: "legacy-quicktime", pattern: /^(qtmlclient\.dll|quicktime\.qts)$/i },
   { id: "legacy-directshow", pattern: /^(quartz|amstream|msvfw32|mciavi32|mciqtz32)\.dll$/i },
   { id: "legacy-flash", pattern: /^(flash|flash\d+|swflash)\.ocx$/i },
+  { id: "legacy-activex-controls", pattern: /^(mscomctl|comdlg32|msflxgrd|richtx32|tabctl32|mswinsck|msinet|msmask32|comctl32)\.ocx$/i },
   { id: "legacy-borland", pattern: /^(borlndmm|cc3260mt)\.dll$|^(rtl|vcl|vclx|vcldb|vcljpg)\d+\.bpl$/i },
 ];
 

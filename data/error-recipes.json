@@ -337,10 +337,7 @@
     "patterns": [
       "flash\\d*\\.ocx",
       "swflash\\.ocx",
-      "shockwave flash",
-      "active.?x.*(cannot create object|component|class not registered)",
-      "class not registered.*active.?x",
-      "activex component can't create object"
+      "shockwave flash"
     ],
     "cause": "部分 WinXP 时代启动器、菜单或小游戏组件依赖 Flash ActiveX/OCX。新系统通常不会再默认提供这些旧组件。",
     "action": "如果主游戏入口可绕过启动器，先直接运行主程序；如果报错来自菜单或配置工具，再按游戏包说明处理对应旧 ActiveX 组件。",
@@ -348,6 +345,33 @@
       "确认报错是否点名 flash.ocx、swflash.ocx 或 Shockwave Flash",
       "优先尝试绕过菜单直接运行主游戏 exe",
       "如果必须使用该启动器，再处理游戏包自带或说明要求的旧组件"
+    ]
+  },
+  {
+    "id": "vb-activex-controls",
+    "title": "VB/ActiveX 通用控件",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "mscomctl\\.ocx",
+      "comdlg32\\.ocx",
+      "msflxgrd\\.ocx",
+      "richtx32\\.ocx",
+      "tabctl32\\.ocx",
+      "mswinsck\\.ocx",
+      "msinet\\.ocx",
+      "msmask32\\.ocx",
+      "comctl32\\.ocx",
+      "activex component can't create object",
+      "active.?x.*(component|control).*?(not correctly registered|missing|invalid)",
+      "class not registered.*(mscomctl|comdlg32|msflxgrd|richtx32|tabctl32)"
+    ],
+    "cause": "部分旧启动器、安装菜单或配置工具依赖 VB6/ActiveX 通用控件。缺 OCX 或未注册时，游戏本体可能还在，但外层菜单会打不开。",
+    "action": "优先尝试 GalAid 推荐的主游戏 exe；如果必须使用该菜单或配置工具，再确认对应 OCX 是否随包完整保留，或按发行包说明处理。",
+    "checklist": [
+      "确认报错是否点名 MSCOMCTL.OCX、COMDLG32.OCX、TABCTL32.OCX 等控件",
+      "尝试绕过菜单直接运行主游戏入口",
+      "重新完整解压并保持控件文件与启动器的相对位置"
     ]
   },
   {

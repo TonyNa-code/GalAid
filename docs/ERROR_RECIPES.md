@@ -102,6 +102,14 @@ Good Flash/ActiveX clues:
 - `flash9.ocx`
 - `swflash.ocx`
 - `Shockwave Flash`
+
+Generic VB/ActiveX control clues belong to `vb-activex-controls`, not the Flash rule:
+
+- `MSCOMCTL.OCX`
+- `COMDLG32.OCX`
+- `MSFLXGRD.OCX`
+- `RICHTX32.OCX`
+- `TABCTL32.OCX`
 - `ActiveX component can't create object`
 
 Good Borland/Delphi clues:

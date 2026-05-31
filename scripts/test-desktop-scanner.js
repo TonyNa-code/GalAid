@@ -20,7 +20,7 @@ async function main() {
         machine: 0x014c,
         magic: 0x10b,
         subsystemVersion: [5, 1],
-        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "DPLAYX.dll", "DPNET.dll", "WINMM.dll", "QUARTZ.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "rtl60.bpl"],
+        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "DPLAYX.dll", "DPNET.dll", "WINMM.dll", "QUARTZ.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "MSCOMCTL.OCX", "rtl60.bpl"],
       }),
     );
 
@@ -54,6 +54,7 @@ async function main() {
       "mscoree.dll",
       "qtmlclient.dll",
       "flash.ocx",
+      "mscomctl.ocx",
       "rtl60.bpl",
     ]);
     assert.deepEqual(byName.get("XP32.EXE").executableInfo.importHints, [
@@ -67,6 +68,7 @@ async function main() {
       "legacy-quicktime",
       "legacy-directshow",
       "legacy-flash",
+      "legacy-activex-controls",
       "legacy-borland",
     ]);
     assert.match(byName.get("Disc.cue").textPreview, /Track01\.bin/);

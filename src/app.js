@@ -2307,6 +2307,7 @@ const RUNTIME_IMPORT_HINT_META = {
   "legacy-quicktime": { family: "quicktime", label: "QuickTime" },
   "legacy-directshow": { family: "media", label: "DirectShow / MCI video" },
   "legacy-flash": { family: "flash", label: "Flash / ActiveX" },
+  "legacy-activex-controls": { family: "activex", label: "VB/ActiveX controls" },
   "legacy-borland": { family: "borland", label: "Borland / Delphi runtime" },
 };
 
