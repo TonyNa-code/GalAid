@@ -310,13 +310,21 @@
       "quicktime\\.qts",
       "quicktime",
       "mciqtz32\\.dll",
+      "mciavi32\\.dll",
       "quartz\\.dll",
-      "directshow"
+      "amstream\\.dll",
+      "ir50_32\\.dll",
+      "iccvid\\.dll",
+      "msvidc32\\.dll",
+      "directshow",
+      "video for windows",
+      "indeo",
+      "cinepak"
     ],
-    "cause": "部分老游戏的 OP、ED 或过场动画依赖 QuickTime、DirectShow、MCI 或旧视频组件。",
-    "action": "如果游戏在播放视频前后黑屏、无响应或报 DLL 缺失，先补对应视频组件；也可以临时跳过片头后再验证主流程。",
+    "cause": "部分老游戏的 OP、ED 或过场动画依赖 QuickTime、DirectShow、MCI、Video for Windows、Indeo 或其他旧视频组件。",
+    "action": "如果游戏在播放视频前后黑屏、无响应或报 DLL/codec 缺失，先补对应视频组件；也可以临时跳过片头后再验证主流程。",
     "checklist": [
-      "确认报错是否点名 QuickTime、DirectShow 或 MCI",
+      "确认报错是否点名 QuickTime、DirectShow、MCI、Indeo 或 Video for Windows",
       "检查游戏包是否自带视频组件安装器",
       "补齐后从推荐入口重试"
     ]

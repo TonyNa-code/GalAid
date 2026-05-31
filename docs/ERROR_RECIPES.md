@@ -68,6 +68,19 @@ The `directx-legacy` recipe should stay focused on exact legacy component names.
 
 Keep broad renderer failures such as `d3d11.dll` as supporting context only. By itself, that text should not trigger the DirectX 9-era runtime route.
 
+## Old Video Component Evidence
+
+The `quicktime-runtime` recipe covers startup failures around old OP/ED playback and movie codec handoffs. Useful exact clues include:
+
+- `qtmlclient.dll`
+- `mciqtz32.dll`
+- `mciavi32.dll`
+- `quartz.dll`
+- `ir50_32.dll`
+- `iccvid.dll`
+- `Video for Windows`
+- `Indeo`
+
 ## DirectPlay Legacy Evidence
 
 Keep DirectPlay separate from the DirectX 9-era runtime route because the beginner action is different. Good positive examples include:

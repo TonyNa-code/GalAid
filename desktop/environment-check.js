@@ -191,6 +191,13 @@ async function inspectQuickTime(spawnImpl) {
       "  if($root -and (Test-Path (Join-Path $root 'qtmlclient.dll'))){ Write-Output 'qtmlclient.dll (QuickTime)' }",
       "  if($root -and (Test-Path (Join-Path $root 'QuickTime.qts'))){ Write-Output 'QuickTime.qts (QuickTime)' }",
       "}",
+      "$systemRoots=@($env:WINDIR + '\\System32',$env:WINDIR + '\\SysWOW64');",
+      "$mediaNames=@('mciqtz32.dll','mciavi32.dll','quartz.dll','amstream.dll','msvidc32.dll','iccvid.dll','ir50_32.dll');",
+      "foreach($root in $systemRoots){",
+      "  foreach($name in $mediaNames){",
+      "    if(Test-Path (Join-Path $root $name)){ Write-Output ($name + ' (' + (Split-Path $root -Leaf) + ')') }",
+      "  }",
+      "}",
     ].join(" "),
     spawnImpl,
   );
@@ -201,11 +208,11 @@ async function inspectQuickTime(spawnImpl) {
     title: "QuickTime/旧视频组件",
     status: evidence.length ? "good" : "info",
     detail: evidence.length
-      ? "检测到 QuickTime 或相关旧视频组件线索。"
-      : "没有检测到 QuickTime。只有报错或游戏入口点名 QuickTime、qtmlclient、MCI/DirectShow 视频组件时才需要处理。",
+      ? "检测到 QuickTime、MCI、DirectShow 或旧视频组件线索。"
+      : "没有检测到 QuickTime 或常见旧视频组件。只有报错或游戏入口点名 QuickTime、qtmlclient、MCI/DirectShow、Indeo 视频组件时才需要处理。",
     action: evidence.length
       ? "如果视频播放仍黑屏或卡住，继续结合报错文字、片头跳过选项和游戏完整性排查。"
-      : "遇到 QuickTime、qtmlclient.dll、mciqtz32 或片头视频黑屏时，再补对应视频组件或尝试跳过片头。",
+      : "遇到 QuickTime、qtmlclient.dll、mciqtz32、Indeo 或片头视频黑屏时，再补对应视频组件或尝试跳过片头。",
     evidence,
   });
 }

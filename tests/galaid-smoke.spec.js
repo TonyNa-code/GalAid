@@ -188,6 +188,27 @@ test("DirectPlay recipe and import hints route old Windows component guidance", 
   expect(result.roadmapIds).toContain("error-directplay-legacy");
 });
 
+test("old video component recipe covers DirectShow, MCI, and codec clues", async ({ page }) => {
+  await page.goto("/");
+
+  const recipeMatches = await page.evaluate(() => {
+    const examples = [
+      "mciqtz32.dll failed to load.",
+      "mciavi32.dll was not found.",
+      "Cannot initialize quartz.dll.",
+      "IR50_32.DLL is missing.",
+      "Indeo video codec is required.",
+      "Video for Windows codec failed.",
+    ];
+
+    return examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id));
+  });
+
+  for (const matches of recipeMatches) {
+    expect(matches).toContain("quicktime-runtime");
+  }
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 
@@ -1451,6 +1472,81 @@ test("old Win32 PE headers stay launchable but add compatibility guidance", asyn
   expect(result.nativeStepIds).toEqual(expect.arrayContaining(["native-directx-native", "native-dotnet-native", "native-vb6-native", "native-quicktime-native"]));
   expect(result.nativeStepText).toContain("没有检测到 QuickTime");
   expect(result.profileInfo).toBe("5.1");
+});
+
+test("DirectShow and MCI imports promote old video component repairs", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const analysis = analyze([
+      {
+        name: "MovieVN.exe",
+        path: "MovieVN/MovieVN.exe",
+        lowerPath: "movievn/movievn.exe",
+        ext: "exe",
+        size: 580000,
+        depth: 1,
+        fullPath: "C:\\Games\\MovieVN\\MovieVN.exe",
+        executableInfo: {
+          schema: "galaid.executableInfo.v1",
+          format: "pe",
+          runtime: "win32",
+          bitness: "32-bit",
+          architecture: "x86",
+          runtimeImports: ["quartz.dll", "mciqtz32.dll", "winmm.dll"],
+          importHints: ["legacy-directshow", "legacy-winmm"],
+          label: "32-bit Windows PE executable",
+          route: "native-windows",
+          confidence: "high",
+        },
+      },
+      {
+        name: "QuickTimeInstaller.exe",
+        path: "MovieVN/Support/QuickTimeInstaller.exe",
+        lowerPath: "movievn/support/quicktimeinstaller.exe",
+        ext: "exe",
+        size: 18000000,
+        depth: 2,
+        fullPath: "C:\\Games\\MovieVN\\Support\\QuickTimeInstaller.exe",
+      },
+    ]);
+    const quickTimeRepair = analysis.runtimeRepairs.find((repair) => repair.type === "QuickTime");
+    const legacyRuntimeCheck = analysis.environment.checks.find((check) => check.id === "legacy-runtime-imports");
+    const contextualAnalysis = applyDesktopEnvironmentToAnalysis(analysis, {
+      ok: true,
+      platform: "win32",
+      checkedAt: "2026-05-31T00:00:00.000Z",
+      summary: { status: "good", label: "本机环境检测", detail: "contextual", counts: { good: 0, warning: 0, info: 1 } },
+      checks: [
+        {
+          id: "quicktime-native",
+          title: "QuickTime/旧视频组件",
+          status: "info",
+          statusLabel: "观察",
+          detail: "没有检测到 QuickTime 或常见旧视频组件。",
+          action: "遇到 MCI/DirectShow 或片头视频黑屏时，再补对应视频组件。",
+          evidence: [],
+        },
+      ],
+    });
+    const nativeStep = contextualAnalysis.roadmap.steps.find((step) => step.id === "native-quicktime-native");
+
+    return {
+      quickTimeRepairRecommended: quickTimeRepair?.recommended,
+      quickTimeRepairReason: quickTimeRepair?.reason,
+      legacyRuntimeEvidence: legacyRuntimeCheck?.evidence || [],
+      nativeStepState: nativeStep?.state,
+      nativeStepDetail: nativeStep?.detail,
+      manifestImports: buildFileManifest(analysis).files[0]?.executableInfo?.runtimeImports,
+    };
+  });
+
+  expect(result.quickTimeRepairRecommended).toBe(true);
+  expect(result.quickTimeRepairReason).toContain("旧视频播放组件");
+  expect(result.legacyRuntimeEvidence.join("\n")).toContain("quartz.dll");
+  expect(result.nativeStepState).toBe("todo");
+  expect(result.nativeStepDetail).toContain("常见旧视频组件");
+  expect(result.manifestImports).toEqual(expect.arrayContaining(["quartz.dll", "mciqtz32.dll"]));
 });
 
 test("desktop one-click flow retries password-protected packages", async ({ page }) => {

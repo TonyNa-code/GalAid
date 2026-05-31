@@ -2337,7 +2337,7 @@ function getRuntimeRepairType(pathValue, ext = getExt(getBaseName(String(pathVal
     return "VB6 Runtime";
   }
 
-  if (/(?:quicktime|qt.?runtime|qtlite).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath)) {
+  if (/(?:quicktime|qt.?runtime|qtlite|indeo|ir50|iccvid|cinepak|video.?codec).*?\.(exe|msi|zip|rar|7z)$/.test(lowerPath)) {
     return "QuickTime";
   }
 
@@ -2421,7 +2421,7 @@ function buildRuntimeRepairCandidates(files, errorDiagnostics, launchFailure = n
   if (runtimeImportRoute.hasVc) recommendedTypes.add("VC++");
   if (runtimeImportRoute.hasDotNet || hasErrorRecipe(errorDiagnostics, "dotnet-runtime")) recommendedTypes.add(".NET Framework");
   if (runtimeImportRoute.hasVb6 || hasErrorRecipe(errorDiagnostics, "vb6-runtime")) recommendedTypes.add("VB6 Runtime");
-  if (runtimeImportRoute.hasQuickTime || hasErrorRecipe(errorDiagnostics, "quicktime-runtime")) recommendedTypes.add("QuickTime");
+  if (runtimeImportRoute.hasQuickTime || runtimeImportRoute.hasMedia || hasErrorRecipe(errorDiagnostics, "quicktime-runtime")) recommendedTypes.add("QuickTime");
   if (hasErrorRecipe(errorDiagnostics, "visual-cpp-redist")) recommendedTypes.add("VC++");
   if (hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp")) recommendedTypes.add("RPG Maker RTP");
   if (genericRuntimeSymptom) {
@@ -3825,7 +3825,7 @@ function buildEnvironmentDiagnostics(files, engines, packages, launchCandidates,
   const vcError = hasErrorRecipe(errorDiagnostics, "visual-cpp-redist") || runtimeImportRoute.hasVc;
   const dotNetError = hasErrorRecipe(errorDiagnostics, "dotnet-runtime") || runtimeImportRoute.hasDotNet;
   const vb6Error = hasErrorRecipe(errorDiagnostics, "vb6-runtime") || runtimeImportRoute.hasVb6;
-  const quickTimeError = hasErrorRecipe(errorDiagnostics, "quicktime-runtime") || runtimeImportRoute.hasQuickTime;
+  const quickTimeError = hasErrorRecipe(errorDiagnostics, "quicktime-runtime") || runtimeImportRoute.hasQuickTime || runtimeImportRoute.hasMedia;
   const rtpError = hasErrorRecipe(errorDiagnostics, "rpgmaker-rtp");
   const runtimeRepairError = directXError || vcError || dotNetError || vb6Error || quickTimeError || rtpError || failureSymptoms.has("missing-dll") || failureSymptoms.has("black-screen");
   const permissionError = hasErrorRecipe(errorDiagnostics, "permission-write");
@@ -4782,7 +4782,7 @@ function getDesktopEnvironmentRoadmapContext(analysis) {
     vc: route.hasVc || hasErrorRecipe(analysis.errorDiagnostics, "visual-cpp-redist") || symptoms.has("missing-dll"),
     dotnet: route.hasDotNet || hasErrorRecipe(analysis.errorDiagnostics, "dotnet-runtime"),
     vb6: route.hasVb6 || hasErrorRecipe(analysis.errorDiagnostics, "vb6-runtime"),
-    quicktime: route.hasQuickTime || hasErrorRecipe(analysis.errorDiagnostics, "quicktime-runtime"),
+    quicktime: route.hasQuickTime || route.hasMedia || hasErrorRecipe(analysis.errorDiagnostics, "quicktime-runtime"),
     rtp: hasErrorRecipe(analysis.errorDiagnostics, "rpgmaker-rtp") || engineIds.has("rpgmaker"),
     locale:
       hasErrorRecipe(analysis.errorDiagnostics, "locale-encoding") ||

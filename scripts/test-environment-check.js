@@ -51,6 +51,10 @@ async function main() {
   const quickTime = await inspectQuickTime(makeStaticSpawn("QuickTime 7\nqtmlclient.dll (QuickTime)\n"));
   assert.equal(quickTime.status, "good");
 
+  const oldVideo = await inspectQuickTime(makeStaticSpawn("mciqtz32.dll (System32)\nir50_32.dll (SysWOW64)\n"));
+  assert.equal(oldVideo.status, "good");
+  assert.match(oldVideo.detail, /旧视频组件/);
+
   const rtp = await inspectRpgMakerRtp(makeStaticSpawn("RPG Maker VX Ace RTP\n"));
   assert.equal(rtp.status, "good");
 
