@@ -34,7 +34,7 @@ GalAid is a launch doctor for visual novel and galgame folders. It helps players
     <td width="25%" valign="top"><strong>01 Drop</strong><br>Folders, `.zip/.rar/.7z/.lzh`, self-extracting `.exe` packages, split archives, `.iso`, CUE sheets with referenced `.bin` tracks, `.mds/.mdf`, and older VN layouts all enter one flow.</td>
     <td width="25%" valign="top"><strong>02 Prepare</strong><br>GalAid groups packages, asks for a password when needed, extracts or mounts, then rescans the prepared folder.</td>
     <td width="25%" valign="top"><strong>03 Launch</strong><br>The desktop beta can turn the main launch button into prepare, rescan, pick the top entry, and start compatible Windows `.exe/.com/.bat/.cmd/.lnk` files with the right working directory.</td>
-    <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, VC++, locale, RTP, path, or package route.</td>
+    <td width="25%" valign="top"><strong>04 Fix</strong><br>If it fails, paste text or read a screenshot. GalAid turns the error into a DirectX, DirectPlay, VC++, locale, RTP, path, or package route.</td>
   </tr>
 </table>
 
@@ -106,7 +106,7 @@ npm run verify:release -- v0.1.9-beta --commit 60cafbc936bdbb31f16a78d3fc9da50b4
   <tr>
     <td width="33%" valign="top"><strong>Package to folder</strong><br>Split archives, normal archives, self-extracting EXE packages, disc-image pairs, legacy image formats, runtime repair tools, and password prompts are folded into one prepare-and-rescan flow.</td>
     <td width="33%" valign="top"><strong>Folder to launcher</strong><br>Launch candidates are ranked against installers, redists, config tools, engine files, executable headers, working directories, and commercial/self-developed layouts. Setup/autorun/MSI entries, including `autorun.inf` targets, become a separate install-media route when no game launcher is ready.</td>
-    <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs, screenshot OCR, and optional desktop runtime checks feed the roadmap for DirectX, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
+    <td width="33%" valign="top"><strong>Error to next step</strong><br>Pasted logs, screenshot OCR, and optional desktop runtime checks feed the roadmap for DirectX, DirectPlay, VC++, Japanese locale, RPG Maker RTP, missing files, damaged archives, and web VN restrictions.</td>
   </tr>
   <tr>
     <td width="33%" valign="top"><strong>Engine clues</strong><br>Ren'Py, KiriKiri, NScripter, Unity, RPG Maker, Siglus, TyranoScript, and private commercial structures get evidence explanations.</td>

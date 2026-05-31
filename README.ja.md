@@ -30,7 +30,7 @@ Maintainers can run `npm run verify:release -- v0.1.9-beta --commit 60cafbc936bd
 - アーカイブが完全に展開されていない
 - `.iso`、`.cue/.bin`、`.mds/.mdf` などの扱いが分からない
 - 日本語ロケール、フォント、パス文字化けで起動に失敗する
-- 古い DirectX、VC++、VB6、.NET、QuickTime/動画コンポーネント、RPG Maker RTP が不足している
+- 古い DirectX、DirectPlay、VC++、VB6、.NET、QuickTime/動画コンポーネント、RPG Maker RTP が不足している
 - フォルダ内に複数の `.exe` があり、主プログラムが分からない
 - Win95/Win98/WinXP 世代の入口が DOS、Win16、古いインストールメディア、または通常の Win32 のどれか分からない
 
@@ -45,13 +45,13 @@ GalAid はこれらを小さな診断レポートと手順に整理します。
 - 分割アーカイブ、古いアーカイブ、ディスクイメージの検出：`.part1.rar`、`.7z.001`、`.z01/.zip`、`.lzh/.lha`、`.iso`、`.cue/.bin`
 - 古いイメージ形式や媒体セットの検出：`.mds/.mdf`、`.ccd/.img/.sub`、`.nrg`、BlindWrite、`.mdx`、`.daa`、`.uif`、`.pdi`。デスクトップ版では小さな `.cue` 内の `.bin/.img` トラック宣言も読める
 - 起動画面の一括フロー：パッケージ/イメージ投入後、必要ならパスワードを入力し、メインボタン 1 回で準備、再スキャン、推奨入口の起動まで進める
-- デスクトップスキャンで `.exe/.com` ヘッダーを読み、DOS COM/MZ、Win16 NE、古い LE/LX、Win32、Win64 を区別する。古い Win32 入口は起動可能なまま、XP/Win98 互換モード、古い DirectX、短い英数字パスの確認を案内する
+- デスクトップスキャンで `.exe/.com` ヘッダーを読み、DOS COM/MZ、Win16 NE、古い LE/LX、Win32、Win64 を区別する。古い Win32 入口は起動可能なまま、XP/Win98 互換モード、古い DirectX/DirectPlay、短い英数字パスの確認を案内する
 - KiriKiri、NScripter、Siglus、RPG Maker、Unity、TyranoScript、商用/自社エンジン構造の手がかりを検出
 - 商用/自社 VN に多い構造を主要ルートとして診断：ルート exe、同階層 DLL、大きなリソースアーカイブ、設定ファイル、作業フォルダ
 - 貼り付けたエラー文をローカルのエラーレシピに照合
 - エラー画像 OCR で、スクリーンショット内の文字をエラー診断へ追加
 - 起動失敗後のクイック問診：何が見えたか、どこから起動したか、エラーをコピーできるかを記録し、手順、レポート、サポートバンドルへ反映
-- デスクトップ版では、古い DirectX、VC++、.NET、VB6、QuickTime/動画コンポーネント、RPG Maker RTP、システム locale を確認し、PC 側の不足を切り分けられる
+- デスクトップ版では、古い DirectX、DirectPlay、VC++、.NET、VB6、QuickTime/動画コンポーネント、RPG Maker RTP、システム locale を確認し、PC 側の不足を切り分けられる
 - 20,000+ ファイルの大規模フォルダ向けモード
 - デスクトップ beta でネイティブフォルダ選択と再帰スキャン
 - デスクトップのパッケージ/イメージ事前チェックは ZIP ディレクトリ、同梱またはローカル 7z ツールによる RAR/7z/LZH/LHA/ARJ/CAB/TAR 系メタデータを読み、起動、インストールメディア、ランタイム修復サンプル、暗号化項目を個別に強調する。ディスクイメージ種別、`autorun.inf + Start.exe + data1.cab` のような古いインストールディスク構造、同梱ランタイム修復項目も扱い、起動ボタンからローカル展開、ISO マウント/イメージ展開、再スキャン、推奨入口の起動まで進められる。ゲーム本体がなく `setup.exe/autorun.exe/.msi` または `autorun.inf` が指すインストール入口だけの場合は、インストールメディア入口として分けて扱う

@@ -36,7 +36,7 @@ Windows 便携版是主推荐。网页预览适合先看界面和诊断逻辑，
 - 自解压包：能列出内部目录的 `.exe` 会先按包处理
 - 镜像文件：`.iso/.cue/.bin/.mds/.mdf/.ccd/.img/.sub/.nrg/.mdx/.daa/.uif/.pdi`
 - 安装盘入口：`setup.exe`、`install.exe`、`autorun.exe`、`.msi`、`autorun.inf` 指向的安装脚本
-- 常见运行环境线索：DirectX、VC++、.NET、VB6、QuickTime/旧视频组件、RPG Maker RTP、日文 locale、旧 Windows 兼容模式
+- 常见运行环境线索：DirectX、DirectPlay、VC++、.NET、VB6、QuickTime/旧视频组件、RPG Maker RTP、日文 locale、旧 Windows 兼容模式
 
 ## 常见情况
 
@@ -56,7 +56,7 @@ GalAid 会把它当作安装盘入口。先打开安装器，安装完成后再�
 
 **游戏很老，像 Win95/Win98/WinXP 时代**
 
-GalAid 会先判断入口是不是 DOS、Win16、旧 Win32 或安装盘路线。能直接启动的 Win32 入口仍可尝试；失败后再按界面建议检查兼容模式、短英文路径、旧 DirectX/运行库和视频组件。
+GalAid 会先判断入口是不是 DOS、Win16、旧 Win32 或安装盘路线。能直接启动的 Win32 入口仍可尝试；失败后再按界面建议检查兼容模式、短英文路径、旧 DirectX/DirectPlay、运行库和视频组件。
 
 **想求助别人**
 

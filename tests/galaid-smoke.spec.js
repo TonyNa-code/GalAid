@@ -1789,7 +1789,7 @@ test("desktop runtime assistant records local environment checks", async ({ page
               status: "good",
               label: "本机环境检测没有发现明显缺口",
               detail: "如果游戏仍启动失败，继续结合报错截图、路径和游戏完整性排查。",
-              counts: { good: 4, warning: 0, info: 3 },
+              counts: { good: 5, warning: 0, info: 3 },
             },
             checks: [
               {
@@ -1800,6 +1800,15 @@ test("desktop runtime assistant records local environment checks", async ({ page
                 detail: "检测到常见 DirectX 9 时代 DLL。",
                 action: "如果仍黑屏，继续结合报错文字排查。",
                 evidence: ["d3dx9_43.dll (System32)"],
+              },
+              {
+                id: "directplay-native",
+                title: "DirectPlay 旧版组件",
+                status: "good",
+                statusLabel: "OK",
+                detail: "检测到 Windows DirectPlay 旧版组件已启用。",
+                action: "如果仍提示 DirectPlay，继续检查游戏目录完整性和启动入口。",
+                evidence: ["DirectPlay=Enabled"],
               },
               {
                 id: "vcredist-native",
@@ -1866,7 +1875,7 @@ test("desktop runtime assistant records local environment checks", async ({ page
             status: "warning",
             label: "3 个本机环境建议项",
             detail: "遇到 d3dx/xinput 报错时，优先补 DirectX End-User Runtime。",
-            counts: { good: 1, warning: 3, info: 3 },
+            counts: { good: 1, warning: 3, info: 4 },
           },
           checks: [
             {
@@ -1877,6 +1886,15 @@ test("desktop runtime assistant records local environment checks", async ({ page
               detail: "没有检测到常见 DirectX 9 时代 DLL。",
               action: "遇到 d3dx、xinput 相关报错时，优先补 DirectX End-User Runtime。",
               evidence: [],
+            },
+            {
+              id: "directplay-native",
+              title: "DirectPlay 旧版组件",
+              status: "info",
+              statusLabel: "观察",
+              detail: "Windows DirectPlay 旧版组件当前未启用；只有报错点名 DirectPlay、dplayx 或 dpnet 时才需要处理。",
+              action: "遇到 DirectPlay、dplayx.dll 或 dpnet.dll 报错时，在 Windows 功能里启用 Legacy Components / DirectPlay 后重试。",
+              evidence: ["DirectPlay=Disabled"],
             },
             {
               id: "vcredist-native",
@@ -1949,6 +1967,7 @@ test("desktop runtime assistant records local environment checks", async ({ page
   await page.waitForFunction(() => window.__environmentChecks === 1);
 
   await expect(page.locator("#environmentPanel")).toContainText("3 个本机环境建议项");
+  await expect(page.locator("#environmentPanel")).toContainText("DirectPlay 旧版组件");
   await expect(page.locator("#environmentPanel")).toContainText("Microsoft Visual C++ 2015-2022 Redistributable");
   await expect(page.locator("#environmentPanel")).toContainText(".NET Framework");
   await expect(page.locator("#environmentPanel")).toContainText("VB6 运行库");
@@ -1973,6 +1992,7 @@ test("desktop runtime assistant records local environment checks", async ({ page
   await page.locator('[data-tab="report"]').click();
   await expect(page.locator("#reportPanel")).toContainText("## 本机运行环境助手");
   await expect(page.locator("#reportPanel")).toContainText("DirectX 旧组件");
+  await expect(page.locator("#reportPanel")).toContainText("DirectPlay 旧版组件");
 });
 
 test("interface and assistant output language can switch to English and Japanese", async ({ page }) => {
@@ -1984,6 +2004,7 @@ test("interface and assistant output language can switch to English and Japanese
 
   await expect(page.getByRole("button", { name: "Choose folder" })).toBeVisible();
   await expect(page.getByText("Interface / diagnosis language")).toBeVisible();
+  await expect(page.locator("#errorInput")).toHaveAttribute("placeholder", /dplayx\.dll/);
   await expect(page.locator('[data-tab="roadmap"]')).toHaveText("Roadmap");
   await expect(page.locator(".summary-strip small").first()).toHaveText("files");
   await page.locator('[data-tab="profiles"]').click();
@@ -1996,6 +2017,8 @@ test("interface and assistant output language can switch to English and Japanese
 
   await expect(page.locator("#reportPanel")).toContainText("Assistant language: English");
   await expect(page.locator("#reportPanel")).toContainText("## Environment checks");
+  await page.locator('[data-tab="environment"]').click();
+  await expect(page.locator("#environmentPanel")).toContainText("legacy DirectX files, DirectPlay");
 
   await page.locator('[data-tab="support"]').click();
   await expect(page.getByRole("heading", { name: "Support bundle" })).toBeVisible();
@@ -2006,11 +2029,14 @@ test("interface and assistant output language can switch to English and Japanese
   await page.locator("#assistantLanguageSelect").selectOption("ja");
   await expect(page.getByRole("button", { name: "フォルダを選択" })).toBeVisible();
   await expect(page.getByText("UI / 診断言語")).toBeVisible();
+  await expect(page.locator("#errorInput")).toHaveAttribute("placeholder", /dplayx\.dll/);
   await expect(page.locator('[data-tab="roadmap"]')).toHaveText("手順");
   await expect(page.locator(".summary-strip small").first()).toHaveText("ファイル");
   await page.locator('[data-tab="engine"]').click();
   await expect(page.locator("#enginePanel")).toContainText("次の手順");
   await expect(page.locator("#enginePanel")).toContainText("まずルートフォルダの起動ファイル");
+  await page.locator('[data-tab="environment"]').click();
+  await expect(page.locator("#environmentPanel")).toContainText("古い DirectX、DirectPlay");
   await page.locator('[data-tab="support"]').click();
   await expect(page.getByRole("heading", { name: "サポートバンドル" })).toBeVisible();
   await expect(page.getByRole("button", { name: "チャット用文面をコピー" })).toBeVisible();

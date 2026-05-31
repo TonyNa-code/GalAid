@@ -17,7 +17,7 @@ GalAid is already usable as a static web demo and a Windows desktop beta.
 - Screenshot OCR for startup dialogs
 - Legacy executable header detection for DOS, Win16, LE/LX, Win32, and Win64 entries
 - Old Win32 compatibility guidance for Win95/NT4/Win2000/XP-era entries
-- PE import hints for legacy DirectX, VC++, VB6, .NET, QuickTime/video, Flash/ActiveX, and Borland runtime routing
+- PE import hints for legacy DirectX, DirectPlay, VC++, VB6, .NET, QuickTime/video, Flash/ActiveX, and Borland runtime routing
 - Local runtime/environment checks
 - Launch history, shortcut creation, launch profiles, and launch-failure follow-up
 - Support bundles with reports, roadmaps, recipe matches, package previews, privacy summaries, and redacted local paths
