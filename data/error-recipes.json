@@ -16,12 +16,17 @@
       "xactengine\\d_\\d\\.dll",
       "dsound\\.dll",
       "dinput8?\\.dll",
+      "ddraw\\.dll",
+      "d3drm\\.dll",
+      "directdraw",
+      "direct3d retained mode",
       "directx"
     ],
-    "cause": "老游戏可能依赖 DirectX 9 时代的 D3DX、D3DCompiler、XInput、XAudio、XACT、X3DAudio、DirectSound 或 DirectInput 组件，新系统自带 DirectX 12 不代表包含这些旧 DLL。",
-    "action": "安装 DirectX End-User Runtime，并确认游戏文件没有被杀软隔离。",
+    "cause": "老游戏可能依赖 DirectX 9 时代的 D3DX、D3DCompiler、XInput、XAudio、XACT、X3DAudio、DirectSound、DirectInput、DirectDraw 或旧 Direct3D 组件，新系统自带 DirectX 12 不代表包含这些旧 DLL。",
+    "action": "安装 DirectX End-User Runtime，并确认游戏文件没有被杀软隔离；如果报错点名 DirectDraw 或 d3drm，再按旧图形兼容路线尝试窗口/全屏兼容设置。",
     "checklist": [
       "安装 DirectX End-User Runtime",
+      "DirectDraw/d3drm 报错时检查窗口模式和全屏兼容设置",
       "重新完整解压游戏",
       "确认报错中的 DLL 不在隔离区"
     ]

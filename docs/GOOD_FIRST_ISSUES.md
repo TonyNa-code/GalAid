@@ -35,6 +35,8 @@ Starter clues:
 - `xinput1_3.dll`
 - `dsound.dll`
 - `dinput8.dll`
+- `ddraw.dll`
+- `d3drm.dll`
 
 Acceptance checklist:
 

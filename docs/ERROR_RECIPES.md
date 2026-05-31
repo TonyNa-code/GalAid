@@ -62,6 +62,9 @@ The `directx-legacy` recipe should stay focused on exact legacy component names.
 - `x3daudio1_7.dll`
 - `xactengine3_7.dll`
 - `d3dcompiler_43.dll`
+- `ddraw.dll`
+- `d3drm.dll`
+- `DirectDraw initialization failed`
 
 Keep broad renderer failures such as `d3d11.dll` as supporting context only. By itself, that text should not trigger the DirectX 9-era runtime route.
 

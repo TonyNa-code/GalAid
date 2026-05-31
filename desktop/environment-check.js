@@ -36,7 +36,7 @@ async function checkRuntimeEnvironment({ platform = process.platform, spawnImpl 
 async function inspectDirectX(spawnImpl) {
   const result = await runPowerShell(
     [
-      "$names=@('d3dx9_43.dll','xinput1_3.dll','xaudio2_7.dll','xactengine3_7.dll');",
+      "$names=@('d3dx9_43.dll','xinput1_3.dll','xaudio2_7.dll','xactengine3_7.dll','ddraw.dll','d3drm.dll');",
       "$roots=@($env:WINDIR + '\\System32',$env:WINDIR + '\\SysWOW64');",
       "foreach($name in $names){",
       "  foreach($root in $roots){",
@@ -57,7 +57,7 @@ async function inspectDirectX(spawnImpl) {
       : "没有检测到常见 DirectX 9 时代 DLL。很多老 galgame 在新系统上仍需要这些旧组件。",
     action: evidence.length
       ? "如果仍黑屏，继续结合报错文字排查显卡切换、窗口模式和游戏完整性。"
-      : "遇到 d3dx、xinput、xaudio、xact、dinput 相关报错时，优先补 DirectX End-User Runtime。",
+      : "遇到 d3dx、xinput、xaudio、xact、dinput、ddraw 或 d3drm 相关报错时，优先补 DirectX End-User Runtime，并按旧图形兼容路线重试。",
     evidence,
   });
 }

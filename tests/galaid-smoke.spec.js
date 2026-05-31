@@ -133,6 +133,9 @@ test("DirectX legacy recipe keeps exact DLL evidence narrow", async ({ page }) =
       "X3DAudio1_7.dll missing.",
       "XACTEngine3_7.dll not found.",
       "D3DCompiler_43.dll is missing.",
+      "DDRAW.dll was not found.",
+      "D3DRM.dll is missing.",
+      "DirectDraw initialization failed.",
     ];
 
     return {
