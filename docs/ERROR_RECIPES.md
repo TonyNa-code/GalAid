@@ -109,6 +109,25 @@ Good WinMM/MIDI clues:
 
 Avoid matching generic "audio failed" or "sound is muted" text without a concrete old Windows audio API clue.
 
+## Audio Middleware DLL Evidence
+
+Keep `audio-middleware-dlls` focused on exact third-party audio DLL names that are usually shipped beside the game executable. These should route users toward restoring the original game folder, not installing broad Windows runtimes.
+
+Good audio middleware clues:
+
+- `bass.dll`
+- `bassmidi.dll`
+- `bass_fx.dll`
+- `fmod.dll`
+- `fmodex.dll`
+- `OpenAL32.dll`
+- `wrap_oal.dll`
+- `ogg.dll`
+- `vorbisfile.dll`
+- `audiere.dll`
+
+Avoid broad positives such as `.ogg` assets, "audio muted", or "music failed" without a concrete missing DLL name.
+
 ## Locale Encoding Evidence
 
 The `locale-encoding` recipe should catch concrete Japanese locale, Shift-JIS/CP932, and old Japanese font clues without treating every generic font or path issue as locale-related.

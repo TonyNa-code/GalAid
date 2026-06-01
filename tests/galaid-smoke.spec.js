@@ -223,6 +223,44 @@ test("WinMM and MIDI recipe stays separate from DirectX and video codecs", async
   expect(result.genericAudio).not.toContain("winmm-midi-audio");
 });
 
+test("audio middleware DLL recipe restores bundled engine files", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "bass.dll was not found.",
+      "BASSMIDI.dll failed to load.",
+      "bass_fx.dll is missing.",
+      "fmodex.dll could not be loaded.",
+      "OpenAL32.dll is missing.",
+      "wrap_oal.dll was not found.",
+      "ogg.dll failed to load.",
+      "vorbisfile.dll is missing.",
+      "audiere.dll could not be found.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      oggAsset: buildErrorDiagnostics("BGM/theme01.ogg is quiet in the music room.").matches.map((match) => match.id),
+      genericAudio: buildErrorDiagnostics("The audio is muted in options.").matches.map((match) => match.id),
+      directSound: buildErrorDiagnostics("dsound.dll was not found.").matches.map((match) => match.id),
+      winmm: buildErrorDiagnostics("winmm.dll failed to load.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("audio-middleware-dlls");
+    expect(matches).not.toContain("directx-legacy");
+    expect(matches).not.toContain("winmm-midi-audio");
+  }
+  expect(result.oggAsset).not.toContain("audio-middleware-dlls");
+  expect(result.genericAudio).not.toContain("audio-middleware-dlls");
+  expect(result.directSound).toContain("directx-legacy");
+  expect(result.directSound).not.toContain("audio-middleware-dlls");
+  expect(result.winmm).toContain("winmm-midi-audio");
+  expect(result.winmm).not.toContain("audio-middleware-dlls");
+});
+
 test("locale recipe covers Shift-JIS code page and Japanese font clues", async ({ page }) => {
   await page.goto("/");
 

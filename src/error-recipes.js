@@ -79,6 +79,31 @@ window.GALAID_ERROR_RECIPES = [
     ]
   },
   {
+    "id": "audio-middleware-dlls",
+    "title": "音频中间件 DLL 缺失",
+    "category": "files",
+    "level": "warning",
+    "patterns": [
+      "\\bbass(?:midi|mix|_fx)?\\.dll\\b",
+      "\\bfmod(?:ex|studio)?\\.dll\\b",
+      "\\bopenal32\\.dll\\b",
+      "\\bwrap_oal\\.dll\\b",
+      "\\balut\\.dll\\b",
+      "\\bogg\\.dll\\b",
+      "\\bvorbis(?:file|enc)?\\.dll\\b",
+      "\\blibvorbis(?:file)?\\.dll\\b",
+      "\\baudiere\\.dll\\b"
+    ],
+    "cause": "很多自研或商业引擎会把 BASS、FMOD、OpenAL、Ogg/Vorbis、Audiere 等音频中间件 DLL 随游戏一起放在目录里。缺这些文件通常说明没有完整解压、只复制了 exe、相邻 DLL 被移动，或被安全软件隔离。",
+    "action": "重新完整解压或从原包恢复这些 DLL，保持它们与游戏 exe 的原相对位置；优先检查隔离区和分卷完整性，不要把报错 DLL 当成系统自带组件随手替换。",
+    "checklist": [
+      "确认报错是否点名 BASS、FMOD、OpenAL、Ogg/Vorbis 或 Audiere DLL",
+      "从原压缩包或镜像完整恢复相邻 DLL",
+      "检查安全软件隔离区",
+      "不要只复制 exe，保持 voice/bgm/sound 与插件目录结构"
+    ]
+  },
+  {
     "id": "visual-cpp-redist",
     "title": "VC++ 运行库",
     "category": "runtime",
