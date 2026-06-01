@@ -92,6 +92,25 @@ Keep DirectPlay separate from the DirectX 9-era runtime route because the beginn
 
 The recommended action should point to Windows Features: enable `Legacy Components / DirectPlay`, then retry from GalAid's recommended launcher.
 
+## Locale Encoding Evidence
+
+The `locale-encoding` recipe should catch concrete Japanese locale, Shift-JIS/CP932, and old Japanese font clues without treating every generic font or path issue as locale-related.
+
+Good locale clues:
+
+- `文字化け`
+- `mojibake`
+- `Shift-JIS`
+- `SJIS`
+- `CP932`
+- `code page 932`
+- `Language for non-Unicode programs`
+- `MS Gothic`
+- `MS UI Gothic`
+- `ＭＳ ゴシック`
+
+Avoid broad positives such as plain `font`, `path`, or `unicode` unless the surrounding text clearly names the Japanese locale/code page issue.
+
 ## Flash And Borland Legacy Evidence
 
 Keep Flash/ActiveX and Borland/Delphi rules narrow. They should explain old launcher/config-tool failures without implying every game needs these components.

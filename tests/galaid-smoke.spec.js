@@ -188,6 +188,37 @@ test("DirectPlay recipe and import hints route old Windows component guidance", 
   expect(result.roadmapIds).toContain("error-directplay-legacy");
 });
 
+test("locale recipe covers Shift-JIS code page and Japanese font clues", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "Failed to decode Shift-JIS script.",
+      "SJIS filename conversion failed.",
+      "CP932 conversion failed.",
+      "Code page 932 is required.",
+      "Language for non-Unicode programs is not Japanese.",
+      "MS Gothic font was not found.",
+      "MS UI Gothic is missing.",
+      "ＭＳ ゴシック が見つかりません。",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      genericFont: buildErrorDiagnostics("The font size is too small.").matches.map((match) => match.id),
+      genericShift: buildErrorDiagnostics("Shift into fullscreen mode before starting.").matches.map((match) => match.id),
+      genericPage: buildErrorDiagnostics("Page 932 of the manual is missing.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("locale-encoding");
+  }
+  expect(result.genericFont).not.toContain("locale-encoding");
+  expect(result.genericShift).not.toContain("locale-encoding");
+  expect(result.genericPage).not.toContain("locale-encoding");
+});
+
 test("old video component recipe covers DirectShow, MCI, and codec clues", async ({ page }) => {
   await page.goto("/");
 

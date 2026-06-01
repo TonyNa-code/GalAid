@@ -104,16 +104,26 @@ window.GALAID_ERROR_RECIPES = [
       "乱码",
       "mojibake",
       "locale",
+      "shift[-_ ]?jis",
+      "\\bsjis\\b",
+      "\\bcp932\\b",
+      "code page 932",
+      "language for non-unicode programs",
+      "ms gothic",
+      "ms ui gothic",
+      "ms pgothic",
+      "ＭＳ ?ゴシック",
       "\\?{4,}",
       "\\uFFFD",
       "区域设置",
       "日区"
     ],
-    "cause": "脚本、文件名或字体可能按日文系统区域保存，非日区环境下会乱码、找不到文件或直接闪退。",
-    "action": "尝试日区环境或 Locale Emulator，并把游戏移动到英文短路径。",
+    "cause": "脚本、文件名或字体可能按日文系统区域保存，尤其是 Shift-JIS/CP932、MS Gothic/MS UI Gothic 一类旧日文环境线索。非日区环境下会乱码、找不到文件或直接闪退。",
+    "action": "尝试日区环境或 Locale Emulator，并把游戏移动到英文短路径；如果报错点名字体，确认系统有可用日文字体。",
     "checklist": [
       "移动到 C:/Games/VNName",
       "使用日区环境或 Locale Emulator",
+      "确认 Shift-JIS/CP932 文件名没有在解压时变成乱码",
       "安装日文字体"
     ]
   },
