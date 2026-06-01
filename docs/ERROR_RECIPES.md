@@ -157,6 +157,21 @@ Good Windows Installer clues:
 - `MSI error 1619`
 - `Installer error 1620`
 
+## Scripted Installer Evidence
+
+Keep NSIS/Inno guidance focused on named installer frameworks or distinctive integrity messages. Generic "installer failed" text is too broad.
+
+Good NSIS/Inno clues:
+
+- `NSIS Error`
+- `Nullsoft Install System`
+- `Installer integrity check has failed`
+- `Error launching installer`
+- `Inno Setup`
+- `unins000.exe`
+- `The setup files are corrupted`
+- `An error occurred while trying to rename a file` with `Inno`
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.

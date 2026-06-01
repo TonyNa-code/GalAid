@@ -309,6 +309,30 @@
     ]
   },
   {
+    "id": "scripted-installer-package",
+    "title": "NSIS/Inno Setup 脚本安装包",
+    "category": "package",
+    "level": "warning",
+    "patterns": [
+      "\\bnsis error\\b",
+      "nullsoft install system",
+      "installer integrity check has failed",
+      "error launching installer",
+      "\\binno setup\\b",
+      "\\bunins000\\.(exe|dat)\\b",
+      "the setup files are corrupted",
+      "an error occurred while trying to rename a file.*inno"
+    ],
+    "cause": "部分汉化补丁、追加包、旧安装包会用 NSIS 或 Inno Setup 做成自解压安装器。报错通常说明安装器包体损坏、路径/权限不兼容、临时目录写入失败，或用户把安装器从相邻资源文件里单独拎出来运行。",
+    "action": "把安装器和相邻数据文件保持在原目录，移动到本地英文短路径后从 GalAid 的安装介质入口重试；如果这是补丁/追加包，先确认目标游戏已安装，再安装到正确的游戏目录。",
+    "checklist": [
+      "确认报错是否点名 NSIS、Nullsoft Install System、Inno Setup 或 unins000",
+      "重新完整解压安装包并保留相邻数据文件",
+      "移动到本地英文短路径后重试",
+      "补丁或追加包要指向已安装的游戏目录，而不是压缩包或镜像目录"
+    ]
+  },
+  {
     "id": "dotnet-runtime",
     "title": ".NET 运行环境",
     "category": "runtime",

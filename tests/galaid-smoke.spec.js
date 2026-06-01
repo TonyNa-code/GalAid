@@ -339,6 +339,36 @@ test("Windows Installer MSI recipe keeps installer error codes contextual", asyn
   expect(result.genericInstaller).not.toContain("windows-installer-msi");
 });
 
+test("NSIS and Inno Setup recipe stays tied to named scripted installers", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "NSIS Error: Installer integrity check has failed.",
+      "Nullsoft Install System cannot continue.",
+      "Error launching installer.",
+      "Inno Setup detected a corrupted setup file.",
+      "unins000.exe failed to start.",
+      "The setup files are corrupted.",
+      "An error occurred while trying to rename a file in the destination directory. Inno Setup cannot continue.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      genericInstaller: buildErrorDiagnostics("The installer failed during setup.").matches.map((match) => match.id),
+      genericCorrupt: buildErrorDiagnostics("The save data looks corrupted.").matches.map((match) => match.id),
+      genericRename: buildErrorDiagnostics("An error occurred while trying to rename a file.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("scripted-installer-package");
+  }
+  expect(result.genericInstaller).not.toContain("scripted-installer-package");
+  expect(result.genericCorrupt).not.toContain("scripted-installer-package");
+  expect(result.genericRename).not.toContain("scripted-installer-package");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 
