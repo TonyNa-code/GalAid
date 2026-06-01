@@ -282,6 +282,34 @@ test("ADO DAO and Jet database runtime recipe stays narrow", async ({ page }) =>
   expect(result.genericProvider).not.toContain("database-ado-jet-runtime");
 });
 
+test("InstallShield installer recipe routes old setup media failures", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "1607: Unable to install InstallShield Scripting Runtime.",
+      "IKernel.exe could not be launched.",
+      "ISScript.msi is missing.",
+      "_setup.dll failed to load.",
+      "setup.inx was not found.",
+      "data1.cab is missing.",
+      "isdata.hdr could not be opened.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      genericSetup: buildErrorDiagnostics("Run setup.exe from the disc.").matches.map((match) => match.id),
+      genericCabinet: buildErrorDiagnostics("The archive includes a cabinet in the readme.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("installshield-runtime");
+  }
+  expect(result.genericSetup).not.toContain("installshield-runtime");
+  expect(result.genericCabinet).not.toContain("installshield-runtime");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 

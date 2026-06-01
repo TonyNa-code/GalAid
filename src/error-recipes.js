@@ -263,6 +263,30 @@ window.GALAID_ERROR_RECIPES = [
     ]
   },
   {
+    "id": "installshield-runtime",
+    "title": "InstallShield 旧安装器",
+    "category": "package",
+    "level": "warning",
+    "patterns": [
+      "installshield scripting runtime",
+      "\\bisscript\\.msi\\b",
+      "\\bikernel\\.ex[e_]?\\b",
+      "\\b1607\\b.*installshield",
+      "\\b_setup\\.dll\\b",
+      "\\bsetup\\.in[xi]\\b",
+      "\\bdata\\d*\\.cab\\b",
+      "\\bisdata\\.(dat|cab|hdr)\\b"
+    ],
+    "cause": "部分老安装盘使用 InstallShield。安装器本体、脚本运行库、data cab/hdr、setup.inx/ini 或 _setup.dll 必须保持同一套发行目录，缺一块时会像游戏坏了一样报错。",
+    "action": "从 GalAid 的安装介质入口或原始挂载/解压目录运行安装器，保持 setup.exe 与 data*.cab、setup.inx/ini、_setup.dll、ISScript.msi 等文件同级或原相对位置；安装完成后再重扫安装目录。",
+    "checklist": [
+      "确认 setup.exe、data*.cab、setup.inx/ini、_setup.dll 没有被单独挪出原目录",
+      "如果提示 IKernel/ISScript/1607，优先回到完整安装介质目录重试",
+      "安装完成后选择安装后的游戏目录重新扫描",
+      "不要把安装器残留目录当成最终游戏目录"
+    ]
+  },
+  {
     "id": "dotnet-runtime",
     "title": ".NET 运行环境",
     "category": "runtime",

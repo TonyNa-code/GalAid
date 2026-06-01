@@ -128,6 +128,20 @@ Good ADO/DAO/Jet database clues:
 - `Microsoft.Jet.OLEDB.4.0`
 - `ADODB.Connection`
 
+## InstallShield Legacy Evidence
+
+Keep the InstallShield rule focused on installer-media failures. It should help users keep an old setup disc layout intact without treating every `setup.exe` mention as a broken game.
+
+Good InstallShield clues:
+
+- `1607: Unable to install InstallShield Scripting Runtime`
+- `IKernel.exe could not be launched`
+- `ISScript.msi is missing`
+- `_setup.dll failed to load`
+- `setup.inx was not found`
+- `data1.cab is missing`
+- `isdata.hdr could not be opened`
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.
