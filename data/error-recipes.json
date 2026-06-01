@@ -285,6 +285,30 @@
     ]
   },
   {
+    "id": "windows-installer-msi",
+    "title": "Windows Installer/MSI 安装器",
+    "category": "package",
+    "level": "warning",
+    "patterns": [
+      "\\bmsiexec(\\.exe)?\\b",
+      "\\bmsi\\.dll\\b",
+      "windows installer package",
+      "this installation package could not be opened",
+      "there is a problem with this windows installer package",
+      "another installation is already in progress",
+      "\\berror (1603|1618|1619|1620|1639)\\b.*\\b(msi|installer|installation)\\b",
+      "\\b(msi|installer|installation)\\b.*\\berror (1603|1618|1619|1620|1639)\\b"
+    ],
+    "cause": ".msi 是 Windows Installer 安装包，不是普通游戏 exe。旧游戏安装盘常把 MSI 与 CAB、MST、setup.ini 或语言资源分开放置；路径、权限、缺少相邻文件或已有安装进程都可能导致 1603/1618/1619/1620 等错误。",
+    "action": "优先使用 GalAid 的安装介质入口打开 MSI，让系统通过 msiexec 安装；保持 MSI 与同目录 CAB/MST/安装资源在原相对位置，必要时移动到本地英文短路径，安装完成后重扫安装后的游戏目录。",
+    "checklist": [
+      "确认报错来自 .msi 或 msiexec，而不是游戏主程序",
+      "保持 MSI 与 CAB/MST/setup.ini 等相邻文件在同一套目录",
+      "避开网络盘、压缩包预览窗口和过深/乱码路径",
+      "等待其他安装进程结束后再从 GalAid 安装介质入口重试"
+    ]
+  },
+  {
     "id": "dotnet-runtime",
     "title": ".NET 运行环境",
     "category": "runtime",

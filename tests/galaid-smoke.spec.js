@@ -310,6 +310,35 @@ test("InstallShield installer recipe routes old setup media failures", async ({ 
   expect(result.genericCabinet).not.toContain("installshield-runtime");
 });
 
+test("Windows Installer MSI recipe keeps installer error codes contextual", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "msiexec.exe failed to open the package.",
+      "MSI.DLL could not be loaded.",
+      "This installation package could not be opened.",
+      "There is a problem with this Windows Installer package.",
+      "Another installation is already in progress.",
+      "Error 1603 during installation.",
+      "MSI error 1619.",
+      "Installer error 1620.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      genericErrorCode: buildErrorDiagnostics("Error 1603 appeared in the game log.").matches.map((match) => match.id),
+      genericInstaller: buildErrorDiagnostics("The folder has an installer note in the readme.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("windows-installer-msi");
+  }
+  expect(result.genericErrorCode).not.toContain("windows-installer-msi");
+  expect(result.genericInstaller).not.toContain("windows-installer-msi");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 

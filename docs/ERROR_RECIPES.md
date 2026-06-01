@@ -142,6 +142,21 @@ Good InstallShield clues:
 - `data1.cab is missing`
 - `isdata.hdr could not be opened`
 
+## Windows Installer/MSI Evidence
+
+Keep MSI guidance separate from generic installer wording. The rule should only fire when the error clearly points to Windows Installer, `msiexec`, or MSI-specific error codes with installer context.
+
+Good Windows Installer clues:
+
+- `msiexec.exe`
+- `msi.dll`
+- `This installation package could not be opened`
+- `There is a problem with this Windows Installer package`
+- `Another installation is already in progress`
+- `Error 1603 during installation`
+- `MSI error 1619`
+- `Installer error 1620`
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.
