@@ -256,6 +256,32 @@ test("Flash, VB ActiveX, and Borland runtime recipes stay narrow", async ({ page
   expect(result.genericDelphi).not.toContain("borland-delphi-runtime");
 });
 
+test("ADO DAO and Jet database runtime recipe stays narrow", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "DAO360.DLL was not found.",
+      "MSADO15.DLL failed to load.",
+      "MSJET40.DLL is missing.",
+      "Microsoft.Jet.OLEDB.4.0 provider is not registered.",
+      "ADODB.Connection cannot be created.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      genericDatabase: buildErrorDiagnostics("The menu stores settings in a database file.").matches.map((match) => match.id),
+      genericProvider: buildErrorDiagnostics("The provider returned an unknown error.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("database-ado-jet-runtime");
+  }
+  expect(result.genericDatabase).not.toContain("database-ado-jet-runtime");
+  expect(result.genericProvider).not.toContain("database-ado-jet-runtime");
+});
+
 test("package sample shows archive and image preflight without treating it as runnable", async ({ page }) => {
   await page.goto("/");
 

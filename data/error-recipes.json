@@ -397,5 +397,29 @@
       "重新完整解压并保持原目录结构",
       "尝试从 GalAid 推荐的主游戏入口启动"
     ]
+  },
+  {
+    "id": "database-ado-jet-runtime",
+    "title": "ADO/DAO/Jet 旧数据库组件",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "dao3\\d+\\.dll",
+      "msado\\d+\\.dll",
+      "msjet\\d+\\.dll",
+      "msjetoledb\\d+\\.dll",
+      "microsoft\\.jet\\.oledb\\.4\\.0",
+      "microsoft\\.ace\\.oledb",
+      "adodb\\.connection",
+      "provider cannot be found.*(jet|oledb|adodb)",
+      "(jet|oledb|adodb).*provider.*not registered"
+    ],
+    "cause": "部分旧启动器、安装器、设置工具或存档管理器依赖 ADO/DAO/Jet 数据库组件。缺组件时外层工具会报 Provider/ADODB/DAO 错误，但游戏主程序未必损坏。",
+    "action": "先尝试 GalAid 推荐的主游戏 exe；如果必须使用该工具，再确认包内数据库相关 DLL/组件是否完整，或按发行包说明处理旧数据库组件。",
+    "checklist": [
+      "确认报错是否点名 DAO、ADODB、Jet OLEDB 或 provider not registered",
+      "尝试绕过外层启动器直接运行主游戏入口",
+      "保持原目录结构并重新完整解压后重试"
+    ]
   }
 ]

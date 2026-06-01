@@ -120,6 +120,14 @@ Good Borland/Delphi clues:
 - `vcl60.bpl`
 - `vcljpg70.bpl`
 
+Good ADO/DAO/Jet database clues:
+
+- `DAO360.DLL`
+- `MSADO15.DLL`
+- `MSJET40.DLL`
+- `Microsoft.Jet.OLEDB.4.0`
+- `ADODB.Connection`
+
 ## Contribution Checklist
 
 - Keep the rule narrow enough to avoid noisy matches.

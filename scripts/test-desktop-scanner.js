@@ -20,7 +20,7 @@ async function main() {
         machine: 0x014c,
         magic: 0x10b,
         subsystemVersion: [5, 1],
-        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "DPLAYX.dll", "DPNET.dll", "WINMM.dll", "QUARTZ.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "MSCOMCTL.OCX", "rtl60.bpl"],
+        imports: ["KERNEL32.dll", "DDRAW.dll", "DSOUND.dll", "DPLAYX.dll", "DPNET.dll", "WINMM.dll", "QUARTZ.dll", "MSVCR71.dll", "MSVBVM60.dll", "mscoree.dll", "qtmlclient.dll", "FLASH.OCX", "MSCOMCTL.OCX", "rtl60.bpl", "MSJET40.DLL"],
       }),
     );
 
@@ -56,6 +56,7 @@ async function main() {
       "flash.ocx",
       "mscomctl.ocx",
       "rtl60.bpl",
+      "msjet40.dll",
     ]);
     assert.deepEqual(byName.get("XP32.EXE").executableInfo.importHints, [
       "legacy-directdraw",
@@ -70,6 +71,7 @@ async function main() {
       "legacy-flash",
       "legacy-activex-controls",
       "legacy-borland",
+      "legacy-database",
     ]);
     assert.match(byName.get("Disc.cue").textPreview, /Track01\.bin/);
   } finally {

@@ -2309,6 +2309,7 @@ const RUNTIME_IMPORT_HINT_META = {
   "legacy-flash": { family: "flash", label: "Flash / ActiveX" },
   "legacy-activex-controls": { family: "activex", label: "VB/ActiveX controls" },
   "legacy-borland": { family: "borland", label: "Borland / Delphi runtime" },
+  "legacy-database": { family: "database", label: "ADO/DAO/Jet database components" },
 };
 
 function getRuntimeRepairType(pathValue, ext = getExt(getBaseName(String(pathValue || "")))) {
