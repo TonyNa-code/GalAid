@@ -52,6 +52,31 @@
     ]
   },
   {
+    "id": "winmm-midi-audio",
+    "title": "WinMM/MIDI 旧音频组件",
+    "category": "runtime",
+    "level": "warning",
+    "patterns": [
+      "winmm\\.dll",
+      "msacm32\\.dll",
+      "midi mapper",
+      "no midi device",
+      "midiout(?:open|prepareheader|reset|close)?",
+      "waveout(?:open|write|prepareheader|reset|close)?",
+      "\\bmmsystem\\d+\\b",
+      "mci device.*(?:audio|midi|wave)",
+      "(?:audio|midi|wave).*mci device"
+    ],
+    "cause": "部分 Win95/Win98/WinXP 时代游戏用 WinMM、MCI、ACM codec 或 MIDI Mapper 播放 BGM、语音、音效。缺旧音频组件或设备映射异常时，可能表现为启动时报错、卡在开场、无声或播放音乐时崩溃。",
+    "action": "先从 GalAid 推荐入口重试并保留完整目录；如果报错点名 WinMM/MIDI/waveOut/MMSYSTEM，检查系统音频设备、旧 ACM/MIDI 支持和游戏包内是否有音频 codec/修复工具。",
+    "checklist": [
+      "确认报错是否点名 winmm.dll、msacm32.dll、MIDI Mapper、waveOut、midiOut 或 MMSYSTEM",
+      "检查游戏包是否自带音频 codec、MIDI 或运行库安装项",
+      "尝试跳过片头/关闭 MIDI BGM 后验证主流程",
+      "保持 BGM/voice/sound 目录与启动器的相对位置"
+    ]
+  },
+  {
     "id": "visual-cpp-redist",
     "title": "VC++ 运行库",
     "category": "runtime",

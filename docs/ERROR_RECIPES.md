@@ -92,6 +92,23 @@ Keep DirectPlay separate from the DirectX 9-era runtime route because the beginn
 
 The recommended action should point to Windows Features: enable `Legacy Components / DirectPlay`, then retry from GalAid's recommended launcher.
 
+## WinMM And MIDI Evidence
+
+Keep `winmm-midi-audio` focused on old audio APIs and MIDI/ACM clues. DirectSound/XAudio/XACT still belong to `directx-legacy`, while QuickTime/DirectShow/MCI video handoff clues belong to `quicktime-runtime`.
+
+Good WinMM/MIDI clues:
+
+- `winmm.dll`
+- `msacm32.dll`
+- `MIDI Mapper`
+- `No MIDI device`
+- `midiOutOpen`
+- `waveOutWrite`
+- `MMSYSTEM296`
+- `MCI device audio`
+
+Avoid matching generic "audio failed" or "sound is muted" text without a concrete old Windows audio API clue.
+
 ## Locale Encoding Evidence
 
 The `locale-encoding` recipe should catch concrete Japanese locale, Shift-JIS/CP932, and old Japanese font clues without treating every generic font or path issue as locale-related.

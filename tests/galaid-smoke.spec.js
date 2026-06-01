@@ -188,6 +188,41 @@ test("DirectPlay recipe and import hints route old Windows component guidance", 
   expect(result.roadmapIds).toContain("error-directplay-legacy");
 });
 
+test("WinMM and MIDI recipe stays separate from DirectX and video codecs", async ({ page }) => {
+  await page.goto("/");
+
+  const result = await page.evaluate(() => {
+    const examples = [
+      "winmm.dll failed to load.",
+      "MSACM32.dll was not found.",
+      "MIDI Mapper is not available.",
+      "No MIDI device is installed.",
+      "midiOutOpen failed.",
+      "waveOutWrite returned an error.",
+      "MMSYSTEM296 cannot play the specified file.",
+      "MCI device audio cannot be opened.",
+    ];
+
+    return {
+      positives: examples.map((text) => buildErrorDiagnostics(text).matches.map((match) => match.id)),
+      directSound: buildErrorDiagnostics("dsound.dll was not found.").matches.map((match) => match.id),
+      videoMci: buildErrorDiagnostics("mciqtz32.dll failed to load.").matches.map((match) => match.id),
+      genericAudio: buildErrorDiagnostics("The audio is muted in options.").matches.map((match) => match.id),
+    };
+  });
+
+  for (const matches of result.positives) {
+    expect(matches).toContain("winmm-midi-audio");
+    expect(matches).not.toContain("directx-legacy");
+    expect(matches).not.toContain("quicktime-runtime");
+  }
+  expect(result.directSound).toContain("directx-legacy");
+  expect(result.directSound).not.toContain("winmm-midi-audio");
+  expect(result.videoMci).toContain("quicktime-runtime");
+  expect(result.videoMci).not.toContain("winmm-midi-audio");
+  expect(result.genericAudio).not.toContain("winmm-midi-audio");
+});
+
 test("locale recipe covers Shift-JIS code page and Japanese font clues", async ({ page }) => {
   await page.goto("/");
 
