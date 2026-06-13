@@ -130,6 +130,10 @@ function checkContributing(errors) {
     "npm run build:recipes",
     "npm run build:engines",
     "npm run check",
+    "Workspace Hygiene",
+    "npm run clean:dry",
+    "npm run clean:deps",
+    "node_modules/",
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
     "Do not include",
@@ -243,7 +247,7 @@ function checkReadmes(errors) {
   const readmes = [
     {
       file: "README.md",
-      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR", "Download And Verify", "GalAid-0.1.9-win-x64.exe.release.json", PUBLISHED_WINDOWS_BETA_COMMIT, "--json", "docs/ROADMAP.md", "docs/GOOD_FIRST_ISSUES.md", "current priority queue", "password-protected package clues"],
+      phrases: ["Languages: English", "README.zh-CN.md", "README.ja.md", "docs/INSTALL.zh-CN.md", "GalAid is a launch doctor", "Screenshot OCR", "Download And Verify", "GalAid-0.1.9-win-x64.exe.release.json", PUBLISHED_WINDOWS_BETA_COMMIT, "--json", "docs/ROADMAP.md", "docs/GOOD_FIRST_ISSUES.md", "current priority queue", "password-protected package clues", "npm run clean:dry"],
     },
     {
       file: "README.zh-CN.md",
@@ -353,6 +357,19 @@ function checkConfig(errors) {
   const text = readRelative(file);
   checkNoTrailingWhitespace(file, text, errors);
   assert(text.includes("blank_issues_enabled: false"), `${file} must disable blank issues`, errors);
+  for (const phrase of [
+    "contact_links:",
+    "Try the live demo",
+    "https://TonyNa-code.github.io/GalAid/",
+    "Download the Windows beta",
+    "https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta",
+    "Good first issues",
+    "docs/GOOD_FIRST_ISSUES.md",
+    "Contributing guide",
+    "docs/CONTRIBUTING.md",
+  ]) {
+    assert(text.includes(phrase), `${file} is missing phrase: ${phrase}`, errors);
+  }
 }
 
 function checkCiWorkflow(errors) {

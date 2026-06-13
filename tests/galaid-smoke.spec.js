@@ -1948,6 +1948,68 @@ test("desktop one-click flow retries password-protected packages", async ({ page
   expect(result.pending).toBe(true);
 });
 
+test("desktop one-click flow stops after final package password failure", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__preparePayloads = [];
+    window.__launchPayloads = [];
+    window.galaidDesktop = {
+      platform: "win32",
+      selectFolder: async () => ({ canceled: true, files: [] }),
+      selectFiles: async () => ({ canceled: true, files: [] }),
+      scanPaths: async () => ({ canceled: true, files: [] }),
+      preparePackage: async (payload) => {
+        window.__preparePayloads.push(payload);
+        return { ok: false, errorCode: "password-failed", message: "This package needs the correct extraction password." };
+      },
+      launchEntry: async (payload) => {
+        window.__launchPayloads.push(payload);
+        return { ok: true };
+      },
+      createShortcut: async () => ({ ok: true }),
+      unmountImage: async () => ({ ok: true }),
+      getLaunchHistory: async () => [],
+      recognizeErrorImage: async () => ({ canceled: true }),
+      onScanProgress: () => () => {},
+      onPrepareProgress: () => () => {},
+      onOcrProgress: () => () => {},
+    };
+  });
+
+  const dialogAnswers = ["wrong-password", "still-wrong"];
+  const dialogMessages = [];
+  page.on("dialog", async (dialog) => {
+    dialogMessages.push(dialog.message());
+    await dialog.accept(dialogAnswers.shift() || "unexpected-extra-prompt");
+  });
+  await page.goto("/");
+
+  await page.evaluate(async () => {
+    const raw = JSON.parse(JSON.stringify(PACKAGE_SAMPLE_FILES[1]));
+    raw[2].archivePreview.encryptedEntries = 12;
+    const files = [fileFromSample(raw)].map((file) => ({
+      ...file,
+      fullPath: `C:\\Downloads\\${file.path}`,
+    }));
+    await setFiles(files);
+  });
+
+  await page.locator('[data-tab="launch"]').click();
+  await page.getByRole("button", { name: "一键准备并启动" }).click();
+  await page.waitForFunction(() => window.__preparePayloads?.length === 2);
+  await expect(page.locator(".toast").filter({ hasText: "密码仍不正确或缺失" })).toBeVisible();
+
+  const result = await page.evaluate(() => ({
+    passwords: window.__preparePayloads.map((payload) => payload.password),
+    launchCount: window.__launchPayloads.length,
+  }));
+
+  expect(dialogMessages).toHaveLength(2);
+  expect(dialogMessages[0]).toContain("可能需要解压密码");
+  expect(dialogMessages[1]).toContain("密码不正确或缺少密码");
+  expect(result.passwords).toEqual(["wrong-password", "still-wrong"]);
+  expect(result.launchCount).toBe(0);
+});
+
 test("desktop runtime repair tools launch separately from game candidates", async ({ page }) => {
   await page.addInitScript(() => {
     window.__launchPayloads = [];

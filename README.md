@@ -310,6 +310,15 @@ npm install
 npm start
 ```
 
+Clean generated local artifacts when the workspace gets noisy:
+
+```bash
+npm run clean:dry
+npm run clean
+```
+
+Use `npm run clean:deps` only when you also want to remove `node_modules/`; run `npm install` again before testing or packaging.
+
 The desktop beta uses the same UI and diagnosis engine as the web app, but the folder/file picker and drag/drop path scan are native and can recursively scan local folders without browser directory limitations. It can launch scanned compatible Windows `.exe/.com/.bat/.cmd/.lnk` entries after the user clicks `Launch`; install-media `.msi` entries are opened through Windows Installer. DOS COM/MZ, Win16 NE, and LE/LX entries are detected from headers and kept on a DOSBox/old-OS/VM route instead of direct launch. Win95/NT4/Win2000/XP-era Win32 PE entries remain launchable, while the roadmap suggests compatibility mode, fullscreen fixes, short paths, and legacy DirectX/runtime/video component checks if launch fails. When the current input is a trusted package/image, that same launch flow can prepare, rescan, and launch the top entry when it is compatible. GalAid sets the working directory to the entry's folder. The profile tab can create a Windows shortcut for normal executable entries and shows a recent-launch history.
 
 Windows portable release builds are handled by `.github/workflows/desktop-release.yml` on manual runs or `v*` tags:

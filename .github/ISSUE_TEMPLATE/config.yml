@@ -1,1 +1,14 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Try the live demo
+    url: https://TonyNa-code.github.io/GalAid/
+    about: Preview GalAid in the browser before opening an issue.
+  - name: Download the Windows beta
+    url: https://github.com/TonyNa-code/GalAid/releases/tag/v0.1.9-beta
+    about: Use the desktop beta for archive/image preparation, one-click launch, and OCR.
+  - name: Good first issues
+    url: https://github.com/TonyNa-code/GalAid/blob/main/docs/GOOD_FIRST_ISSUES.md
+    about: Find small rule, recipe, testing, and documentation tasks.
+  - name: Contributing guide
+    url: https://github.com/TonyNa-code/GalAid/blob/main/docs/CONTRIBUTING.md
+    about: Learn how to send metadata-only improvements safely.

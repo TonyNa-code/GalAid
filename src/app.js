@@ -819,6 +819,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareImageFailed: "镜像暂时无法自动挂载或解包",
       toastPrepareMissingVolume: "分卷不完整，请补齐后从第一分卷开始",
       toastPrepareDamaged: "压缩包可能损坏或不完整",
+      toastPreparePasswordFailed: "密码仍不正确或缺失，已停止解压；请核对密码后再试",
       toastRuntimeCheckDone: "本机运行环境检测完成",
       toastRuntimeCheckFailed: "本机运行环境检测失败",
       toastRoadmapCopied: "路线清单已复制",
@@ -1183,6 +1184,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareImageFailed: "This image could not be mounted or extracted automatically",
       toastPrepareMissingVolume: "A split volume is missing; start from the first volume after collecting all parts",
       toastPrepareDamaged: "The package may be damaged or incomplete",
+      toastPreparePasswordFailed: "The password is still missing or incorrect, so extraction was stopped. Check the password and try again.",
       toastRuntimeCheckDone: "Local runtime check finished",
       toastRuntimeCheckFailed: "Local runtime check failed",
       toastRoadmapCopied: "Roadmap checklist copied",
@@ -1546,6 +1548,7 @@ const ASSISTANT_LANGUAGE_PACKS = {
       toastPrepareImageFailed: "このイメージはまだ自動マウント/展開できません",
       toastPrepareMissingVolume: "分割ボリュームが不足しています。すべて揃えて最初のボリュームから開始してください",
       toastPrepareDamaged: "パッケージが破損または不完全な可能性があります",
+      toastPreparePasswordFailed: "パスワードがまだ不足しているか正しくないため、展開を停止しました。確認してから再試行してください。",
       toastRuntimeCheckDone: "ローカル環境チェックが完了しました",
       toastRuntimeCheckFailed: "ローカル環境チェックに失敗しました",
       toastRoadmapCopied: "手順チェックリストをコピーしました",
@@ -8375,7 +8378,8 @@ async function prepareDesktopPackage(packageFile, packageSet, button, options = 
   }
 
   try {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    const maxAttempts = 2;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       if (options.autoLaunch) showToast(getUiText("toastOneClickPreparing", { name: packageFile.name }));
       updateScanState({
         title: preparingLabel,
@@ -8414,6 +8418,10 @@ async function prepareDesktopPackage(packageFile, packageSet, button, options = 
 
       if (result?.errorCode === "canceled") return result;
       if (result?.errorCode === "password-required" || result?.errorCode === "password-failed") {
+        if (attempt + 1 >= maxAttempts) {
+          showToast(getUiText("toastPreparePasswordFailed"));
+          return result;
+        }
         const entered = window.prompt(getUiText("preparePasswordRetryPrompt"), "");
         if (!entered) return { ok: false, errorCode: "canceled" };
         password = entered;
@@ -8433,6 +8441,7 @@ async function prepareDesktopPackage(packageFile, packageSet, button, options = 
     }
     if (runId === scanRunId) setControlsBusy(false);
   }
+  showToast(getUiText("toastPreparePasswordFailed"));
   return { ok: false, errorCode: "password-failed" };
 }
 

@@ -70,6 +70,17 @@ npm run check
 
 `src/engine-rules.js` is generated from JSON so users can still open `index.html` directly. Do not edit that generated file by hand.
 
+## Workspace Hygiene
+
+Use a dry run before deleting generated local artifacts:
+
+```bash
+npm run clean:dry
+npm run clean
+```
+
+Use `npm run clean:deps` only when you intentionally want to remove `node_modules/`; run `npm install` again before testing or packaging.
+
 ## Pull Request Checklist
 
 - The change stays metadata-only and local-first.
